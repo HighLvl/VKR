@@ -1,0 +1,47 @@
+namespace Model;
+table AgentBehaviour {
+    id:int;
+    requests:[string];
+}
+
+//send to client side only
+//common
+table AgentSnapshot {
+    id:int; //required
+    props:string;
+    responses:string; //required
+}
+
+table Error {
+    code: int;
+    text: string;
+}
+
+table Snapshot {
+    time:float;
+    snapshots:[AgentSnapshot];
+    errors:[Error];
+}
+table Behaviour {
+    requests:[AgentBehaviour];
+}
+
+//required
+table GlobalArgs {
+    args:string;
+}
+
+table Empty {}
+
+rpc_service API {
+  Run(GlobalArgs):Empty;
+  RunAndSubscribeOnUpdate(GlobalArgs):Empty (streaming: "server");
+
+  CallBehaviourFunctions(Behaviour):Empty;
+  RequestSnapshot(Empty):Snapshot;
+
+  Pause(Empty):Empty;
+  Resume(Empty):Empty;
+  Stop(Empty):Empty;
+
+}

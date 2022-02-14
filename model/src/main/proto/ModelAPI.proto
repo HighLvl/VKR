@@ -1,0 +1,25 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+
+message Bytes {
+    bytes body = 1;
+}
+
+message Event {
+
+}
+
+service ModelAPI {
+    //arg GlobalParams
+    rpc Run(Bytes) returns (google.protobuf.Empty);
+    //arg GlobalParams returns Snapshot stream
+    rpc RunAndSubscribeOnUpdate(Bytes) returns (stream Event);
+    //arg Behaviour
+    rpc CallBehaviourFunctions(Bytes) returns (google.protobuf.Empty);
+    //returns Snapshot
+    rpc RequestSnapshot(google.protobuf.Empty) returns (Bytes);
+
+    rpc Pause(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc Resume(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

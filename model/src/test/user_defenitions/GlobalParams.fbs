@@ -1,0 +1,4 @@
+table GlobalParams {
+    agentsNumber:int;
+    k:float;
+}
