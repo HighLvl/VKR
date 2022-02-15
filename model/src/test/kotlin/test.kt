@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import app.services.scene.SceneService
 import core.api.AgentModelApiClient
 import core.components.getComponent
+import core.components.getSnapshot
 import core.coroutines.AppContext
 import model.modelcontrol.service.AgentModelControlService
 import java.time.Instant
@@ -188,7 +189,7 @@ fun main() {
             val snapshot = when (count) {
                 0 -> Snapshot(
                     1f, mutableListOf(
-                        AgentSnapshot(1, mutableMapOf(), mutableListOf()),
+                        AgentSnapshot(1, mutableMapOf("a" to 3, "b" to 7), mutableListOf()),
                         AgentSnapshot(2, mutableMapOf(), mutableListOf()),
                         AgentSnapshot(3, mutableMapOf(), mutableListOf())
                     ), mutableListOf()
@@ -252,7 +253,7 @@ fun main() {
                     )
                 )
                 val res = ObjectMapper().readValue(json, Property::class.java)
-                it.getComponent<AgentInterfaceScript>()!!.id
+                println(ObjectMapper().writeValueAsString(it.getComponent<AgentInterfaceScript>()!!.getSnapshot()))
             })
             println("start 10")
             val startTime = Instant.now().epochSecond
