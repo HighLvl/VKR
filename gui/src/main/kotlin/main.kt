@@ -1,7 +1,10 @@
+import app.components.AgentInterfaceScript
 import app.services.logger.Log
 import app.services.logger.Logger
+import core.components.base.Script
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
+import core.entities.Agent
 import imgui.ImGuiViewport
 import imgui.app.Application
 import imgui.app.Configuration
@@ -13,12 +16,21 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import org.lwjgl.glfw.GLFW
-import views.*
+import views.Dockspace
+import views.LoggerView
+import views.ScriptViewPort
+import views.Window
+import views.component.Component
+import views.inspector.component.ComponentInspector
+import views.inspector.property.PropertyInspector
 import java.io.IOException
 import java.net.URISyntaxException
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.random.Random
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 class Main : Application() {
     private val loggerView = LoggerView()
@@ -43,6 +55,9 @@ class Main : Application() {
         ImGui.getIO().fonts.build()
     }
 
+    var time: Duration? = null
+
+    @OptIn(ExperimentalTime::class)
     override fun preRun() {
         super.preRun()
         val logger = Logger()
@@ -50,19 +65,21 @@ class Main : Application() {
             var count = 0
             while (true) {
                 count++
-                logger.log(
-                    "$count log",
-                    when (Random.nextInt(0, 3)) {
-                        0 -> Log.Level.INFO
-                        1 -> Log.Level.DEBUG
-                        2 -> Log.Level.ERROR
-                        else -> Log.Level.INFO
+                time = measureTime {
+                    logger.log(
+                        "$count log $time",
+                        when (Random.nextInt(0, 3)) {
+                            0 -> Log.Level.INFO
+                            1 -> Log.Level.DEBUG
+                            2 -> Log.Level.ERROR
+                            else -> Log.Level.INFO
 
-                    }
+                        }
 
-                )
-                delay(1000)
+                    )
+                    delay(1000)
 
+                }
             }
         }
         launchWithAppContext {
@@ -73,9 +90,21 @@ class Main : Application() {
     }
 
     private val loggerDockedWindow = Window("Logger", width = 150f, height = 300f, loggerView)
-    private val componentView = ComponentView()
+    private val propertyInspector = PropertyInspector()
+
+    private val componentInspector = ComponentInspector().apply {
+        val agent = Agent()
+        agent.setComponent(AgentInterfaceScript())
+        agent.setComponent(object: core.components.base.Component() {
+            var x = 0f
+            var y = 0f
+            val name = "position"
+        })
+        setEntity(agent)
+    }
+
     private val testWindow = Window(
-        "Properties", 500f, 150f, componentView
+        "Inspector", 500f, 150f, componentInspector
     )
 
     private val scriptViewPortWindow = Window("ScriptView", width = 500f, height = 500f, ScriptViewPort {
@@ -84,9 +113,7 @@ class Main : Application() {
         dock(loggerDockedWindow, Dockspace.Position.DOWN)
         dock(testWindow, Dockspace.Position.UP_LEFT)
         dock(scriptViewPortWindow, Dockspace.Position.UP_RIGHT)
-        componentView.inflate()
     }
-
     override fun process() {
         dockspace.draw()
         loggerDockedWindow.draw()

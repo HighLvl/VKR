@@ -1,4 +1,4 @@
-package views
+package views.inspector.property
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -57,17 +57,18 @@ class PropertyBuilder(private val factory: PropertyFactory) {
             }
         return objectProperty
     }
+
+    abstract class PropertyFactory {
+        abstract fun createProperty(
+            name: String,
+            value: Any,
+            parentNode: JsonNode,
+            parentNodeType: JsonNodeType
+        ): Property
+    }
+
+    enum class JsonNodeType {
+        COMPONENT, ARRAY, OBJECT
+    }
 }
 
-abstract class PropertyFactory {
-    abstract fun createProperty(
-        name: String,
-        value: Any,
-        parentNode: JsonNode,
-        parentNodeType: JsonNodeType
-    ): Property
-}
-
-enum class JsonNodeType {
-    COMPONENT, ARRAY, OBJECT
-}

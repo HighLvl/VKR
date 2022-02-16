@@ -13,7 +13,7 @@ class AgentInterfaceScript : Script(), AgentInterface {
         get() = snapshot.id
     override val props: Props
         get() = _props
-    private lateinit var _props: Props
+    private var _props: Props = mapOf()
 
     @IgnoreInSnapshot
     val requests: List<Request>

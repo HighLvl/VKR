@@ -19,4 +19,8 @@ class MapComponentHolder : ComponentHolder {
     override fun <C : Component> removeComponent(type: KClass<C>): C? {
         return components.remove(type) as C?
     }
+
+    override fun getComponents(): List<Component> {
+        return components.values.toList()
+    }
 }
