@@ -4,11 +4,12 @@ import imgui.ImGui
 import imgui.type.ImDouble
 import org.lwjgl.glfw.GLFW
 
-class DoubleMutableProperty(name: String, onValueChange: (Double) -> Unit) : MutableProperty<Double>(
+class DoubleMutableProperty(name: String, initValue: Double, onValueChange: (Double) -> Unit) : MutableProperty<Double>(
     name,
+    initValue,
     onValueChange
 ) {
-    private val inputValue = ImDouble()
+    private val inputValue = ImDouble(initValue)
 
     override var value: Double
         get() = inputValue.get()

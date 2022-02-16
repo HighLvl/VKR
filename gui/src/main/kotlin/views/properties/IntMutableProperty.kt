@@ -6,10 +6,11 @@ import org.lwjgl.glfw.GLFW
 
 class IntMutableProperty(
     name: String,
+    initValue: Int,
     onValueChange: (value: Int) -> Unit
-) : MutableProperty<Int>(name, onValueChange) {
+) : MutableProperty<Int>(name, initValue, onValueChange) {
 
-    private val inputValue = ImInt()
+    private val inputValue = ImInt(initValue)
 
     override var value: Int
         get() = inputValue.get()

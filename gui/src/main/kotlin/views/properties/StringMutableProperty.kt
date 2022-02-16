@@ -4,14 +4,17 @@ import imgui.ImGui
 import imgui.type.ImString
 import org.lwjgl.glfw.GLFW
 
-class StringMutableProperty(name: String, onValueChange: (String) -> Unit) : MutableProperty<String>(name,
-    onValueChange
+class StringMutableProperty(name: String, initValue: String, onValueChange: (String) -> Unit) : MutableProperty<String>(
+    name,
+    initValue, onValueChange
 ) {
-    private val inputValue = ImString("")
+    private val inputValue = ImString(initValue)
 
     override var value: String
         get() = inputValue.get()
-        set(value) {inputValue.set(value)}
+        set(value) {
+            inputValue.set(value)
+        }
 
     override fun drawValue() {
         ImGui.captureKeyboardFromApp()
