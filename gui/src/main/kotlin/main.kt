@@ -1,7 +1,6 @@
 import app.components.AgentInterfaceScript
 import app.services.logger.Log
 import app.services.logger.Logger
-import core.components.base.Script
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
 import core.entities.Agent
@@ -20,7 +19,6 @@ import views.Dockspace
 import views.LoggerView
 import views.ScriptViewPort
 import views.Window
-import views.component.Component
 import views.inspector.component.ComponentInspector
 import views.inspector.property.PropertyInspector
 import java.io.IOException
@@ -99,6 +97,7 @@ class Main : Application() {
             var x = 0f
             var y = 0f
             val name = "position"
+            var mName = "mName"
         })
         setEntity(agent)
     }

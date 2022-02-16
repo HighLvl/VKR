@@ -13,7 +13,7 @@ class AgentInterfaceScript : Script(), AgentInterface {
         get() = snapshot.id
     override val props: Props
         get() = _props
-    private var _props: Props = mapOf()
+    private var _props: Props = Props()
 
     @IgnoreInSnapshot
     val requests: List<Request>
@@ -29,8 +29,8 @@ class AgentInterfaceScript : Script(), AgentInterface {
 
     var a = 0
 
-    private fun updateProps(propsMap: Map<String, Any>) {
-        _props = propsMap
+    private fun updateProps(props: Map<String, Any>) {
+        _props = Props(props)
     }
 
     override fun requestSetProp(name: String, value: Any) {

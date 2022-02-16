@@ -8,7 +8,7 @@ class StringMutableProperty(name: String, initValue: String, onValueChange: (Str
     name,
     initValue, onValueChange
 ) {
-    private val inputValue = ImString(initValue)
+    private val inputValue = ImString(initValue, 100)
 
     override var value: String
         get() = inputValue.get()

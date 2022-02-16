@@ -29,7 +29,7 @@ class PropertyBuilder(private val factory: PropertyFactory) {
         name: String,
         objectNode: ObjectNode
     ): ObjectProperty {
-        val objectProperty = ObjectProperty(name)
+        val objectProperty = ObjectProperty(name) // TODO move create object property to factory
         objectNode.fields()
             .asSequence()
             .map { (propName, jsonNode) ->

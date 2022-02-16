@@ -3,25 +3,24 @@ package views.inspector.property
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import imgui.ImGui
 import views.View
 
-class PropertyInspector : View {
+open class PropertyInspector : View {
     private lateinit var node: JsonNode
-    private val changedProps = run {
-        ObjectNode(JsonNodeFactory.instance).putArray("mutableProps")
+    private val changedPropsNode = ObjectNode(JsonNodeFactory.instance)
+    private val changedProps = changedPropsNode.putArray("mutableProps")
+
+
+    fun inflate(node: JsonNode) {
+        this.node = node
     }
 
-    fun inflate() {
-        node = jacksonObjectMapper().readTree(
-            "{\"immutableProps\":[{\"name\":\"id\",\"type\":\"java.lang.Integer\",\"value\":1},{\"name\":\"props\",\"type\":\"java.util.LinkedHashMap\",\"value\":{\"a\":3,\"b\":7,\"text\":\"some text\",\"v\":1.3,\"list\":[1,{\"name\":\"id\",\"type\":\"java.lang.Integer\",\"value\":1},3]}}],\"mutableProps\":[{\"name\":\"a\",\"type\":\"java.lang.Integer\",\"value\":0},{\"name\":\"b\",\"type\":\"java.lang.Integer\",\"value\":45.6},{\"name\":\"c\",\"type\":\"java.lang.Integer\",\"value\":\"jljlj\"},{\"name\":\"id\",\"type\":\"java.lang.Integer\",\"value\":1},{\"name\":\"props\",\"type\":\"java.util.LinkedHashMap\",\"value\":{\"a\":3,\"b\":7,\"text\":\"some text\",\"v\":1.3,\"list\":[1,{\"name\":\"id\",\"type\":\"java.lang.Integer\",\"value\":1},3]}}]}"
-        )
+    fun getJsonNode(): JsonNode {
+        return changedPropsNode
     }
 
-    fun getJson() {
-        node.get("immutableProps").get(0)
-    }
+    fun changed() = !changedProps.isEmpty
 
     override fun draw() {
         changedProps.removeAll()

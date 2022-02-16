@@ -5,17 +5,11 @@ import imgui.flag.ImGuiTreeNodeFlags
 import views.View
 import views.inspector.property.PropertyInspector
 
-class Component(private val componentName: String) : View {
-    private val propertyInspector = PropertyInspector()
-
-    init {
-        propertyInspector.inflate()
-    }
-
+class ComponentView(private val componentName: String) : PropertyInspector() {
     override fun draw() {
         ImGui.pushID(componentName + "1")
         if (ImGui.collapsingHeader(componentName, ImGuiTreeNodeFlags.DefaultOpen)) {
-            propertyInspector.draw()
+            super.draw()
         }
         ImGui.popID()
     }
