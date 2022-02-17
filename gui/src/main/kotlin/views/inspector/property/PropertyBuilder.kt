@@ -3,16 +3,22 @@ package views.inspector.property
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import views.properties.NodeTreeObjectProperty
 import views.properties.ObjectProperty
 import views.properties.Property
 
 class PropertyBuilder(private val factory: PropertyFactory) {
+    private lateinit var parentNode: JsonNode
+    private lateinit var parentNodeType: JsonNodeType
+
     fun buildProperty(
         name: String,
         valueNode: JsonNode,
         parentNode: JsonNode,
         parentNodeType: JsonNodeType
     ): Property {
+        this.parentNode = parentNode
+        this.parentNodeType = parentNodeType
         when {
             valueNode.isArray -> return buildObjectProperty(name, valueNode as ArrayNode)
             valueNode.isObject -> return buildObjectProperty(name, valueNode as ObjectNode)
@@ -29,7 +35,7 @@ class PropertyBuilder(private val factory: PropertyFactory) {
         name: String,
         objectNode: ObjectNode
     ): ObjectProperty {
-        val objectProperty = ObjectProperty(name) // TODO move create object property to factory
+        val objectProperty = factory.createObjectProperty(name, parentNode, parentNodeType) // TODO move create object property to factory
         objectNode.fields()
             .asSequence()
             .map { (propName, jsonNode) ->
@@ -45,7 +51,7 @@ class PropertyBuilder(private val factory: PropertyFactory) {
         name: String,
         arrayNode: ArrayNode
     ): ObjectProperty {
-        val objectProperty = ObjectProperty(name)
+        val objectProperty = factory.createObjectProperty(name, parentNode, parentNodeType)
         arrayNode.elements()
             .asSequence()
             .mapIndexed { index, jsonNode ->
@@ -65,6 +71,14 @@ class PropertyBuilder(private val factory: PropertyFactory) {
             parentNode: JsonNode,
             parentNodeType: JsonNodeType
         ): Property
+
+        open fun createObjectProperty(
+            name: String,
+            parentNode: JsonNode,
+            parentNodeType: JsonNodeType
+        ): ObjectProperty {
+            return NodeTreeObjectProperty(name)
+        }
     }
 
     enum class JsonNodeType {

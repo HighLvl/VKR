@@ -1,4 +1,4 @@
-import app.components.AgentInterfaceScript
+import app.components.AgentInterface
 import app.services.logger.Log
 import app.services.logger.Logger
 import com.fasterxml.jackson.databind.JsonNode
@@ -99,7 +99,7 @@ class Main : Application() {
 
     private val componentInspector = ComponentInspector().apply {
         val agent = Agent()
-        agent.setComponent(AgentInterfaceScript())
+        agent.setComponent(AgentInterface())
         agent.setComponent(object: core.components.base.Component() {
             var x = 0f
             var y = 0f

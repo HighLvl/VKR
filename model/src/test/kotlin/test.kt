@@ -1,4 +1,4 @@
-import app.components.AgentInterfaceScript
+import app.components.AgentInterface
 import core.components.base.Property
 import core.api.dto.AgentSnapshot
 import core.api.dto.Behaviour
@@ -243,8 +243,8 @@ fun main() {
         agentMOdelControlService.run(5f)
         EventBus.listen<AgentModelLifecycleEvent.Update>().subscribe {
             println(sceneService.scene.agents.values.map {
-                it.getComponent<AgentInterfaceScript>()!!.id
-                val c = it.getComponent<AgentInterfaceScript>()
+                it.getComponent<AgentInterface>()!!.id
+                val c = it.getComponent<AgentInterface>()
                 val json = ObjectMapper().writeValueAsString(
                     Property(
                         "df",
@@ -253,7 +253,7 @@ fun main() {
                     )
                 )
                 val res = ObjectMapper().readValue(json, Property::class.java)
-                println(ObjectMapper().writeValueAsString(it.getComponent<AgentInterfaceScript>()!!.getSnapshot()))
+                println(ObjectMapper().writeValueAsString(it.getComponent<AgentInterface>()!!.getSnapshot()))
             })
             println("start 10")
             val startTime = Instant.now().epochSecond

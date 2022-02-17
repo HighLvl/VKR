@@ -8,12 +8,12 @@ import core.api.dto.AgentSnapshot
 import core.api.dto.Request
 import core.uppercaseFirstChar
 
-class AgentInterfaceScript : Script(), AgentInterface {
+class AgentInterface : Script(), AgentInterface {
     override val id: Int
         get() = snapshot.id
     override val props: Props
         get() = _props
-    private var _props: Props = Props()
+    private var _props: Props = Props(mapOf("abc" to "3", "fff" to 4, "a" to 6))
 
     @IgnoreInSnapshot
     val requests: List<Request>

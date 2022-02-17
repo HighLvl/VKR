@@ -4,7 +4,7 @@ import core.entities.Agent
 import core.entities.Environment
 import core.entities.Optimizer
 import core.scene.Scene
-import app.components.AgentInterfaceScript
+import app.components.AgentInterface
 import app.scene.SceneImpl
 import core.components.getComponent
 import core.services.*
@@ -59,7 +59,7 @@ class SceneService : Service() {
         getAgentInterfaceScript().snapshot = snapshot
     }
 
-    private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterfaceScript>()!!
+    private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterface>()!!
 
     private fun onUpdate(modelTime: Float) {
         EventBus.publish(AgentModelLifecycleEvent.Update(modelTime))
@@ -96,9 +96,9 @@ object EntityFactory {
     }
 
     fun createAgent(): Agent {
-        val agentInterfaceScript = AgentInterfaceScript()
+        val agentInterface = AgentInterface()
         val agent = Agent().apply {
-            setComponent(agentInterfaceScript)
+            setComponent(agentInterface)
         }
         return agent
     }

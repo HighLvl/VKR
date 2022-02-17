@@ -1,15 +1,20 @@
 package views.properties
 
 import imgui.ImGui
-import java.util.*
 
-class ObjectProperty(name: String) : Property(name) {
-    private val properties = mutableListOf<Property>()
+abstract class ObjectProperty(name: String) : Property(name) {
+    protected val properties = mutableListOf<Property>()
 
     fun addProperty(property: Property) {
         properties.add(property)
     }
 
+    override fun drawValue() {
+        properties.forEach { it.draw() }
+    }
+}
+
+class NodeTreeObjectProperty(name: String) : ObjectProperty(name) {
     override fun draw() {
         ImGui.pushID(name)
         val opened = ImGui.treeNode(name, name)
@@ -21,9 +26,10 @@ class ObjectProperty(name: String) : Property(name) {
         }
         ImGui.popID()
     }
+}
 
-    override fun drawValue() {
-        properties.forEach { it.draw() }
-
+class ListObjectProperty: ObjectProperty("") {
+    override fun draw() {
+        super.drawValue()
     }
 }
