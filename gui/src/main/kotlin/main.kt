@@ -1,6 +1,13 @@
 import app.components.AgentInterfaceScript
 import app.services.logger.Log
 import app.services.logger.Logger
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.treeToValue
+import core.components.base.ComponentConverter
+import core.components.base.ComponentSnapshot
+import core.components.loadSnapshot
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
 import core.entities.Agent
@@ -99,7 +106,15 @@ class Main : Application() {
             val name = "position"
             var mName = "mName"
         })
-        setEntity(agent)
+        val objectMapper = jacksonObjectMapper()
+        setComponentJsonNodesWithListeners(agent.getComponents().asSequence().map {
+            val snap = ComponentConverter.convertToComponentSnapshot(it)
+            val compNode = objectMapper.valueToTree<ObjectNode>(snap)
+            compNode to { dif: JsonNode ->
+                val difSnapshot = objectMapper.treeToValue<ComponentSnapshot>(dif)
+                it.loadSnapshot(difSnapshot)
+            }
+        }.toMap())
     }
 
     private val testWindow = Window(

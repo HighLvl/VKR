@@ -21,7 +21,7 @@ object ComponentConverter {
 
             }
         }
-        return ComponentSnapshot(immutableProps, mutableProps)
+        return ComponentSnapshot(component::class.qualifiedName.toString(), immutableProps, mutableProps)
     }
 
     private fun handleKProperty(

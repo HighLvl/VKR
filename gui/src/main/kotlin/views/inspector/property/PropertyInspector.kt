@@ -7,7 +7,7 @@ import imgui.ImGui
 import views.View
 
 open class PropertyInspector : View {
-    private lateinit var node: JsonNode
+    protected lateinit var node: JsonNode
     private val changedPropsNode = ObjectNode(JsonNodeFactory.instance)
     private val changedProps = changedPropsNode.putArray("mutableProps")
 
@@ -16,7 +16,7 @@ open class PropertyInspector : View {
         this.node = node
     }
 
-    fun getJsonNode(): JsonNode {
+    fun getDifference(): ObjectNode {
         return changedPropsNode
     }
 
