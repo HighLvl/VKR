@@ -20,17 +20,4 @@ object ImmutablePropertyFactory :
             setString(value.toString())
         }
     }
-
-    override fun createObjectProperty(
-        name: String,
-        parentNode: JsonNode,
-        parentNodeType: PropertyBuilder.JsonNodeType
-    ): ObjectProperty {
-        if (parentNodeType == PropertyBuilder.JsonNodeType.COMPONENT &&
-            parentNode["type"].asText() == Props::class.qualifiedName.toString()
-        ) {
-            return ListObjectProperty()
-        }
-        return super.createObjectProperty(name, parentNode, parentNodeType)
-    }
 }

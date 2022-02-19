@@ -13,16 +13,6 @@ fun Component.changePropertyValue(propertyName: String, value: Any) {
     property.setter.call(this, value)
 }
 
-fun Component.getSnapshot(): ComponentSnapshot {
-    return ComponentConverter.convertToComponentSnapshot(this)
-}
-
-fun Component.loadSnapshot(snapshot: ComponentSnapshot) {
-    snapshot.mutableProps.forEach {
-        changePropertyValue(it.name, it.value)
-    }
-}
-
 fun <C1, R> ComponentHolder.query(t1: KClass<C1>, block: (C1) -> R): R? where C1 : Component {
     val c1 = getComponent(t1) ?: return null
     return block(c1)

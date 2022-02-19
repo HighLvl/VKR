@@ -6,6 +6,8 @@ import core.entities.AgentInterface
 import core.entities.Props
 import core.api.dto.AgentSnapshot
 import core.api.dto.Request
+import core.components.base.ComponentSnapshot
+import core.components.base.Property
 import core.uppercaseFirstChar
 
 class AgentInterface : Script(), AgentInterface {
@@ -19,6 +21,7 @@ class AgentInterface : Script(), AgentInterface {
     val requests: List<Request>
         get() = _requests
     private val _requests: MutableList<Request> = mutableListOf()
+    private val propsName by lazy { this::props.name }
 
     @IgnoreInSnapshot
     var snapshot: AgentSnapshot = AgentSnapshot(0, mapOf(), listOf())
@@ -41,5 +44,17 @@ class AgentInterface : Script(), AgentInterface {
 
     override fun afterUpdate() {
         _requests.clear()
+    }
+
+    override fun getSnapshot(): ComponentSnapshot {
+        val snapshot = super.getSnapshot()
+        val immutableProps = snapshot.immutableProps as MutableList<Property>
+        val props = immutableProps.removeAt(immutableProps.indexOfFirst { it.name == propsName })
+        immutableProps.addAll((props.value as Props).props.map { Property(it.key, it::class.java, it.value) })
+        return snapshot
+    }
+
+    override fun loadSnapshot(snapshot: ComponentSnapshot) {
+        super.loadSnapshot(snapshot)
     }
 }

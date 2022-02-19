@@ -7,7 +7,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import core.components.base.ComponentConverter
 import core.components.base.ComponentSnapshot
-import core.components.loadSnapshot
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
 import core.entities.Agent
@@ -108,7 +107,7 @@ class Main : Application() {
         })
         val objectMapper = jacksonObjectMapper()
         setComponentJsonNodesWithListeners(agent.getComponents().asSequence().map {
-            val snap = ComponentConverter.convertToComponentSnapshot(it)
+            val snap = it.getSnapshot()
             val compNode = objectMapper.valueToTree<ObjectNode>(snap)
             compNode to { dif: JsonNode ->
                 val difSnapshot = objectMapper.treeToValue<ComponentSnapshot>(dif)

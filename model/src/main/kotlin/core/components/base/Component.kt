@@ -1,5 +1,6 @@
 package core.components.base
 
+import core.components.changePropertyValue
 import core.entities.Entity
 import core.scene.Scene
 
@@ -13,5 +14,15 @@ abstract class Component {
     @IgnoreInSnapshot
     val scene: Scene?
         get() = entity?.scene
+
+    open fun getSnapshot(): ComponentSnapshot {
+        return ComponentConverter.convertToComponentSnapshot(this)
+    }
+
+    open fun loadSnapshot(snapshot: ComponentSnapshot) {
+        snapshot.mutableProps.forEach {
+            changePropertyValue(it.name, it.value)
+        }
+    }
 }
 
