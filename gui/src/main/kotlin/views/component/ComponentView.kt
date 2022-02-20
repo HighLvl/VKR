@@ -2,12 +2,17 @@ package views.component
 
 import imgui.ImGui
 import imgui.flag.ImGuiTreeNodeFlags
-import views.inspector.property.PropertyInspector
+import views.Decorator
+import views.inspector.property.base.PropertyInspector
+import views.inspector.splitOnCapitalLetters
 
-class ComponentView : PropertyInspector() {
+class ComponentView(
+    private val compClass: String,
+    propertyInspector: PropertyInspector
+) : Decorator(propertyInspector) {
 
     override fun draw() {
-        val componentId = node["compClass"].asText()
+        val componentId = compClass
         val componentName = getName(componentId)
         ImGui.pushID(componentId)
         if (ImGui.collapsingHeader(componentName, ImGuiTreeNodeFlags.DefaultOpen)) {
@@ -18,5 +23,5 @@ class ComponentView : PropertyInspector() {
 
     private fun getName(componentId: String) = componentId.split(".")
         .last()
-        .replace("([^_])([A-Z])".toRegex(), "$1 $2")
+        .splitOnCapitalLetters()
 }

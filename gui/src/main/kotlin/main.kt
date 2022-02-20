@@ -1,15 +1,20 @@
 import app.components.AgentInterface
+import app.components.getSnapshot
+import app.components.loadSnapshot
 import app.services.logger.Log
 import app.services.logger.Logger
+import app.services.model.`interface`.*
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
-import core.components.base.ComponentConverter
 import core.components.base.ComponentSnapshot
+import core.components.base.Property
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
 import core.entities.Agent
+import core.entities.Entity
 import imgui.ImGuiViewport
 import imgui.app.Application
 import imgui.app.Configuration
@@ -26,7 +31,8 @@ import views.LoggerView
 import views.ScriptViewPort
 import views.Window
 import views.inspector.component.ComponentInspector
-import views.inspector.property.PropertyInspector
+import views.inspector.component.PropertyInspectorFactoryImpl
+import views.inspector.property.base.PropertyInspector
 import java.io.IOException
 import java.net.URISyntaxException
 import java.nio.file.Files
@@ -94,39 +100,50 @@ class Main : Application() {
     }
 
     private val loggerDockedWindow = Window("Logger", width = 150f, height = 300f, loggerView)
-    private val propertyInspector = PropertyInspector()
-
-    private val componentInspector = ComponentInspector().apply {
+    private val scriptViewPortWindow = Window("ScriptView", width = 500f, height = 500f, ScriptViewPort {
+    })
+    data class A(val x: Float = 0f, val y: String = ";jlk")
+    var entity: Entity? = run {
         val agent = Agent()
-        agent.setComponent(AgentInterface())
-        agent.setComponent(object: core.components.base.Component() {
+        val modelInterface = modelInterface {
+            agentInterface("SimpleAgent") {
+                setter<Int>("x")
+                setter<String>("text")
+                setter<A>("setA")
+
+                request<Unit>("putToMap") {
+                    param<Int>("x")
+                    param<Property>("y")
+                }
+            }
+        }
+        val agentInterface = AgentInterface(
+            modelInterface.agentInterfaces.first().setters.toList(),
+            modelInterface.agentInterfaces.first().requestSignatures.toList()
+        )
+        agent.setComponent(
+            agentInterface
+        )
+        agent.setComponent(object : core.components.base.Component() {
             var x = 0f
             var y = 0f
             val name = "position"
             var mName = "mName"
         })
-        val objectMapper = jacksonObjectMapper()
-        setComponentJsonNodesWithListeners(agent.getComponents().asSequence().map {
-            val snap = it.getSnapshot()
-            val compNode = objectMapper.valueToTree<ObjectNode>(snap)
-            compNode to { dif: JsonNode ->
-                val difSnapshot = objectMapper.treeToValue<ComponentSnapshot>(dif)
-                it.loadSnapshot(difSnapshot)
-            }
-        }.toMap())
+        agent
     }
-
     private val testWindow = Window(
-        "Inspector", 500f, 150f, componentInspector
+        "Inspector",
+        500f,
+        150f,
+        ComponentInspector(entity!!.getComponents(), PropertyInspectorFactoryImpl())
     )
-
-    private val scriptViewPortWindow = Window("ScriptView", width = 500f, height = 500f, ScriptViewPort {
-    })
     private val dockspace = Dockspace().apply {
         dock(loggerDockedWindow, Dockspace.Position.DOWN)
         dock(testWindow, Dockspace.Position.UP_LEFT)
         dock(scriptViewPortWindow, Dockspace.Position.UP_RIGHT)
     }
+
     override fun process() {
         dockspace.draw()
         loggerDockedWindow.draw()

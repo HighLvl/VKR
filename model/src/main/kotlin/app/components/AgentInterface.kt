@@ -1,5 +1,7 @@
 package app.components
 
+import app.services.model.`interface`.RequestSignature
+import com.google.common.base.Defaults
 import core.components.base.IgnoreInSnapshot
 import core.components.base.Script
 import core.entities.AgentInterface
@@ -8,9 +10,20 @@ import core.api.dto.AgentSnapshot
 import core.api.dto.Request
 import core.components.base.ComponentSnapshot
 import core.components.base.Property
+import core.components.changePropertyValue
 import core.uppercaseFirstChar
+import kotlin.reflect.KClass
+import kotlin.reflect.full.createInstance
 
-class AgentInterface : Script(), AgentInterface {
+class AgentInterface(
+    @property:IgnoreInSnapshot
+    val setterSignatures: List<RequestSignature> = listOf(),
+    @property:IgnoreInSnapshot
+    val otherRequestSignatures: List<RequestSignature> = listOf()
+) : Script(), AgentInterface {
+    @IgnoreInSnapshot
+    val requestBodies = RequestBodies(setterSignatures, this)
+
     override val id: Int
         get() = snapshot.id
     override val props: Props
@@ -30,8 +43,6 @@ class AgentInterface : Script(), AgentInterface {
             updateProps(value.props)
         }
 
-    var a = 0
-
     private fun updateProps(props: Map<String, Any>) {
         _props = Props(props)
     }
@@ -44,17 +55,5 @@ class AgentInterface : Script(), AgentInterface {
 
     override fun afterUpdate() {
         _requests.clear()
-    }
-
-    override fun getSnapshot(): ComponentSnapshot {
-        val snapshot = super.getSnapshot()
-        val immutableProps = snapshot.immutableProps as MutableList<Property>
-        val props = immutableProps.removeAt(immutableProps.indexOfFirst { it.name == propsName })
-        immutableProps.addAll((props.value as Props).props.map { Property(it.key, it::class.java, it.value) })
-        return snapshot
-    }
-
-    override fun loadSnapshot(snapshot: ComponentSnapshot) {
-        super.loadSnapshot(snapshot)
     }
 }

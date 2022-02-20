@@ -1,4 +1,6 @@
-package model.modelcontrol.service.state
+package app.services.model.control.state
+
+import app.services.model.control.state.AgentModelControlContext
 
 sealed class State {
     open fun run(context: AgentModelControlContext, periodSec: Float) {}

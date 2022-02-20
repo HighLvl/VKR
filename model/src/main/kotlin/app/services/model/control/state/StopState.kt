@@ -1,10 +1,10 @@
-package model.modelcontrol.service.state
+package app.services.model.control.state
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
-import model.modelcontrol.service.ControlAction
+import app.services.model.control.ControlAction
 
 object StopState : State() {
     private val AVAILABLE_CONTROL_ACTIONS = listOf(ControlAction.RUN)

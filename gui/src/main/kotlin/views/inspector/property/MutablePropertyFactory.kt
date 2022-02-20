@@ -1,20 +1,18 @@
 package views.inspector.property
 
 import com.fasterxml.jackson.databind.JsonNode
-import views.properties.DoubleMutableProperty
-import views.properties.IntMutableProperty
-import views.properties.Property
-import views.properties.StringMutableProperty
+import views.inspector.property.base.OnChangeValueListenerFactory
+import views.inspector.property.base.PropertyBuilder
+import views.properties.*
 
-class MutablePropertyFactory(private val onChangeValueListenerFactory: OnChangeValueListenerFactory) :
+open class MutablePropertyFactory(private val onChangeValueListenerFactory: OnChangeValueListenerFactory) :
     PropertyBuilder.PropertyFactory() {
     override fun createProperty(
         name: String,
         value: Any,
-        parentNode: JsonNode,
-        parentNodeType: PropertyBuilder.JsonNodeType
+        parentNode: JsonNode
     ): Property {
-        val onChangeValueListener = onChangeValueListenerFactory.create(parentNodeType, parentNode, name)
+        val onChangeValueListener = onChangeValueListenerFactory.create(parentNode, name)
         return when (value) {
             is Int -> IntMutableProperty(name, value, onChangeValueListener::onChangeValue)
             is Double -> DoubleMutableProperty(name, value, onChangeValueListener::onChangeValue)
@@ -22,4 +20,6 @@ class MutablePropertyFactory(private val onChangeValueListenerFactory: OnChangeV
             else -> throw IllegalStateException()
         }
     }
+
+
 }

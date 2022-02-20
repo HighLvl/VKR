@@ -1,4 +1,4 @@
-package model.modelcontrol.service.state
+package app.services.model.control.state
 
 import io.reactivex.rxjava3.subjects.PublishSubject
 import core.services.*
@@ -6,7 +6,7 @@ import core.api.AgentModelApiClient
 import core.api.dto.GlobalArgs
 import core.api.dto.Snapshot
 import core.coroutines.PeriodTaskExecutor
-import model.modelcontrol.service.ControlAction
+import app.services.model.control.ControlAction
 
 class AgentModelControlContext(val apiClient: AgentModelApiClient) {
     private var state: State = StopState

@@ -1,45 +1,47 @@
-package views.inspector.property
+package views.inspector.property.base
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import kotlinx.coroutines.flow.asFlow
 import views.properties.NodeTreeObjectProperty
 import views.properties.ObjectProperty
 import views.properties.Property
 
 class PropertyBuilder(private val factory: PropertyFactory) {
     private lateinit var parentNode: JsonNode
-    private lateinit var parentNodeType: JsonNodeType
 
     fun buildProperty(
         name: String,
         valueNode: JsonNode,
-        parentNode: JsonNode,
-        parentNodeType: JsonNodeType
-    ): Property {
+        parentNode: JsonNode): Property {
         this.parentNode = parentNode
-        this.parentNodeType = parentNodeType
         when {
             valueNode.isArray -> return buildObjectProperty(name, valueNode as ArrayNode)
             valueNode.isObject -> return buildObjectProperty(name, valueNode as ObjectNode)
         }
         val value = when {
             valueNode.isInt -> valueNode.asInt()
-            valueNode.isDouble -> valueNode.asDouble()
+            valueNode.isLong -> valueNode.asLong()
+            valueNode.isBoolean -> valueNode.asBoolean()
+            valueNode.isDouble || valueNode.isFloat -> valueNode.asDouble()
             else -> valueNode.asText()
         }
-        return factory.createProperty(name, value, parentNode, parentNodeType)
+        return factory.createProperty(name, value, parentNode)
     }
 
     private fun buildObjectProperty(
         name: String,
         objectNode: ObjectNode
     ): ObjectProperty {
-        val objectProperty = factory.createObjectProperty(name, parentNode, parentNodeType) // TODO move create object property to factory
+        val objectProperty = factory.createObjectProperty(
+            name,
+            parentNode
+        )
         objectNode.fields()
             .asSequence()
             .map { (propName, jsonNode) ->
-                buildProperty(propName, jsonNode, objectNode, JsonNodeType.OBJECT)
+                buildProperty(propName, jsonNode, objectNode)
             }
             .forEach {
                 objectProperty.addProperty(it)
@@ -51,12 +53,12 @@ class PropertyBuilder(private val factory: PropertyFactory) {
         name: String,
         arrayNode: ArrayNode
     ): ObjectProperty {
-        val objectProperty = factory.createObjectProperty(name, parentNode, parentNodeType)
+        val objectProperty = factory.createObjectProperty(name, parentNode)
         arrayNode.elements()
             .asSequence()
             .mapIndexed { index, jsonNode ->
                 val propName = index.toString()
-                buildProperty(propName, jsonNode, arrayNode, JsonNodeType.ARRAY)
+                buildProperty(propName, jsonNode, arrayNode)
             }
             .forEach {
                 objectProperty.addProperty(it)
@@ -68,21 +70,15 @@ class PropertyBuilder(private val factory: PropertyFactory) {
         abstract fun createProperty(
             name: String,
             value: Any,
-            parentNode: JsonNode,
-            parentNodeType: JsonNodeType
+            parentNode: JsonNode
         ): Property
 
         open fun createObjectProperty(
             name: String,
-            parentNode: JsonNode,
-            parentNodeType: JsonNodeType
+            parentNode: JsonNode
         ): ObjectProperty {
             return NodeTreeObjectProperty(name)
         }
-    }
-
-    enum class JsonNodeType {
-        COMPONENT, ARRAY, OBJECT
     }
 }
 

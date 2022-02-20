@@ -1,10 +1,10 @@
-package model.modelcontrol.service
+package app.services.model.control
 
 
 import io.reactivex.rxjava3.core.Observable
 import core.api.AgentModelApiClient
 import core.services.Service
-import model.modelcontrol.service.state.AgentModelControlContext
+import app.services.model.control.state.AgentModelControlContext
 
 
 class AgentModelControlService(apiClient: AgentModelApiClient) : Service() {

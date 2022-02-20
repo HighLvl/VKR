@@ -23,7 +23,7 @@ class DoubleMutableProperty(name: String, initValue: Double, onValueChange: (Dou
             //TODO not working for any
             val focused = ImGui.isAnyItemFocused()
             if (focused && ImGui.isKeyPressed(GLFW.GLFW_KEY_ENTER) || !focused)
-                onValueChange(inputValue.get())
+                onValueChange(value)
         }
     }
 

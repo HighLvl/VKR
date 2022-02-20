@@ -13,7 +13,7 @@ import core.api.AgentModelApiClient
 import core.components.getComponent
 import core.components.getSnapshot
 import core.coroutines.AppContext
-import model.modelcontrol.service.AgentModelControlService
+import app.services.model.control.AgentModelControlService
 import java.time.Instant
 import kotlin.coroutines.ContinuationInterceptor
 

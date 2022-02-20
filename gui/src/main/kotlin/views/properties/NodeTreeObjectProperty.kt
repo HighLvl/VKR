@@ -14,7 +14,7 @@ abstract class ObjectProperty(name: String) : Property(name) {
     }
 }
 
-class NodeTreeObjectProperty(name: String) : ObjectProperty(name) {
+open class NodeTreeObjectProperty(name: String) : ObjectProperty(name) {
     override fun draw() {
         ImGui.pushID(name)
         val opened = ImGui.treeNode(name, name)

@@ -22,7 +22,7 @@ class StringMutableProperty(name: String, initValue: String, onValueChange: (Str
         ) {
             val focused = ImGui.isAnyItemFocused()
             if (focused && ImGui.isKeyPressed(GLFW.GLFW_KEY_ENTER) || !focused)
-                onValueChange(inputValue.get())
+                onValueChange(value)
         }
     }
 

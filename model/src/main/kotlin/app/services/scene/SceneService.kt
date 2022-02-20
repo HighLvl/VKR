@@ -96,7 +96,7 @@ object EntityFactory {
     }
 
     fun createAgent(): Agent {
-        val agentInterface = AgentInterface()
+        val agentInterface = AgentInterface(mutableListOf(), mutableListOf())
         val agent = Agent().apply {
             setComponent(agentInterface)
         }

@@ -1,4 +1,4 @@
-package model.modelcontrol.service
+package app.services.model.control
 
 enum class ControlAction {
     RUN, PAUSE, STOP, RESUME
