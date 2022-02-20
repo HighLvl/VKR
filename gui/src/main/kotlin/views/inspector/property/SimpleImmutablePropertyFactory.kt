@@ -1,19 +1,20 @@
 package views.inspector.property
 
 import com.fasterxml.jackson.databind.JsonNode
-import views.inspector.property.base.PropertyBuilder
+import views.inspector.property.base.PropertyFactory
+import views.properties.ImmutableProperty
 import views.properties.Property
 import views.properties.StringImmutableProperty
 
 open class SimpleImmutablePropertyFactory :
-    PropertyBuilder.PropertyFactory() {
+    PropertyFactory<ImmutableProperty<*>> {
 
     override fun createProperty(
         name: String,
         value: Any,
-        parentNode: JsonNode): Property {
+        parentNode: JsonNode): ImmutableProperty<*> {
         return StringImmutableProperty(name).apply {
-            setString(value.toString())
+            this.value = value.toString()
         }
     }
 }

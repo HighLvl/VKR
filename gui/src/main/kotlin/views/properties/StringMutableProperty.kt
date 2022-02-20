@@ -4,10 +4,11 @@ import imgui.ImGui
 import imgui.type.ImString
 import org.lwjgl.glfw.GLFW
 
-class StringMutableProperty(name: String, initValue: String, onValueChange: (String) -> Unit) : MutableProperty<String>(
-    name,
-    initValue, onValueChange
-) {
+class StringMutableProperty(name: String, initValue: String, onValueChange: (String) -> Unit = {}) :
+    MutableProperty<String>(
+        name,
+        initValue, onValueChange
+    ) {
     private val inputValue = ImString(initValue, 100)
 
     override var value: String
@@ -22,7 +23,7 @@ class StringMutableProperty(name: String, initValue: String, onValueChange: (Str
         ) {
             val focused = ImGui.isAnyItemFocused()
             if (focused && ImGui.isKeyPressed(GLFW.GLFW_KEY_ENTER) || !focused)
-                onValueChange(value)
+                onChangeValue(value)
         }
     }
 

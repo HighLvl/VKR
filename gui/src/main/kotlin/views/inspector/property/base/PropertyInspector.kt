@@ -5,12 +5,16 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import imgui.ImGui
 import views.View
-import views.inspector.property.MutablePropertyFactory
 import views.inspector.property.OnChangeValueListenerFactoryImpl
 import views.inspector.property.SimpleImmutablePropertyFactory
+import views.inspector.property.SimpleMutablePropertyFactory
+import views.properties.ImmutableProperty
+import views.properties.MutableProperty
 
 open class PropertyInspector(
-    protected var immutablePropertyFactory: PropertyBuilder.PropertyFactory = SimpleImmutablePropertyFactory()) : View {
+    protected var immutablePropertyFactory: PropertyFactory<ImmutableProperty<*>> = SimpleImmutablePropertyFactory(),
+    protected var mutablePropertyFactory: PropertyFactory<MutableProperty<*>> = SimpleMutablePropertyFactory()
+) : View {
 
     protected lateinit var node: JsonNode
     private val changedPropsNode = ObjectNode(JsonNodeFactory.instance)
@@ -59,7 +63,7 @@ open class PropertyInspector(
         val parentNode = node[MUTABLE_PROPS]
         parentNode.fields().forEach { (propName, valueNode) ->
             val listenerFactory = OnChangeValueListenerFactoryImpl(parentNode, changedProps)
-            val propertyFactory = MutablePropertyFactory(listenerFactory)
+            val propertyFactory = MutablePropertyFactory(mutablePropertyFactory, listenerFactory)
             val propertyBuilder = PropertyBuilder(propertyFactory)
             val property = propertyBuilder.buildProperty(propName, valueNode, parentNode)
             property.draw()

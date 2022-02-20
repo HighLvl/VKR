@@ -4,11 +4,12 @@ import imgui.ImGui
 import imgui.type.ImDouble
 import org.lwjgl.glfw.GLFW
 
-class DoubleMutableProperty(name: String, initValue: Double, onValueChange: (Double) -> Unit) : MutableProperty<Double>(
-    name,
-    initValue,
-    onValueChange
-) {
+class DoubleMutableProperty(name: String, initValue: Double, onValueChange: (Double) -> Unit = {}) :
+    MutableProperty<Double>(
+        name,
+        initValue,
+        onValueChange
+    ) {
     private val inputValue = ImDouble(initValue)
 
     override var value: Double
@@ -23,7 +24,7 @@ class DoubleMutableProperty(name: String, initValue: Double, onValueChange: (Dou
             //TODO not working for any
             val focused = ImGui.isAnyItemFocused()
             if (focused && ImGui.isKeyPressed(GLFW.GLFW_KEY_ENTER) || !focused)
-                onValueChange(value)
+                onChangeValue(value)
         }
     }
 

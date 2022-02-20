@@ -2,10 +2,10 @@ package views.properties
 
 import imgui.ImGui
 
-abstract class MutableProperty<T>(
+abstract class MutableProperty<T : Any>(
     name: String,
     initValue: T,
-    protected val onValueChange: (value: T) -> Unit
+    var onChangeValue: (value: T) -> Unit = {}
 ) : Property(name) {
     open var value: T = initValue
 

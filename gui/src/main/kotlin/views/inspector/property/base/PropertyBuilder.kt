@@ -3,18 +3,17 @@ package views.inspector.property.base
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import kotlinx.coroutines.flow.asFlow
-import views.properties.NodeTreeObjectProperty
 import views.properties.ObjectProperty
 import views.properties.Property
 
-class PropertyBuilder(private val factory: PropertyFactory) {
+class PropertyBuilder(private val factory: PropertyFactory<*>) {
     private lateinit var parentNode: JsonNode
 
     fun buildProperty(
         name: String,
         valueNode: JsonNode,
-        parentNode: JsonNode): Property {
+        parentNode: JsonNode
+    ): Property {
         this.parentNode = parentNode
         when {
             valueNode.isArray -> return buildObjectProperty(name, valueNode as ArrayNode)
@@ -66,19 +65,5 @@ class PropertyBuilder(private val factory: PropertyFactory) {
         return objectProperty
     }
 
-    abstract class PropertyFactory {
-        abstract fun createProperty(
-            name: String,
-            value: Any,
-            parentNode: JsonNode
-        ): Property
-
-        open fun createObjectProperty(
-            name: String,
-            parentNode: JsonNode
-        ): ObjectProperty {
-            return NodeTreeObjectProperty(name)
-        }
-    }
 }
 

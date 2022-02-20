@@ -5,9 +5,8 @@ import imgui.type.ImInt
 import org.lwjgl.glfw.GLFW
 
 class IntMutableProperty(
-    name: String,
-    initValue: Int,
-    onValueChange: (value: Int) -> Unit
+    name: String, initValue: Int, onValueChange: (value: Int) -> Unit = {}
+
 ) : MutableProperty<Int>(name, initValue, onValueChange) {
 
     private val inputValue = ImInt(initValue)
@@ -23,7 +22,7 @@ class IntMutableProperty(
         ) {
             val focused = ImGui.isAnyItemFocused()
             if (focused && ImGui.isKeyPressed(GLFW.GLFW_KEY_ENTER) || !focused)
-                onValueChange(value)
+                onChangeValue(value)
         }
     }
 
