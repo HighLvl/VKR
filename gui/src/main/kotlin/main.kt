@@ -2,7 +2,7 @@ import app.components.AgentInterface
 import app.components.optimization.OptimizationTask
 import app.logger.Log
 import app.logger.Logger
-import app.services.model.`interface`.*
+import app.services.model.`interface`.modelInterface
 import core.components.base.Property
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
@@ -15,7 +15,6 @@ import imgui.callback.ImPlatformFuncViewport
 import imgui.flag.ImGuiConfigFlags
 import imgui.internal.ImGui
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import org.lwjgl.glfw.GLFW
@@ -25,14 +24,15 @@ import views.ScriptViewPort
 import views.Window
 import views.inspector.component.ComponentInspector
 import views.inspector.component.PropertyInspectorFactoryImpl
+import views.objecttree.FolderNode
+import views.objecttree.ObjectNode
+import views.objecttree.ObjectTree
 import java.io.IOException
 import java.net.URISyntaxException
 import java.nio.file.Files
 import java.nio.file.Paths
-import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 class Main : Application() {
     private val loggerView = LoggerView()
@@ -76,7 +76,9 @@ class Main : Application() {
     private val loggerDockedWindow = Window("Logger", width = 150f, height = 300f, loggerView)
     private val scriptViewPortWindow = Window("ScriptView", width = 500f, height = 500f, ScriptViewPort {
     })
+
     data class A(val x: Float = 0f, val y: String = ";jlk")
+
     var entity: Entity? = run {
         val agent = Agent()
         val modelInterface = modelInterface {
@@ -119,11 +121,20 @@ class Main : Application() {
         dock(scriptViewPortWindow, Dockspace.Position.UP_RIGHT)
     }
 
+    private val objectTreeWindow = Window("Object tree", 200f, 600f, ObjectTree().apply {
+        addNode(ObjectNode("node1") { println("vvvv")})
+        addNode(ObjectNode("node2"))
+        addNode(FolderNode("folder1").apply {
+            addNode(ObjectNode("node1"))
+            addNode(ObjectNode("node2"))
+        })
+    })
     override fun process() {
         dockspace.draw()
         loggerDockedWindow.draw()
         testWindow.draw()
         scriptViewPortWindow.draw()
+        objectTreeWindow.draw()
     }
 
     object OnChangedViewportListener : ImPlatformFuncViewport() {

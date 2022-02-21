@@ -1,6 +1,8 @@
 package views
 
 import imgui.internal.ImGui
+import imgui.type.ImBoolean
+import imgui.type.ImString
 import java.util.*
 
 class LoggerView : View {
@@ -9,6 +11,9 @@ class LoggerView : View {
     }
 
     private val logs = LinkedList<Pair<String, Level>>()
+    private val filterString = ImString()
+    private var filteredLogs = logs.asSequence()
+    private val openFilter = ImBoolean()
 
     fun log(text: String, level: Level) {
         if (logs.size == MAX_LOG_LIST_SIZE) {
@@ -18,25 +23,29 @@ class LoggerView : View {
     }
 
     override fun draw() {
-        if (ImGui.smallButton("Debug")) {
-            log("Some debug", Level.DEBUG)
+        if (ImGui.beginPopup("Options"))
+        {
+            ImGui.checkbox("Filter", openFilter);
+            ImGui.endPopup();
         }
-        ImGui.sameLine()
-        if (ImGui.smallButton("Error")) {
-            log("Some error", Level.ERROR)
-        }
-        ImGui.sameLine()
-        if (ImGui.smallButton("Info")) {
-            log("Some info", Level.INFO)
-        }
+
+        if (ImGui.smallButton("Options")) ImGui.openPopup("Options")
+
         ImGui.sameLine()
         if (ImGui.smallButton(TITLE_CLEAR_BUTTON)) {
             logs.clear()
         }
         ImGui.separator()
+        if (openFilter.get()) {
+            ImGui.setNextItemWidth(FILTER_WIDTH)
+            if (ImGui.inputText("Filter", filterString)) {
+                filteredLogs = logs.asSequence().filter { filterString.get() in it.first }
+            }
+            ImGui.separator()
+        }
 
         ImGui.beginChild(ID_LOG_CONTAINER)
-        for (log in logs) {
+        for (log in filteredLogs) {
             val formattedLog = formatLog(log)
             val color = when (log.second) {
                 Level.ERROR -> ERROR_COLOR
@@ -74,5 +83,6 @@ class LoggerView : View {
         val DEBUG_COLOR = listOf(255, 255, 255, 255)
 
         const val ID_LOG_CONTAINER = "log container"
+        const val FILTER_WIDTH = 300f
     }
 }

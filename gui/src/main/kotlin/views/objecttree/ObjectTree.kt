@@ -1,0 +1,44 @@
+package views.objecttree
+
+import imgui.ImGui
+import imgui.flag.ImGuiTreeNodeFlags
+import views.View
+
+class ObjectTree : View {
+    private val nodes = mutableListOf<TreeNode>()
+    override fun draw() {
+        nodes.forEach { it.draw() }
+    }
+
+    fun addNode(node: TreeNode) {
+        nodes.add(node)
+    }
+}
+
+sealed class TreeNode(protected val name: String) : View
+class ObjectNode(name: String, private val onClickListener: () -> Unit = {}) : TreeNode(name) {
+    override fun draw() {
+        val flags = ImGuiTreeNodeFlags.Leaf or ImGuiTreeNodeFlags.Bullet or ImGuiTreeNodeFlags.NoTreePushOnOpen
+        ImGui.treeNodeEx(name, flags, name)
+        if(ImGui.isItemClicked()) {
+            onClickListener()
+        }
+    }
+}
+
+class FolderNode(name: String) : TreeNode(name) {
+    private val nodes = mutableListOf<TreeNode>()
+    fun addNode(node: TreeNode) {
+        nodes.add(node)
+    }
+
+    override fun draw() {
+        ImGui.pushID(name)
+        if (ImGui.treeNode(name, name)) {
+            nodes.forEach { it.draw() }
+            ImGui.treePop()
+        }
+        ImGui.popID()
+    }
+
+}
