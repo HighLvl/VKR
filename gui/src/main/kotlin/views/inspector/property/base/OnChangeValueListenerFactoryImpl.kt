@@ -1,9 +1,9 @@
 package views.inspector.property.base
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 
-class OnChangeValueListenerFactoryImpl(private val componentNode: JsonNode, private val changedNodeProps: ArrayNode) :
+class OnChangeValueListenerFactoryImpl(private val rootNodePropNamePair: Pair<String, JsonNode>, private val changedNodeProps: ObjectNode) :
     OnChangeValueListenerFactory {
     override fun create(
         parentNode: JsonNode,
@@ -11,7 +11,7 @@ class OnChangeValueListenerFactoryImpl(private val componentNode: JsonNode, priv
     ): OnChangeValueListener {
         return OnChangeValueListenerImpl(
             parentNode,
-            componentNode,
+            rootNodePropNamePair,
             propName,
             changedNodeProps
         )

@@ -20,8 +20,8 @@ class IntMutableProperty(
     override fun drawValue() {
         if (ImGui.inputInt(LABEL_TEXT, inputValue)
         ) {
-            val focused = ImGui.isAnyItemFocused()
-            if (focused && ImGui.isKeyPressed(GLFW.GLFW_KEY_ENTER) || !focused)
+            val isActive = ImGui.isItemActive()
+            if (isActive && ImGui.isKeyPressed(GLFW.GLFW_KEY_ENTER) || !isActive)
                 onChangeValue(value)
         }
     }

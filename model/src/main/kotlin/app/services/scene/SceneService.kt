@@ -5,6 +5,7 @@ import core.entities.Environment
 import core.entities.Optimizer
 import core.scene.Scene
 import app.components.AgentInterface
+import app.components.optimization.OptimizationTask
 import app.scene.SceneImpl
 import core.components.getComponent
 import core.services.*
@@ -87,6 +88,7 @@ object SceneFactory {
 object EntityFactory {
     fun createOptimizer(): Optimizer {
         val optimizer = Optimizer()
+        optimizer.setComponent(OptimizationTask())
         return optimizer
     }
 
@@ -97,7 +99,7 @@ object EntityFactory {
 
     fun createAgent(): Agent {
         val agentInterface = AgentInterface(mutableListOf(), mutableListOf())
-        val agent = Agent().apply {
+        val agent = Agent("Simple agent").apply {
             setComponent(agentInterface)
         }
         return agent

@@ -9,18 +9,31 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import core.components.base.Component
+import imgui.ImGui
 import views.View
 import views.component.ComponentView
 import views.inspector.property.base.PropertyInspector
 
 class ComponentInspector(
-    private val components: List<Component>,
     private val propertyInspectorFactory: PropertyInspectorFactory
 ) : View {
+    var title = ""
+    var components: List<Component> = listOf()
 
     private val objectMapper = jacksonObjectMapper()
 
     override fun draw() {
+        drawHeader()
+        drawComponents()
+    }
+
+    private fun drawHeader() {
+        ImGui.text(title)
+        repeat(4) { ImGui.spacing() }
+        ImGui.separator()
+    }
+
+    private fun drawComponents() {
         for (component in components) {
             val compClassName = component::class.qualifiedName.toString()
             val snapshotNode = objectMapper.valueToTree<ObjectNode>(component.getSnapshot())
@@ -56,8 +69,7 @@ class ComponentInspector(
     private fun ObjectNode.mapToSnapPropNode(snapPropNodeInstance: ObjectNode): ObjectNode {
         val snapPropNode = ObjectNode(JsonNodeFactory.instance)
         val snapMutableArrayNode = ArrayNode(JsonNodeFactory.instance)
-        this[MUTABLE_PROPS].elements().forEach { pairNode ->
-            val (propName, valueNode) = pairNode.fields().asSequence().first()
+        this[MUTABLE_PROPS].fields().forEach { (propName, valueNode) ->
             val propNode = ObjectNode(JsonNodeFactory.instance)
             propNode.put("name", propName)
             propNode.set<JsonNode>("value", valueNode)

@@ -2,21 +2,25 @@ import app.components.AgentInterface
 import app.components.getSnapshot
 import app.logger.Log
 import app.logger.Logger
-import core.components.base.Property
+import app.services.model.control.AgentModelControlService
+import app.services.scene.SceneService
+import com.fasterxml.jackson.databind.ObjectMapper
+import core.api.AgentModelApiClient
 import core.api.dto.AgentSnapshot
 import core.api.dto.Behaviour
 import core.api.dto.GlobalArgs
 import core.api.dto.Snapshot
-import core.services.*
-import com.fasterxml.jackson.databind.ObjectMapper
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import app.services.scene.SceneService
-import core.api.AgentModelApiClient
+import core.components.base.Property
 import core.components.getComponent
-import core.components.getSnapshot
 import core.coroutines.AppContext
-import app.services.model.control.AgentModelControlService
+import core.services.AgentModelLifecycleEvent
+import core.services.Event
+import core.services.EventBus
+import core.services.listen
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import kotlin.coroutines.ContinuationInterceptor
 
@@ -256,7 +260,10 @@ fun main() {
                     )
                 )
                 val res = ObjectMapper().readValue(json, Property::class.java)
-                Logger.log(ObjectMapper().writeValueAsString(it.getComponent<AgentInterface>()!!.getSnapshot()).toString(), Log.Level.DEBUG)
+                Logger.log(
+                    ObjectMapper().writeValueAsString(it.getComponent<AgentInterface>()!!.getSnapshot()).toString(),
+                    Log.Level.DEBUG
+                )
             }.toString(), Log.Level.DEBUG)
             Logger.log("start 10", Log.Level.DEBUG)
             val startTime = Instant.now().epochSecond

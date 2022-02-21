@@ -17,7 +17,7 @@ open class PropertyInspector(
 
     protected lateinit var node: JsonNode
     private val changedPropsNode = ObjectNode(JsonNodeFactory.instance)
-    private val changedProps = changedPropsNode.putArray(MUTABLE_PROPS)
+    private val changedProps = changedPropsNode.putObject(MUTABLE_PROPS)
 
     fun setPropNode(node: JsonNode) {
         this.node = node
@@ -65,7 +65,7 @@ open class PropertyInspector(
             ImGui.separator()
         }
         parentNode.fields().forEach { (propName, valueNode) ->
-            val listenerFactory = OnChangeValueListenerFactoryImpl(parentNode, changedProps)
+            val listenerFactory = OnChangeValueListenerFactoryImpl(propName to parentNode, changedProps)
             val propertyFactory = MutablePropertyFactory(mutablePropertyFactory, listenerFactory)
             val propertyBuilder = PropertyBuilder(propertyFactory)
             val property = propertyBuilder.buildProperty(propName, valueNode, parentNode)

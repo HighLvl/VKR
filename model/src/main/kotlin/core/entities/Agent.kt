@@ -1,3 +1,4 @@
 package core.entities
 
-class Agent: Entity()
+class Agent(val agentType: String): Entity() {
+}

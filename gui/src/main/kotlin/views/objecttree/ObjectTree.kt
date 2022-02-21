@@ -13,6 +13,10 @@ class ObjectTree : View {
     fun addNode(node: TreeNode) {
         nodes.add(node)
     }
+
+    fun clear() {
+        nodes.clear()
+    }
 }
 
 sealed class TreeNode(protected val name: String) : View

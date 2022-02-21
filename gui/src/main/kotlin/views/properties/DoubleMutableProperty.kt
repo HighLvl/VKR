@@ -19,11 +19,10 @@ class DoubleMutableProperty(name: String, initValue: Double, onValueChange: (Dou
         }
 
     override fun drawValue() {
-        if (ImGui.inputDouble(LABEL_TEXT, inputValue)
+        if (ImGui.inputDouble(LABEL_TEXT, inputValue, 0.0, 0.0, "%g")
         ) {
-            //TODO not working for any
-            val focused = ImGui.isAnyItemFocused()
-            if (focused && ImGui.isKeyPressed(GLFW.GLFW_KEY_ENTER) || !focused)
+            val isActive = ImGui.isItemActive()
+            if (isActive && ImGui.isKeyPressed(GLFW.GLFW_KEY_ENTER) || !isActive)
                 onChangeValue(value)
         }
     }

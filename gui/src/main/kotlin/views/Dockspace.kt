@@ -30,8 +30,8 @@ class Dockspace : View {
                 ImGuiWindowFlags.NoSavedSettings or
                 ImGuiWindowFlags.NoTitleBar
 
-        if (ImGui.begin("master_window_id", flags)) {
-            id = ImGui.getID("central_dockspace_id")
+        if (ImGui.begin(ID_MASTER_WINDOW, flags)) {
+            id = ImGui.getID(ID_CENTRAL_DOCKSPACE)
             ImGui.dockSpace(id)
         }
         ImGui.end()
@@ -52,14 +52,17 @@ class Dockspace : View {
     }
 
     private fun splitDockspace(): Map<Position, Int> {
-        val up = ImInt()
-        val down = ImGui.dockBuilderSplitNode(id, ImGuiDir.Down, .25f, null, up)
-        val upRight = ImInt()
-        val upLeft = ImGui.dockBuilderSplitNode(up.get(), ImGuiDir.Left, .25f, null, upRight)
+        val left = ImInt()
+        val right = ImGui.dockBuilderSplitNode(id, ImGuiDir.Right, .25f, null, left)
+        val leftUp = ImInt()
+        val leftDown = ImGui.dockBuilderSplitNode(left.get(), ImGuiDir.Down, .25f, null, leftUp)
+        val leftUpLeft = ImInt()
+        val leftUpRight = ImGui.dockBuilderSplitNode(leftUp.get(), ImGuiDir.Right, .25f, null, leftUpLeft)
         return mapOf(
-            Position.DOWN to down,
-            Position.UP_LEFT to upLeft,
-            Position.UP_RIGHT to upRight.get()
+            Position.RIGHT to right,
+            Position.LEFT_DOWN to leftDown,
+            Position.LEFT_UP_RIGHT to leftUpRight,
+            Position.LEFT_UP_LEFT to leftUpLeft.get()
         )
     }
 
@@ -68,6 +71,11 @@ class Dockspace : View {
     }
 
     enum class Position {
-        DOWN, UP_LEFT, UP_RIGHT
+        RIGHT, LEFT_DOWN, LEFT_UP_RIGHT, LEFT_UP_LEFT
+    }
+
+    private companion object {
+        const val ID_MASTER_WINDOW = "master_window_id"
+        const val ID_CENTRAL_DOCKSPACE = "central_dockspace_id"
     }
 }

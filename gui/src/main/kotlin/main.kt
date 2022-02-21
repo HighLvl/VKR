@@ -2,12 +2,17 @@ import app.components.AgentInterface
 import app.components.optimization.OptimizationTask
 import app.logger.Log
 import app.logger.Logger
+import app.scene.SceneImpl
 import app.services.model.`interface`.modelInterface
+import app.services.scene.SceneService
+import controllers.SceneController
 import core.components.base.Property
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
 import core.entities.Agent
 import core.entities.Entity
+import core.entities.Environment
+import core.entities.Optimizer
 import imgui.ImGuiViewport
 import imgui.app.Application
 import imgui.app.Configuration
@@ -79,8 +84,10 @@ class Main : Application() {
 
     data class A(val x: Float = 0f, val y: String = ";jlk")
 
+    private val sceneService = SceneService().apply { start() }
+
     var entity: Entity? = run {
-        val agent = Agent()
+        val agent = Agent("Simple agent")
         val modelInterface = modelInterface {
             agentInterface("SimpleAgent") {
                 setter<Int>("x")
@@ -103,36 +110,36 @@ class Main : Application() {
         agent.setComponent(OptimizationTask())
         agent.setComponent(object : core.components.base.Component() {
             var x = 0f
-            var y = 0f
+            var y = 0
             val name = "position"
             var mName = "mName"
         })
+        val scene = sceneService.scene as SceneImpl
+        scene.addAgent(0, agent)
         agent
     }
-    private val testWindow = Window(
-        "Inspector",
-        500f,
-        150f,
-        ComponentInspector(entity!!.getComponents(), PropertyInspectorFactoryImpl())
-    )
+
+
+    private val componentInspector = ComponentInspector(PropertyInspectorFactoryImpl())
+    val componentInspectorWindow = Window("Inspector", 500f, 900f, componentInspector)
+    private val objectTree = ObjectTree()
+    val objectTreeWindow = Window("Object tree", 330f, 900f, objectTree)
+
+    private val sceneController = SceneController(sceneService.scene, componentInspector, objectTree)
+
     private val dockspace = Dockspace().apply {
-        dock(loggerDockedWindow, Dockspace.Position.DOWN)
-        dock(testWindow, Dockspace.Position.UP_LEFT)
-        dock(scriptViewPortWindow, Dockspace.Position.UP_RIGHT)
+        dock(loggerDockedWindow, Dockspace.Position.LEFT_DOWN)
+        dock(componentInspectorWindow, Dockspace.Position.RIGHT)
+        dock(scriptViewPortWindow, Dockspace.Position.LEFT_UP_RIGHT)
+        dock(objectTreeWindow, Dockspace.Position.LEFT_UP_LEFT)
     }
 
-    private val objectTreeWindow = Window("Object tree", 200f, 600f, ObjectTree().apply {
-        addNode(ObjectNode("node1") { println("vvvv")})
-        addNode(ObjectNode("node2"))
-        addNode(FolderNode("folder1").apply {
-            addNode(ObjectNode("node1"))
-            addNode(ObjectNode("node2"))
-        })
-    })
+
     override fun process() {
+        sceneController.update()
         dockspace.draw()
         loggerDockedWindow.draw()
-        testWindow.draw()
+        componentInspectorWindow.draw()
         scriptViewPortWindow.draw()
         objectTreeWindow.draw()
     }
