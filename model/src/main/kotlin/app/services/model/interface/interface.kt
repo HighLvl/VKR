@@ -36,14 +36,44 @@ data class RequestSignature(val name: String, val returnType: KClass<*>) {
     }
 }
 
-fun modelInterface(builder: ModelInterface.() -> Unit) = ModelInterface().apply(builder)
-fun ModelInterface.agentInterface(name: String, builder: AgentInterface.() -> Unit) =
-    addAgentInterface(AgentInterface(name).apply(builder))
+class ModelInterfaceContext(private val modelInterface: ModelInterface) {
+    fun agentInterface(name: String, builder: AgentInterfaceContext.() -> Unit) {
+        modelInterface.addAgentInterface(
+            AgentInterface(name).apply { AgentInterfaceContext(this).apply(builder) }
+        )
+    }
+}
 
-inline fun <reified T> AgentInterface.request(name: String, builder: RequestSignature.() -> Unit = {}) =
-    addRequest(RequestSignature(name, T::class).apply(builder))
+class AgentInterfaceContext(private val agentInterface: AgentInterface) {
+    fun <T : Any> request(returnType: KClass<T>, name: String, builder: RequestSignatureContext.() -> Unit = {}) {
+        agentInterface.addRequest(
+            RequestSignature(
+                name,
+                returnType
+            ).apply { RequestSignatureContext(this).apply(builder) })
+    }
 
-inline fun <reified T> AgentInterface.setter(varName: String) =
-    addSetter(RequestSignature("Set${varName.uppercaseFirstChar()}", Unit::class).apply { addParam("value", T::class) })
+    fun <T : Any> setter(valueType: KClass<T>, varName: String) =
+        agentInterface.addSetter(
+            RequestSignature(
+                "Set${varName.uppercaseFirstChar()}",
+                Unit::class
+            ).apply { addParam("value", valueType) })
 
-inline fun <reified T> RequestSignature.param(name: String) = addParam(name, T::class)
+    inline fun <reified T : Any> request(name: String, noinline builder: RequestSignatureContext.() -> Unit = {}) =
+        request(T::class, name, builder)
+
+    inline fun <reified T : Any> setter(varName: String) = setter(T::class, varName)
+}
+
+class RequestSignatureContext(private val requestSignature: RequestSignature) {
+    fun <T : Any> param(paramType: KClass<T>, name: String) = requestSignature.addParam(name, paramType)
+    inline fun <reified T : Any> param(name: String) = param(T::class, name)
+}
+
+fun modelInterface(builder: ModelInterfaceContext.() -> Unit) =
+    ModelInterface().apply { ModelInterfaceContext(this).apply(builder) }
+
+
+
+

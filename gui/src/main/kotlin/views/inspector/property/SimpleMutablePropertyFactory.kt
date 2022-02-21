@@ -12,8 +12,7 @@ class SimpleMutablePropertyFactory: PropertyFactory<MutableProperty<*>> {
         return when (value) {
             is Int -> IntMutableProperty(name, value)
             is Double -> DoubleMutableProperty(name, value)
-            is String -> StringMutableProperty(name, value)
-            else -> throw IllegalStateException()
+            else -> StringMutableProperty(name, value.toString())
         }
     }
 }

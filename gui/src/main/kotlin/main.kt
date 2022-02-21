@@ -109,7 +109,7 @@ class Main : Application() {
             agentInterface("SimpleAgent") {
                 setter<Int>("x")
                 setter<String>("text")
-                setter<A>("setA")
+                setter<A>("a")
 
                 request<Unit>("putToMap") {
                     param<Int>("x")
