@@ -1,5 +1,7 @@
 package app.components
 
+import app.logger.Log
+import app.logger.Logger
 import app.services.model.`interface`.RequestSignature
 import com.google.common.base.Defaults
 import core.entities.AgentInterface
@@ -24,7 +26,7 @@ class RequestBodies(
 
     fun commit(name: String) {
         val body = bodies.firstOrNull { it.name == name } ?: return
-        println("Commit $body")
+        Logger.log("Commit $body", Log.Level.DEBUG)
         agentInterface.requestSetProp(body.name, body.args["value"]!!.first)
     }
 

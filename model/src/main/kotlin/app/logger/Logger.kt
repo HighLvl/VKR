@@ -1,17 +1,12 @@
-package app.services.logger
+package app.logger
 
 import kotlinx.coroutines.flow.MutableSharedFlow
 import core.coroutines.launchWithAppContext
-import core.services.Service
 import kotlinx.coroutines.flow.Flow
 
-class Logger : Service() {
+object Logger {
     private val _logs = MutableSharedFlow<Log>()
     val logs: Flow<Log> = _logs
-
-    override fun start() {
-        //listen errors
-    }
 
     fun log(text: String, level: Log.Level) {
         launchWithAppContext {

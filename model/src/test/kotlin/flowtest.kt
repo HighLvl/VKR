@@ -1,3 +1,5 @@
+import app.logger.Log
+import app.logger.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -9,12 +11,12 @@ fun main() {
         flow {
             (1..100).forEach {
                 emit(it)
-                println("$it emitted")
+                Logger.log("$it emitted", Log.Level.DEBUG)
                 delay(100)
             }
         }.flowOn(Dispatchers.Default).collect {
             delay(10000)
-            println("$it consumed")
+            Logger.log("$it consumed", Log.Level.DEBUG)
         }
     }
 //

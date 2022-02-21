@@ -1,13 +1,12 @@
 package views.inspector.property.base
 
+import app.logger.Log
+import app.logger.Logger
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import imgui.ImGui
 import views.View
-import views.inspector.property.OnChangeValueListenerFactoryImpl
-import views.inspector.property.SimpleImmutablePropertyFactory
-import views.inspector.property.SimpleMutablePropertyFactory
 import views.properties.ImmutableProperty
 import views.properties.MutableProperty
 
@@ -32,7 +31,6 @@ open class PropertyInspector(
 
     override fun draw() {
         changedProps.removeAll()
-        ImGui.separator()
         ImGui.columns(2)
         drawProperties()
         ImGui.columns()
@@ -41,16 +39,18 @@ open class PropertyInspector(
 
     protected open fun drawProperties() {
         drawImmutableProps()
-        ImGui.separator()
         drawMutableProps()
         if (!changedProps.isEmpty) {
-            println(changedProps)
+            Logger.log(changedProps.toString(), Log.Level.DEBUG)
         }
     }
 
     private fun drawImmutableProps() {
-        val immutablePropertyBuilder = PropertyBuilder(immutablePropertyFactory)
         val parentNode = node[IMMUTABLE_PROPS]
+        if (!parentNode.isEmpty) {
+            ImGui.separator()
+        }
+        val immutablePropertyBuilder = PropertyBuilder(immutablePropertyFactory)
         parentNode.fields().forEach { (propName, valueNode) ->
             val property =
                 immutablePropertyBuilder.buildProperty(
@@ -61,6 +61,9 @@ open class PropertyInspector(
 
     private fun drawMutableProps() {
         val parentNode = node[MUTABLE_PROPS]
+        if (!parentNode.isEmpty) {
+            ImGui.separator()
+        }
         parentNode.fields().forEach { (propName, valueNode) ->
             val listenerFactory = OnChangeValueListenerFactoryImpl(parentNode, changedProps)
             val propertyFactory = MutablePropertyFactory(mutablePropertyFactory, listenerFactory)

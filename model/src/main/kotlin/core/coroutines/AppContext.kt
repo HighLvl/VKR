@@ -1,5 +1,7 @@
 package core.coroutines
 
+import app.logger.Log
+import app.logger.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +25,6 @@ fun <T> Flow<T>.collectWithAppContext(collector: FlowCollector<T>) {
 fun <T>FlowCollector<T>.emitWithAppContext(value: T) {
     launchWithAppContext {
         emit(value)
-        println("Published $value")
+        Logger.log("Published $value", Log.Level.DEBUG)
     }
 }

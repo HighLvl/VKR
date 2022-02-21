@@ -1,9 +1,7 @@
-package views.inspector.property
+package views.inspector.property.base
 
 import com.fasterxml.jackson.databind.JsonNode
-import views.inspector.property.base.PropertyFactory
 import views.properties.ImmutableProperty
-import views.properties.Property
 import views.properties.StringImmutableProperty
 
 open class SimpleImmutablePropertyFactory :

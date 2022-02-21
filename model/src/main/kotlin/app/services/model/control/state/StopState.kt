@@ -1,5 +1,7 @@
 package app.services.model.control.state
 
+import app.logger.Log
+import app.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import core.coroutines.AppContext
@@ -27,13 +29,13 @@ object StopState : State() {
     }
 
     private suspend fun updateAgentModel(context: AgentModelControlContext) {
-        println("start model update")
-        println(Thread.currentThread().id)
+        Logger.log("start model update", Log.Level.DEBUG)
+        Logger.log(Thread.currentThread().id.toString(), Log.Level.DEBUG)
         val snapshot = withContext(Dispatchers.IO) {
             context.apiClient.requestSnapshot()
         }
         context.onUpdate(snapshot)
-        println("finish model update")
+        Logger.log("finish model update", Log.Level.DEBUG)
     }
 
     override fun onThisStateChanged(context: AgentModelControlContext) {

@@ -1,4 +1,4 @@
-package views.inspector.property
+package views.inspector.property.base
 
 import com.fasterxml.jackson.databind.JsonNode
 import views.inspector.property.base.PropertyFactory
@@ -7,7 +7,7 @@ import views.properties.IntMutableProperty
 import views.properties.MutableProperty
 import views.properties.StringMutableProperty
 
-class SimpleMutablePropertyFactory: PropertyFactory<MutableProperty<*>> {
+open class SimpleMutablePropertyFactory: PropertyFactory<MutableProperty<*>> {
     override fun createProperty(name: String, value: Any, parentNode: JsonNode): MutableProperty<*> {
         return when (value) {
             is Int -> IntMutableProperty(name, value)

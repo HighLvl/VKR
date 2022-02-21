@@ -1,15 +1,8 @@
 import app.components.AgentInterface
-import app.components.getSnapshot
-import app.components.loadSnapshot
-import app.services.logger.Log
-import app.services.logger.Logger
+import app.components.optimization.OptimizationTask
+import app.logger.Log
+import app.logger.Logger
 import app.services.model.`interface`.*
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.treeToValue
-import core.components.base.ComponentSnapshot
 import core.components.base.Property
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
@@ -32,7 +25,6 @@ import views.ScriptViewPort
 import views.Window
 import views.inspector.component.ComponentInspector
 import views.inspector.component.PropertyInspectorFactoryImpl
-import views.inspector.property.base.PropertyInspector
 import java.io.IOException
 import java.net.URISyntaxException
 import java.nio.file.Files
@@ -70,27 +62,9 @@ class Main : Application() {
     @OptIn(ExperimentalTime::class)
     override fun preRun() {
         super.preRun()
-        val logger = Logger()
+        val logger = Logger
         launchWithAppContext {
             var count = 0
-            while (true) {
-                count++
-                time = measureTime {
-                    logger.log(
-                        "$count log $time",
-                        when (Random.nextInt(0, 3)) {
-                            0 -> Log.Level.INFO
-                            1 -> Log.Level.DEBUG
-                            2 -> Log.Level.ERROR
-                            else -> Log.Level.INFO
-
-                        }
-
-                    )
-                    delay(1000)
-
-                }
-            }
         }
         launchWithAppContext {
             logger.logs.collect {
@@ -124,6 +98,7 @@ class Main : Application() {
         agent.setComponent(
             agentInterface
         )
+        agent.setComponent(OptimizationTask())
         agent.setComponent(object : core.components.base.Component() {
             var x = 0f
             var y = 0f

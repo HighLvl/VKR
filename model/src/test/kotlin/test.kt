@@ -1,4 +1,7 @@
 import app.components.AgentInterface
+import app.components.getSnapshot
+import app.logger.Log
+import app.logger.Logger
 import core.components.base.Property
 import core.api.dto.AgentSnapshot
 import core.api.dto.Behaviour
@@ -168,9 +171,9 @@ fun main() {
 
     val agentMOdelControlService = AgentModelControlService(object : AgentModelApiClient {
         override suspend fun run(globalArgs: GlobalArgs) {
-            println("Request run")
+            Logger.log("Request run", Log.Level.DEBUG)
             delay(1000)
-            println("Requested run")
+            Logger.log("Requested run", Log.Level.DEBUG)
         }
 
         override suspend fun runAndSubscribeOnUpdate(globalArgs: GlobalArgs): Flow<Unit> {
@@ -184,7 +187,7 @@ fun main() {
         var count = 0
 
         override suspend fun requestSnapshot(): Snapshot {
-            println("Request snapshot")
+            Logger.log("Request snapshot", Log.Level.DEBUG)
             delay(1000)
             val snapshot = when (count) {
                 0 -> Snapshot(
@@ -222,19 +225,19 @@ fun main() {
         }
 
         override suspend fun pause() {
-            println("Request pause")
+            Logger.log("Request pause", Log.Level.DEBUG)
         }
 
         override suspend fun resume() {
-            println("Request resume")
+            Logger.log("Request resume", Log.Level.DEBUG)
         }
 
         override suspend fun stop() {
-            println("Request stop")
+            Logger.log("Request stop", Log.Level.DEBUG)
         }
     })
 
-    EventBus.listen<Event>().subscribe { println(it) }
+    EventBus.listen<Event>().subscribe { Logger.log(it.toString(), Log.Level.DEBUG) }
     val sceneService = SceneService()
     val services = listOf(agentMOdelControlService, sceneService)
 
@@ -242,7 +245,7 @@ fun main() {
         services.forEach { it.start() }
         agentMOdelControlService.run(5f)
         EventBus.listen<AgentModelLifecycleEvent.Update>().subscribe {
-            println(sceneService.scene.agents.values.map {
+            Logger.log(sceneService.scene.agents.values.map {
                 it.getComponent<AgentInterface>()!!.id
                 val c = it.getComponent<AgentInterface>()
                 val json = ObjectMapper().writeValueAsString(
@@ -253,15 +256,15 @@ fun main() {
                     )
                 )
                 val res = ObjectMapper().readValue(json, Property::class.java)
-                println(ObjectMapper().writeValueAsString(it.getComponent<AgentInterface>()!!.getSnapshot()))
-            })
-            println("start 10")
+                Logger.log(ObjectMapper().writeValueAsString(it.getComponent<AgentInterface>()!!.getSnapshot()).toString(), Log.Level.DEBUG)
+            }.toString(), Log.Level.DEBUG)
+            Logger.log("start 10", Log.Level.DEBUG)
             val startTime = Instant.now().epochSecond
             while (Instant.now().epochSecond - startTime < 10) {
 
             }
             //delay(10000)
-            println("end 10")
+            Logger.log("end 10", Log.Level.DEBUG)
         }
 
         delay(1000000)

@@ -1,10 +1,10 @@
-package views.inspector.property
+package views.inspector.property.base
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import views.inspector.property.base.OnChangeValueListener
-import views.inspector.property.base.PropertyBuilder
+import views.inspector.property.insert
+import views.inspector.property.put
 
 class OnChangeValueListenerImpl(
     private val parentNode: JsonNode,

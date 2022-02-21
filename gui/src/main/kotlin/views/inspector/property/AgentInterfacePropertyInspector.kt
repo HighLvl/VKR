@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
+import imgui.ImGui
 import views.inspector.property.base.*
 import views.inspector.splitOnCapitalLetters
 import views.properties.ListObjectProperty
@@ -24,6 +25,9 @@ class AgentInterfacePropertyInspector(private val requestBodies: RequestBodies) 
 
     override fun drawProperties() {
         super.drawProperties()
+        if (requestBodies.bodies.isNotEmpty()) {
+            ImGui.separator()
+        }
         for (requestBody in requestBodies.bodies) {
             val requestBodyObjectNode = objectMapper.valueToTree<ObjectNode>(requestBody)
             val propBuilderObjectNode = requestBodyObjectNode.mapToPropBuilderObjectNode()

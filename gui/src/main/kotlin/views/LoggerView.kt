@@ -71,7 +71,7 @@ class LoggerView : View {
 
         val ERROR_COLOR = listOf(255, 100, 100, 255)
         val INFO_COLOR = listOf(255, 255, 255, 255)
-        val DEBUG_COLOR = listOf(10, 150, 10, 255)
+        val DEBUG_COLOR = listOf(255, 255, 255, 255)
 
         const val ID_LOG_CONTAINER = "log container"
     }

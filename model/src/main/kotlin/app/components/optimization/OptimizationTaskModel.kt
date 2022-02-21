@@ -1,4 +1,5 @@
 package app.components.optimization
+
 typealias MutableVariable = Pair<String, (Float) -> Unit>
 typealias ObservableVariable = Pair<String, () -> Float>
 
@@ -55,36 +56,11 @@ class OptimizationTaskModel {
     class TargetFunc(val score: Int, val name: String, val predicate: () -> Boolean)
     class Predicate(val name: String, val predicate: () -> Boolean)
 }
-
-class OptimizationTaskContext(private val model: OptimizationTaskModel) {
-    fun targetFunc(score: Int, name: String = "", predicate: () -> Boolean) = model.addTargetFunc(score, name, predicate)
-    fun stopOn(stopOnContext: StopOnContext.() -> Unit) = stopOnContext(StopOnContext(model))
-    fun constraint(name: String = "", predicate: () -> Boolean) = model.addConstraint(name, predicate)
-    fun observableVariables(vararg variables: ObservableVariable) = model.addObservableVariables(*variables)
-    fun mutableVariables(vararg variables: MutableVariable) = model.addMutableVariables(*variables)
-}
-
-class StopOnContext(private val model: OptimizationTaskModel) {
-    fun condition(name: String = "", predicate: () -> Boolean) {
-        model.addStopOnCondition(name, predicate)
-    }
-
-    fun scoreMoreThan(value: Int) {
-        model.setConditionStopOnScoreMoreThan(value)
-    }
-
-    fun timeMoreThan(value: Float) {
-        model.setConditionStopOnTimeMoreThan(value)
-    }
-}
-fun optimizationTask(buildTask: OptimizationTaskContext.() -> Unit): OptimizationTaskModel {
-    val model = OptimizationTaskModel()
-    OptimizationTaskContext(model).buildTask()
-    return model
-}
+//
+//
 
 fun main() {
-    optimizationTask {
+    val task = optimizationTask {
         targetFunc(10, "some Func") {
             4 < 100
         }
@@ -100,11 +76,12 @@ fun main() {
             timeMoreThan(9f)
         }
         observableVariables(
-            "x" to {1f},
-            "y" to {2f}
+            "x" to { 1f },
+            "y" to { 2f }
         )
         mutableVariables("x" to {})
     }
+    println()
 }
 
 

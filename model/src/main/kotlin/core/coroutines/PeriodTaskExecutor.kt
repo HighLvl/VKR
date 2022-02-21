@@ -1,5 +1,7 @@
 package core.coroutines
 
+import app.logger.Log
+import app.logger.Logger
 import kotlinx.coroutines.*
 import java.time.Instant
 
@@ -41,8 +43,8 @@ class PeriodTaskExecutor {
     private suspend fun executeTaskOnUpdateTime() {
         if (!isPause) {
             if (isItTimeToUpdate()) {
-                println(Thread.currentThread().id)
-                println("execute task")
+                Logger.log(Thread.currentThread().id.toString(), Log.Level.DEBUG)
+                Logger.log("execute task", Log.Level.DEBUG)
                 task()
             }
         }
