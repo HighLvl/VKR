@@ -1,0 +1,172 @@
+package views
+
+import com.google.common.net.InetAddresses
+import imgui.flag.ImGuiStyleVar
+import imgui.internal.ImGui
+import imgui.type.ImInt
+import imgui.type.ImString
+
+class ModelControlView : View {
+    var onClickConnectListener: (String, Int) -> Unit = { _, _ -> }
+    var onClickStopListener: () -> Unit = {}
+    var onClickRunListener: () -> Unit = {}
+    var onClickPauseListener: () -> Unit = {}
+    var onClickResumeListener: () -> Unit = {}
+    var onClickDisconnectListener: () -> Unit = {}
+
+    private var ipText = ImString(DEFAULT_IP, 15)
+    private val port = ImInt(1024)
+
+    var width = 0f
+        private set
+
+    private enum class State {
+        CONNECT, RUN, PAUSE, STOP
+    }
+
+    private var state = State.CONNECT
+
+    private val connectButton = Button(TITLE_CONNECT_BUTTON).apply {
+        enabled = isValidIpAddress()
+        onClickListener = {
+            onClickConnectListener(ipText.get(), port.get())
+        }
+    }
+
+    private val runButton = Button(TITLE_RUN_BUTTON)
+    private val pauseButton = Button(TITLE_PAUSE_BUTTON)
+    private val disconnectButton = Button(TITLE_DISCONNECT_BUTTON)
+
+    override fun draw() {
+        when (state) {
+            State.CONNECT -> handleConnectState()
+            State.RUN -> handleRunState()
+            State.PAUSE -> handlePauseState()
+            State.STOP -> handleStopState()
+        }
+        width = when (state) {
+            State.CONNECT -> {
+                WIDTH_IP + WIDTH_PORT + WIDTH_CONNECT_BUTTON
+            }
+            else -> {
+                WIDTH_RUN_BUTTON + WIDTH_PAUSE_BUTTON + WIDTH_DISCONNECT_BUTTON
+            }
+        }
+    }
+
+    private fun handleConnectState() {
+        disconnectButton.onClickListener = onClickDisconnectListener
+
+        ImGui.setNextItemWidth(WIDTH_IP)
+        if (ImGui.inputText(LABEL_INPUT_IP, ipText)) {
+            connectButton.enabled = isValidIpAddress()
+        }
+        ImGui.sameLine()
+        ImGui.setNextItemWidth(WIDTH_PORT)
+        if (ImGui.inputInt(LABEL_INPUT_PORT, port)) {
+            port.set(port.get().coerceIn(1024, 49151))
+        }
+        ImGui.sameLine()
+
+        connectButton.draw()
+    }
+
+    private fun isValidIpAddress(): Boolean {
+        return InetAddresses.isInetAddress(ipText.get())
+    }
+
+    private fun handleRunState() {
+        runButton.apply {
+            pressed = true
+            enabled = true
+            onClickListener = onClickStopListener
+        }
+        pauseButton.apply {
+            enabled = true
+            pressed = false
+            onClickListener = onClickPauseListener
+        }
+        drawControlButtons()
+    }
+
+    private fun handlePauseState() {
+        runButton.apply {
+            pressed = true
+            enabled = true
+            onClickListener = onClickStopListener
+        }
+        pauseButton.apply {
+            enabled = true
+            pressed = true
+            onClickListener = onClickResumeListener
+        }
+        drawControlButtons()
+    }
+
+    private fun handleStopState() {
+        runButton.apply {
+            pressed = false
+            enabled = true
+            onClickListener = onClickRunListener
+        }
+        pauseButton.apply {
+            pressed = false
+            enabled = false
+            onClickListener = {}
+        }
+        drawControlButtons()
+    }
+
+    private fun drawControlButtons() {
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, SPACING_BETWEEN_PLAY_AND_PAUSE, ImGui.getStyle().itemSpacing.y)
+        runButton.draw()
+        ImGui.sameLine()
+        pauseButton.draw()
+        ImGui.popStyleVar()
+        repeat(4) {
+            ImGui.sameLine()
+            ImGui.spacing()
+        }
+        ImGui.sameLine()
+        disconnectButton.draw()
+    }
+
+    fun connect() {
+        state = State.STOP
+    }
+
+    fun stop() {
+        state = State.STOP
+    }
+
+    fun pause() {
+        state = State.PAUSE
+    }
+
+    fun run() {
+        state = State.RUN
+    }
+
+    fun disconnect() {
+        state = State.CONNECT
+    }
+
+    private companion object {
+        const val WIDTH_IP = 200f
+        const val WIDTH_PORT = 200f
+        const val SPACING_BETWEEN_PLAY_AND_PAUSE = 2f
+        const val TITLE_CONNECT_BUTTON = "Connect"
+        const val TITLE_RUN_BUTTON = "Run"
+        const val TITLE_PAUSE_BUTTON = "Pause"
+        const val TITLE_DISCONNECT_BUTTON = "Disconnect"
+
+        const val DEFAULT_IP = "127.0.0.1"
+        const val LABEL_INPUT_IP = "ip"
+        const val LABEL_INPUT_PORT = "port"
+
+        const val WIDTH_DISCONNECT_BUTTON = 100f
+        const val WIDTH_CONNECT_BUTTON = 100f
+        const val WIDTH_RUN_BUTTON = 100f
+        const val WIDTH_PAUSE_BUTTON = 100f
+    }
+}

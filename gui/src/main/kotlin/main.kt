@@ -1,36 +1,29 @@
 import app.components.AgentInterface
-import app.components.optimization.OptimizationTask
+import app.components.experiment.Experiment
 import app.logger.Log
 import app.logger.Logger
 import app.scene.SceneImpl
 import app.services.model.`interface`.modelInterface
 import app.services.scene.SceneService
 import controllers.SceneController
-import core.components.base.Property
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
 import core.entities.Agent
 import core.entities.Entity
-import core.entities.Environment
-import core.entities.Optimizer
 import imgui.ImGuiViewport
 import imgui.app.Application
 import imgui.app.Configuration
 import imgui.callback.ImPlatformFuncViewport
 import imgui.flag.ImGuiConfigFlags
+import imgui.flag.ImGuiWindowFlags
 import imgui.internal.ImGui
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import org.lwjgl.glfw.GLFW
-import views.Dockspace
-import views.LoggerView
-import views.ScriptViewPort
-import views.Window
+import views.*
 import views.inspector.component.ComponentInspector
 import views.inspector.component.PropertyInspectorFactoryImpl
-import views.objecttree.FolderNode
-import views.objecttree.ObjectNode
 import views.objecttree.ObjectTree
 import java.io.IOException
 import java.net.URISyntaxException
@@ -44,6 +37,7 @@ class Main : Application() {
 
     override fun configure(config: Configuration) {
         config.title = "Dear ImGui is Awesome!"
+        config.isFullScreen = true
     }
 
     override fun initImGui(config: Configuration?) {
@@ -78,8 +72,8 @@ class Main : Application() {
         }
     }
 
-    private val loggerDockedWindow = Window("Logger", width = 150f, height = 300f, loggerView)
-    private val scriptViewPortWindow = Window("ScriptView", width = 500f, height = 500f, ScriptViewPort {
+    private val loggerDockedWindow = Window("Logger", loggerView)
+    private val scriptViewPortWindow = Window("ScriptView", ScriptViewPort {
     })
 
     data class A(val x: Float = 0f, val y: String = ";jlk")
@@ -107,7 +101,7 @@ class Main : Application() {
         agent.setComponent(
             agentInterface
         )
-        agent.setComponent(OptimizationTask())
+        agent.setComponent(Experiment())
         agent.setComponent(object : core.components.base.Component() {
             var x = 0f
             var y = 0
@@ -121,11 +115,27 @@ class Main : Application() {
 
 
     private val componentInspector = ComponentInspector(PropertyInspectorFactoryImpl())
-    val componentInspectorWindow = Window("Inspector", 500f, 900f, componentInspector)
+    val componentInspectorWindow = Window("Inspector", componentInspector)
     private val objectTree = ObjectTree()
-    val objectTreeWindow = Window("Object tree", 330f, 900f, objectTree)
+    val objectTreeWindow = Window("Object tree", objectTree)
 
     private val sceneController = SceneController(sceneService.scene, componentInspector, objectTree)
+
+
+
+    private val modelControlWindow = ModelControlView().apply {
+        onClickConnectListener = { ip, port ->
+            Logger.log("ip: $ip, port: $port", Log.Level.INFO)
+            connect()
+        }
+        onClickPauseListener = { pause() }
+        onClickRunListener = { run() }
+        onClickResumeListener = { run() }
+        onClickStopListener = { stop() }
+        onClickDisconnectListener = {
+            disconnect()
+        }
+    }
 
     private val dockspace = Dockspace().apply {
         dock(loggerDockedWindow, Dockspace.Position.LEFT_DOWN)
@@ -134,10 +144,51 @@ class Main : Application() {
         dock(objectTreeWindow, Dockspace.Position.LEFT_UP_LEFT)
     }
 
-
+    private val toolsHeight = 50f
     override fun process() {
         sceneController.update()
+
+        val viewport = ImGui.getMainViewport()
+        ImGui.beginMainMenuBar()
+        val menuBarHeight = ImGui.getWindowHeight()
+        val menuBarWidth = ImGui.getWindowWidth()
+        val menuBarPos = ImGui.getWindowPos()
+        if(ImGui.beginMenu("File")) {
+            if (ImGui.menuItem("Load configuration")) {
+
+            }
+            if (ImGui.menuItem("Clear scene")) {
+
+            }
+            ImGui.endMenu()
+        }
+        ImGui.endMainMenuBar()
+
+        val flags = ImGuiWindowFlags.NoMove or
+                ImGuiWindowFlags.NoBringToFrontOnFocus or
+                ImGuiWindowFlags.NoResize or
+                ImGuiWindowFlags.NoScrollbar or
+                ImGuiWindowFlags.NoSavedSettings or
+                ImGuiWindowFlags.NoTitleBar
+        ImGui.setNextWindowSize(menuBarWidth, toolsHeight)
+        ImGui.setNextWindowPos(menuBarPos.x, menuBarPos.y + menuBarHeight)
+        if (ImGui.begin("Tools window", flags)) {
+                val width = modelControlWindow.width
+                ImGui.setWindowPos(
+                    menuBarPos.x + (menuBarWidth - width) / 2,
+                    menuBarPos.y + menuBarHeight
+                )
+                modelControlWindow.draw()
+        }
+        ImGui.end()
+
+        ImGui.setNextWindowSize(viewport.sizeX, viewport.sizeY - menuBarHeight - toolsHeight)
+        ImGui.setNextWindowPos(viewport.posX, viewport.posY + menuBarHeight + toolsHeight)
+        ImGui.setNextWindowViewport(viewport.id)
+        dockspace.height = viewport.sizeY
+        dockspace.width = viewport.sizeX
         dockspace.draw()
+
         loggerDockedWindow.draw()
         componentInspectorWindow.draw()
         scriptViewPortWindow.draw()

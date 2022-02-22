@@ -1,21 +1,20 @@
 package views
 
 import imgui.internal.ImGui
-import views.Decorator
-import views.View
 
 class Window(
     val name: String,
-    val width: Float,
-    val height: Float,
-    view: View
-): Decorator(view) {
+    view: View,
+    val width: Float = 0f,
+    val height: Float = 0f,
+) : Decorator(view) {
 
     private var isInit = false
 
     override fun draw() {
         if (!isInit) {
-            ImGui.setNextWindowSize(width, height)
+            if (width != 0f && height != 0f)
+                ImGui.setNextWindowSize(width, height)
             isInit = true
         }
 

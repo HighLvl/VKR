@@ -1,6 +1,6 @@
-package app.components.optimization
+package app.components.experiment
 
-class OptimizationTaskContext(private val model: OptimizationTaskModel) {
+class ExperimentTaskContext(private val model: ExperimentTaskModel) {
     fun targetFunc(score: Int, name: String = "", predicate: () -> Boolean) =
         model.addTargetFunc(score, name, predicate)
 
@@ -10,7 +10,7 @@ class OptimizationTaskContext(private val model: OptimizationTaskModel) {
     fun mutableVariables(vararg variables: MutableVariable) = model.addMutableVariables(*variables)
 }
 
-class StopOnContext(private val model: OptimizationTaskModel) {
+class StopOnContext(private val model: ExperimentTaskModel) {
     fun condition(name: String = "", predicate: () -> Boolean) {
         model.addStopOnCondition(name, predicate)
     }
@@ -24,8 +24,8 @@ class StopOnContext(private val model: OptimizationTaskModel) {
     }
 }
 
-fun optimizationTask(buildTask: OptimizationTaskContext.() -> Unit): OptimizationTaskModel {
-    val model = OptimizationTaskModel()
-    OptimizationTaskContext(model).buildTask()
+fun experimentTask(buildTask: ExperimentTaskContext.() -> Unit): ExperimentTaskModel {
+    val model = ExperimentTaskModel()
+    ExperimentTaskContext(model).buildTask()
     return model
 }

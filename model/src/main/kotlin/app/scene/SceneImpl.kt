@@ -3,7 +3,7 @@ package app.scene
 import core.entities.Agent
 import core.entities.Entity
 import core.entities.Environment
-import core.entities.Optimizer
+import core.entities.Experimenter
 import core.scene.Scene
 import kotlin.reflect.KClass
 
@@ -12,8 +12,8 @@ class SceneImpl : Scene {
     private val entityMap = mutableMapOf<KClass<out Entity>, MutableList<Entity>>()
     private val agentMap = mutableMapOf<Int, Agent>()
 
-    override val optimizer: Optimizer
-        get() = getEntityList<Optimizer>().first()
+    override val experimenter: Experimenter
+        get() = getEntityList<Experimenter>().first()
 
     override val environment: Environment
         get() = getEntityList<Environment>().first()
@@ -25,7 +25,7 @@ class SceneImpl : Scene {
     }
 
     private fun initEntityMap() {
-        entityMap[Optimizer::class] = mutableListOf()
+        entityMap[Experimenter::class] = mutableListOf()
         entityMap[Environment::class] = mutableListOf()
     }
 
@@ -33,8 +33,8 @@ class SceneImpl : Scene {
         return entityMap.getValue(T::class) as List<T>
     }
 
-    fun setOptimizer(optimizer: Optimizer) {
-        addToEntityMap(Optimizer::class, optimizer)
+    fun setOptimizer(experimenter: Experimenter) {
+        addToEntityMap(Experimenter::class, experimenter)
     }
 
     fun setEnvironment(environment: Environment) {

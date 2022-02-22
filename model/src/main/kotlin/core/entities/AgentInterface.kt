@@ -3,7 +3,7 @@ package core.entities
 interface AgentInterface {
     val id: Int
     val props: Props
-    fun requestSetProp(varName: String, value: Any)
+    fun requestSetValue(varName: String, value: Any)
     fun request(name: String, value: Any)
 }
 

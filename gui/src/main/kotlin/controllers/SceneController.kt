@@ -15,7 +15,7 @@ class SceneController(
     private var selectedEntity: Pair<Entity, String>? = null
 
     fun update() {
-        val optimizer = scene.optimizer
+        val optimizer = scene.experimenter
         val environment = scene.environment
         val agents = scene.agents
 
@@ -50,7 +50,7 @@ class SceneController(
 
     private companion object {
         const val TITLE_ENVIRONMENT_OBJECT = "Environment"
-        const val TITLE_OPTIMIZER_OBJECT = "Optimizer"
+        const val TITLE_OPTIMIZER_OBJECT = "Experimenter"
         const val TITLE_COMPONENT_INSPECTOR = "Inspected object: %s"
         const val TITLE_AGENT_OBJECT = "%s (%d)"
         const val TITLE_AGENT_FOLDER = "Agents"

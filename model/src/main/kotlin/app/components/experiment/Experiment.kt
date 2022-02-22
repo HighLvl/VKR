@@ -1,4 +1,4 @@
-package app.components.optimization
+package app.components.experiment
 
 import app.components.SystemComponent
 import app.logger.Log
@@ -7,24 +7,24 @@ import app.utils.KtsScriptEngine
 import core.components.base.IgnoreInSnapshot
 import core.components.base.Script
 
-class OptimizationTask : SystemComponent(), Script {
+class Experiment : SystemComponent(), Script {
     var task: String = ""
         set(value) {
-            field = tryLoadOptimizationTaskModel(value)
+            field = tryLoadExperimentTaskModel(value)
         }
 
-    private fun tryLoadOptimizationTaskModel(path: String): String {
+    private fun tryLoadExperimentTaskModel(path: String): String {
         if (path.isEmpty()) return ""
         return try {
             taskModel = KtsScriptEngine.eval(path)
             path
         } catch (e: Exception) {
-            Logger.log("Bad optimization task file", Log.Level.ERROR)
+            Logger.log("Bad experiment task file", Log.Level.ERROR)
             ""
         }
     }
 
     @IgnoreInSnapshot
-    var taskModel: OptimizationTaskModel = OptimizationTaskModel()
+    var taskModel: ExperimentTaskModel = ExperimentTaskModel()
         private set
 }

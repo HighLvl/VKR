@@ -9,8 +9,9 @@ import imgui.type.ImInt
 class Dockspace : View {
     private var id = 0
     private var docked = false
-
     private val dockedWindows = mutableMapOf<Position, Window>()
+    var width: Float = 0f
+    var height: Float = 0f
 
     override fun draw() {
         drawDockspace()
@@ -18,18 +19,12 @@ class Dockspace : View {
     }
 
     private fun drawDockspace() {
-        val viewport = ImGui.getMainViewport()
-        ImGui.setNextWindowSize(viewport.sizeX, viewport.sizeY)
-        ImGui.setNextWindowPos(viewport.posX, viewport.posY)
-        ImGui.setNextWindowViewport(viewport.id)
-
         val flags = ImGuiWindowFlags.NoMove or
                 ImGuiWindowFlags.NoBringToFrontOnFocus or
                 ImGuiWindowFlags.NoResize or
                 ImGuiWindowFlags.NoScrollbar or
                 ImGuiWindowFlags.NoSavedSettings or
                 ImGuiWindowFlags.NoTitleBar
-
         if (ImGui.begin(ID_MASTER_WINDOW, flags)) {
             id = ImGui.getID(ID_CENTRAL_DOCKSPACE)
             ImGui.dockSpace(id)
@@ -41,10 +36,10 @@ class Dockspace : View {
         if (docked) return
         ImGui.dockBuilderRemoveNode(id)
         ImGui.dockBuilderAddNode(id, ImGuiDockNodeFlags.DockSpace)
+        ImGui.dockBuilderSetNodeSize(id, width, height)
         val positionIdMap = splitDockspace()
         for ((position, window) in dockedWindows.entries) {
             val dockId = positionIdMap[position]!!
-            ImGui.dockBuilderSetNodeSize(dockId, window.width, window.height)
             ImGui.dockBuilderDockWindow(window.name, dockId)
         }
         ImGui.dockBuilderFinish(id)
@@ -57,7 +52,7 @@ class Dockspace : View {
         val leftUp = ImInt()
         val leftDown = ImGui.dockBuilderSplitNode(left.get(), ImGuiDir.Down, .25f, null, leftUp)
         val leftUpLeft = ImInt()
-        val leftUpRight = ImGui.dockBuilderSplitNode(leftUp.get(), ImGuiDir.Right, .25f, null, leftUpLeft)
+        val leftUpRight = ImGui.dockBuilderSplitNode(leftUp.get(), ImGuiDir.Right, 0.75f, null, leftUpLeft)
         return mapOf(
             Position.RIGHT to right,
             Position.LEFT_DOWN to leftDown,

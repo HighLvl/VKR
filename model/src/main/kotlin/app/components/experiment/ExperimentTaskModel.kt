@@ -1,9 +1,9 @@
-package app.components.optimization
+package app.components.experiment
 
 typealias MutableVariable = Pair<String, (Float) -> Unit>
 typealias ObservableVariable = Pair<String, () -> Float>
 
-class OptimizationTaskModel {
+class ExperimentTaskModel {
     val targetFuncList: List<TargetFunc>
         get() = _targetFuncList
 
@@ -60,7 +60,7 @@ class OptimizationTaskModel {
 //
 
 fun main() {
-    val task = optimizationTask {
+    val task = experimentTask {
         targetFunc(10, "some Func") {
             4 < 100
         }

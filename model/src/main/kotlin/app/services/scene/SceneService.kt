@@ -2,10 +2,10 @@ package app.services.scene
 
 import core.entities.Agent
 import core.entities.Environment
-import core.entities.Optimizer
+import core.entities.Experimenter
 import core.scene.Scene
 import app.components.AgentInterface
-import app.components.optimization.OptimizationTask
+import app.components.experiment.Experiment
 import app.scene.SceneImpl
 import core.components.getComponent
 import core.services.*
@@ -86,10 +86,10 @@ object SceneFactory {
 }
 
 object EntityFactory {
-    fun createOptimizer(): Optimizer {
-        val optimizer = Optimizer()
-        optimizer.setComponent(OptimizationTask())
-        return optimizer
+    fun createOptimizer(): Experimenter {
+        val experimenter = Experimenter()
+        experimenter.setComponent(Experiment())
+        return experimenter
     }
 
     fun createEnvironment(): Environment {

@@ -30,7 +30,6 @@ class AgentInterface(
     val requests: List<Request>
         get() = _requests
     private val _requests: MutableList<Request> = mutableListOf()
-    private val propsName by lazy { this::props.name }
 
     @IgnoreInSnapshot
     var snapshot: AgentSnapshot = AgentSnapshot(0, mapOf(), listOf())
@@ -43,14 +42,14 @@ class AgentInterface(
         _props = Props(props)
     }
 
-    override fun requestSetProp(varName: String, value: Any) {
+    override fun requestSetValue(varName: String, value: Any) {
         val requestName = "Set${varName.uppercaseFirstChar()}"
         request(requestName, value)
     }
 
     override fun request(name: String, value: Any) {
         val request = Request(null, name, value)
-        Logger.log("Request scheduled: ${request.toString()}", Log.Level.INFO)
+        Logger.log("Request scheduled: $request", Log.Level.INFO)
         _requests.add(request)
     }
 
