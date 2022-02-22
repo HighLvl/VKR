@@ -2,31 +2,27 @@ package views.component
 
 import imgui.ImGui
 import imgui.flag.ImGuiTreeNodeFlags
-import views.Decorator
+import imgui.type.ImBoolean
 import views.inspector.property.base.PropertyInspector
-import views.inspector.splitOnCapitalLetters
 
-open class ComponentView(
+class CloseableComponentView(
     private val compClass: String,
-    propertyInspector: PropertyInspector
-
-) : Decorator(propertyInspector) {
-    protected fun drawPropertyInspector() {
-        super.draw()
-    }
-
+    propertyInspector: PropertyInspector,
+    private val onClickCloseButton: () -> Unit
+) : ComponentView(
+    compClass,
+    propertyInspector
+) {
+    private val isVisible = ImBoolean(true)
     override fun draw() {
         val componentId = compClass
         val componentName = getName(componentId)
         ImGui.pushID(componentId)
         val flags = ImGuiTreeNodeFlags.DefaultOpen
-        if (ImGui.collapsingHeader(componentName, flags)) {
+        if (ImGui.collapsingHeader(componentName, isVisible, flags)) {
             drawPropertyInspector()
+            if (!isVisible.get()) onClickCloseButton()
         }
         ImGui.popID()
     }
-
-    protected fun getName(componentId: String) = componentId.split(".")
-        .last()
-        .splitOnCapitalLetters()
 }

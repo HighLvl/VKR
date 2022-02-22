@@ -1,12 +1,13 @@
 package app.components.optimization
 
+import app.components.SystemComponent
 import app.logger.Log
 import app.logger.Logger
 import app.utils.KtsScriptEngine
 import core.components.base.IgnoreInSnapshot
 import core.components.base.Script
 
-class OptimizationTask : Script() {
+class OptimizationTask : SystemComponent(), Script {
     var task: String = ""
         set(value) {
             field = tryLoadOptimizationTaskModel(value)

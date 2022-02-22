@@ -20,7 +20,7 @@ class AgentInterface(
     val setterSignatures: List<RequestSignature> = listOf(),
     @property:IgnoreInSnapshot
     val otherRequestSignatures: List<RequestSignature> = listOf()
-) : Script(), AgentInterface {
+) : SystemComponent(), Script, AgentInterface {
     @IgnoreInSnapshot
     val requestBodies = RequestBodies(setterSignatures, this)
 

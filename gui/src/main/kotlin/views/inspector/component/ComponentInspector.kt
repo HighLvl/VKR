@@ -1,5 +1,6 @@
 package views.inspector.component
 
+import app.components.SystemComponent
 import app.components.getSnapshot
 import app.components.loadSnapshot
 import com.fasterxml.jackson.databind.JsonNode
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.module.kotlin.treeToValue
 import core.components.base.Component
 import imgui.ImGui
 import views.View
+import views.component.CloseableComponentView
 import views.component.ComponentView
 import views.inspector.property.base.PropertyInspector
 
@@ -19,6 +21,7 @@ class ComponentInspector(
 ) : View {
     var title = ""
     var components: List<Component> = listOf()
+    var onCloseComponent: (Component) -> Unit = {}
 
     private val objectMapper = jacksonObjectMapper()
 
@@ -39,7 +42,12 @@ class ComponentInspector(
             val snapshotNode = objectMapper.valueToTree<ObjectNode>(component.getSnapshot())
             val propInspectorNode = snapshotNode.mapToPropertyInspectorNode()
             val propertyInspector = propertyInspectorFactory.create(component).apply { setPropNode(propInspectorNode) }
-            val componentView = ComponentView(compClassName, propertyInspector)
+            val componentView = when (component) {
+                is SystemComponent -> ComponentView(compClassName, propertyInspector)
+                else -> CloseableComponentView(compClassName, propertyInspector) {
+                    onCloseComponent(component)
+                }
+            }
             componentView.draw()
             if (propertyInspector.changed()) {
                 val dif = propertyInspector.getDifference().mapToSnapPropNode(snapshotNode)

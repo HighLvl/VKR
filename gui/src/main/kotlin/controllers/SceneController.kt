@@ -43,6 +43,7 @@ class SceneController(
             else -> {
                 componentInspector.title = TITLE_COMPONENT_INSPECTOR.format(selectedEntity.second)
                 componentInspector.components = selectedEntity.first.getComponents()
+                componentInspector.onCloseComponent = { selectedEntity.first.removeComponent(it::class) }
             }
         }
     }

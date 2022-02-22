@@ -1,11 +1,11 @@
 package core.components.base
 
-abstract class Script: Component() {
-    open fun start() {}
+interface Script {
+    fun start() {}
 
-    open fun update(modelTime: Float) {}
+    fun update(modelTime: Float) {}
 
-    open fun afterUpdate() {}
+    fun afterUpdate() {}
 
-    open fun stop() {}
+    fun stop() {}
 }
