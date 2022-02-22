@@ -35,8 +35,8 @@ class ModelControlView : View {
         }
     }
 
-    private val runButton = Button(TITLE_RUN_BUTTON)
-    private val pauseButton = Button(TITLE_PAUSE_BUTTON)
+    private val runButton = Button(TITLE_RUN_BUTTON).apply { bindKey(Key.R) }
+    private val pauseButton = Button(TITLE_PAUSE_BUTTON).apply { bindKey(Key.P) }
     private val disconnectButton = Button(TITLE_DISCONNECT_BUTTON)
     private val inputRequestDt = InputRequestDt()
 
