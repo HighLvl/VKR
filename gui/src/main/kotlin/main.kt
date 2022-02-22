@@ -96,7 +96,7 @@ class Main : Application() {
 
                 request<Unit>("putToMap") {
                     param<Int>("x")
-                    param<Property>("y")
+                    param<Float>("y")
                 }
             }
         }

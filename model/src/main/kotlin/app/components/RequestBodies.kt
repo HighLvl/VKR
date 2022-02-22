@@ -9,13 +9,13 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 class RequestBodies(
-    private val setterSignatures: List<RequestSignature>,
+    private val requests: List<RequestSignature>,
     private val agentInterface: AgentInterface
 ) {
     private val _requestBodies: MutableList<RequestBody> = create()
     val bodies: List<RequestBody> = _requestBodies
 
-    private fun create(): MutableList<RequestBody> = setterSignatures.map { signature ->
+    private fun create(): MutableList<RequestBody> = requests.map { signature ->
         RequestBody(
             signature.name,
             signature.params.map { param ->
@@ -27,7 +27,7 @@ class RequestBodies(
     fun commit(name: String) {
         val body = bodies.firstOrNull { it.name == name } ?: return
         Logger.log("Commit $body", Log.Level.DEBUG)
-        agentInterface.requestSetProp(body.name, body.args["value"]!!.first)
+        agentInterface.request(body.name, body.args.map { it.key to it.value.first }.toMap())
     }
 
     fun changeRequestBody(newBody: RequestBody) {

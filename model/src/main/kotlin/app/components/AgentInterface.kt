@@ -1,19 +1,15 @@
 package app.components
 
+import app.logger.Log
+import app.logger.Logger
 import app.services.model.`interface`.RequestSignature
-import com.google.common.base.Defaults
 import core.components.base.IgnoreInSnapshot
 import core.components.base.Script
 import core.entities.AgentInterface
 import core.entities.Props
 import core.api.dto.AgentSnapshot
 import core.api.dto.Request
-import core.components.base.ComponentSnapshot
-import core.components.base.Property
-import core.components.changePropertyValue
 import core.uppercaseFirstChar
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 class AgentInterface(
     @property:IgnoreInSnapshot
@@ -22,7 +18,7 @@ class AgentInterface(
     val otherRequestSignatures: List<RequestSignature> = listOf()
 ) : SystemComponent(), Script, AgentInterface {
     @IgnoreInSnapshot
-    val requestBodies = RequestBodies(setterSignatures, this)
+    val requestBodies = RequestBodies(setterSignatures + otherRequestSignatures, this)
 
     override val id: Int
         get() = snapshot.id
@@ -47,9 +43,14 @@ class AgentInterface(
         _props = Props(props)
     }
 
-    override fun requestSetProp(name: String, value: Any) {
-        val requestName = "Set${name.uppercaseFirstChar()}"
-        val request = Request(null, requestName, value)
+    override fun requestSetProp(varName: String, value: Any) {
+        val requestName = "Set${varName.uppercaseFirstChar()}"
+        request(requestName, value)
+    }
+
+    override fun request(name: String, value: Any) {
+        val request = Request(null, name, value)
+        Logger.log("Request scheduled: ${request.toString()}", Log.Level.INFO)
         _requests.add(request)
     }
 
