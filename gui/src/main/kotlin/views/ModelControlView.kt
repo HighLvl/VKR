@@ -3,13 +3,15 @@ package views
 import com.google.common.net.InetAddresses
 import imgui.flag.ImGuiStyleVar
 import imgui.internal.ImGui
+import imgui.internal.flag.ImGuiItemFlags
+import imgui.type.ImFloat
 import imgui.type.ImInt
 import imgui.type.ImString
 
 class ModelControlView : View {
     var onClickConnectListener: (String, Int) -> Unit = { _, _ -> }
     var onClickStopListener: () -> Unit = {}
-    var onClickRunListener: () -> Unit = {}
+    var onClickRunListener: (Float) -> Unit = {}
     var onClickPauseListener: () -> Unit = {}
     var onClickResumeListener: () -> Unit = {}
     var onClickDisconnectListener: () -> Unit = {}
@@ -36,6 +38,7 @@ class ModelControlView : View {
     private val runButton = Button(TITLE_RUN_BUTTON)
     private val pauseButton = Button(TITLE_PAUSE_BUTTON)
     private val disconnectButton = Button(TITLE_DISCONNECT_BUTTON)
+    private val inputRequestDt = InputRequestDt()
 
     override fun draw() {
         when (state) {
@@ -49,7 +52,11 @@ class ModelControlView : View {
                 WIDTH_IP + WIDTH_PORT + WIDTH_CONNECT_BUTTON
             }
             else -> {
-                WIDTH_RUN_BUTTON + WIDTH_PAUSE_BUTTON + WIDTH_DISCONNECT_BUTTON
+                WIDTH_RUN_BUTTON +
+                        WIDTH_PAUSE_BUTTON +
+                        WIDTH_DISCONNECT_BUTTON +
+                        WIDTH_INPUT_REQUEST_DT +
+                        ImGui.getStyle().itemSpacingX * 8
             }
         }
     }
@@ -86,7 +93,8 @@ class ModelControlView : View {
             pressed = false
             onClickListener = onClickPauseListener
         }
-        drawControlButtons()
+        inputRequestDt.enabled = false
+        drawControlViews()
     }
 
     private fun handlePauseState() {
@@ -100,25 +108,34 @@ class ModelControlView : View {
             pressed = true
             onClickListener = onClickResumeListener
         }
-        drawControlButtons()
+        inputRequestDt.enabled = false
+        drawControlViews()
     }
 
     private fun handleStopState() {
         runButton.apply {
             pressed = false
             enabled = true
-            onClickListener = onClickRunListener
+            onClickListener = { onClickRunListener(inputRequestDt.value) }
         }
         pauseButton.apply {
             pressed = false
             enabled = false
             onClickListener = {}
         }
-        drawControlButtons()
+        inputRequestDt.enabled = true
+        drawControlViews()
     }
 
-    private fun drawControlButtons() {
+
+    private fun drawControlViews() {
+        inputRequestDt.draw()
+        repeat(4) {
+            ImGui.sameLine()
+            ImGui.spacing()
+        }
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, SPACING_BETWEEN_PLAY_AND_PAUSE, ImGui.getStyle().itemSpacing.y)
+        ImGui.sameLine()
         runButton.draw()
         ImGui.sameLine()
         pauseButton.draw()
@@ -151,6 +168,29 @@ class ModelControlView : View {
         state = State.CONNECT
     }
 
+    private class InputRequestDt : View {
+        var enabled = true
+        private val imDt = ImFloat(REQUEST_DT_VALUE_MIN)
+
+        val value: Float
+            get() = imDt.get()
+
+        override fun draw() {
+            if (!enabled) {
+                ImGui.pushItemFlag(ImGuiItemFlags.Disabled, true)
+                ImGui.pushStyleVar(ImGuiStyleVar.Alpha, ImGui.getStyle().alpha * 0.5f)
+            }
+            ImGui.pushItemWidth(WIDTH_INPUT_REQUEST_DT)
+            if (ImGui.inputFloat(LABEL_INPUT_REQUEST_DT, imDt, 0f, 0f, "%g")) {
+                imDt.set(imDt.get().coerceIn(REQUEST_DT_VALUE_MIN, REQUEST_DT_VALUE_MAX))
+            }
+            if (!enabled) {
+                ImGui.popItemFlag()
+                imgui.ImGui.popStyleVar()
+            }
+        }
+    }
+
     private companion object {
         const val WIDTH_IP = 200f
         const val WIDTH_PORT = 200f
@@ -168,5 +208,9 @@ class ModelControlView : View {
         const val WIDTH_CONNECT_BUTTON = 100f
         const val WIDTH_RUN_BUTTON = 100f
         const val WIDTH_PAUSE_BUTTON = 100f
+        const val LABEL_INPUT_REQUEST_DT = "dt, s"
+        const val WIDTH_INPUT_REQUEST_DT = 100f
+        const val REQUEST_DT_VALUE_MIN = 0.1f
+        const val REQUEST_DT_VALUE_MAX = 60f
     }
 }

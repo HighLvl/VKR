@@ -1,6 +1,6 @@
 package views.inspector.component
 
-import app.components.SystemComponent
+import core.components.SystemComponent
 import app.components.getSnapshot
 import app.components.loadSnapshot
 import com.fasterxml.jackson.databind.JsonNode
@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
-import core.components.base.Component
+import core.components.Component
 import imgui.ImGui
 import views.View
 import views.component.CloseableComponentView

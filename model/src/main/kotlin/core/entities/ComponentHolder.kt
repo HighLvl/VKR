@@ -1,6 +1,6 @@
-package core.entities.base
+package core.entities
 
-import core.components.base.Component
+import core.components.Component
 import kotlin.reflect.KClass
 
 interface ComponentHolder {

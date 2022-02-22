@@ -10,7 +10,7 @@ import core.api.dto.AgentSnapshot
 import core.api.dto.Behaviour
 import core.api.dto.GlobalArgs
 import core.api.dto.Snapshot
-import core.components.base.Property
+import core.components.Property
 import core.components.getComponent
 import core.coroutines.AppContext
 import core.services.AgentModelLifecycleEvent

@@ -1,4 +1,4 @@
-package core.entities
+package core.components
 
 interface AgentInterface {
     val id: Int

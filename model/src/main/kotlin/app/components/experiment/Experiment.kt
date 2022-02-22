@@ -1,11 +1,11 @@
 package app.components.experiment
 
-import app.components.SystemComponent
+import core.components.SystemComponent
 import app.logger.Log
 import app.logger.Logger
 import app.utils.KtsScriptEngine
-import core.components.base.IgnoreInSnapshot
-import core.components.base.Script
+import core.components.IgnoreInSnapshot
+import core.components.Script
 
 class Experiment : SystemComponent(), Script {
     var task: String = ""

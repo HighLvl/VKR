@@ -1,9 +1,6 @@
 package core.components
 
-import core.components.base.ComponentSnapshot
-import core.components.base.Component
-import core.entities.base.ComponentHolder
-import core.components.base.ComponentConverter
+import core.entities.ComponentHolder
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.memberProperties

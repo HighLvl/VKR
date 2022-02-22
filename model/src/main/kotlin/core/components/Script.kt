@@ -1,4 +1,4 @@
-package core.components.base
+package core.components
 
 interface Script {
     fun start() {}

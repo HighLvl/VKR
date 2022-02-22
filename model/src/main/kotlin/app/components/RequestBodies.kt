@@ -4,7 +4,7 @@ import app.logger.Log
 import app.logger.Logger
 import app.services.model.`interface`.RequestSignature
 import com.google.common.base.Defaults
-import core.entities.AgentInterface
+import core.components.AgentInterface
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 

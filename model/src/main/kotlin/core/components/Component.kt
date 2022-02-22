@@ -1,4 +1,4 @@
-package core.components.base
+package core.components
 
 import core.entities.Entity
 import core.scene.Scene

@@ -3,12 +3,13 @@ package app.components
 import app.logger.Log
 import app.logger.Logger
 import app.services.model.`interface`.RequestSignature
-import core.components.base.IgnoreInSnapshot
-import core.components.base.Script
-import core.entities.AgentInterface
-import core.entities.Props
+import core.components.IgnoreInSnapshot
+import core.components.Script
+import core.components.AgentInterface
+import core.components.Props
 import core.api.dto.AgentSnapshot
 import core.api.dto.Request
+import core.components.SystemComponent
 import core.uppercaseFirstChar
 
 class AgentInterface(

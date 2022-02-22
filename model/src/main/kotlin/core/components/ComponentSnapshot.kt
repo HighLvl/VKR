@@ -1,4 +1,4 @@
-package core.components.base
+package core.components
 
 data class ComponentSnapshot(
     val compClass: String = "",

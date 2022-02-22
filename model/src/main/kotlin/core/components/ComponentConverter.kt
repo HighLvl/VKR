@@ -1,4 +1,4 @@
-package core.components.base
+package core.components
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty

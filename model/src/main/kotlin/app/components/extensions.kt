@@ -1,8 +1,8 @@
 package app.components
 
-import core.components.base.Component
-import core.components.base.ComponentConverter
-import core.components.base.ComponentSnapshot
+import core.components.Component
+import core.components.ComponentConverter
+import core.components.ComponentSnapshot
 import core.components.changePropertyValue
 
 fun Component.getSnapshot(): ComponentSnapshot {

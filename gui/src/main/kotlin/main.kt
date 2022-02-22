@@ -6,6 +6,7 @@ import app.scene.SceneImpl
 import app.services.model.`interface`.modelInterface
 import app.services.scene.SceneService
 import controllers.SceneController
+import core.components.Component
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
 import core.entities.Agent
@@ -102,7 +103,7 @@ class Main : Application() {
             agentInterface
         )
         agent.setComponent(Experiment())
-        agent.setComponent(object : core.components.base.Component() {
+        agent.setComponent(object : Component() {
             var x = 0f
             var y = 0
             val name = "position"

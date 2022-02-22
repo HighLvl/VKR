@@ -1,7 +1,9 @@
-package core.entities.base
+package core.entities
 
-import core.components.base.Component
+import core.components.SystemComponent
+import core.components.Component
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 class MapComponentHolder : ComponentHolder {
     private val components = mutableMapOf<KClass<out Component>, Component>()
@@ -17,6 +19,7 @@ class MapComponentHolder : ComponentHolder {
 
     @Suppress("UNCHECKED_CAST")
     override fun <C : Component> removeComponent(type: KClass<C>): C? {
+        if (type.isSubclassOf(SystemComponent::class)) return null
         return components.remove(type) as C?
     }
 
