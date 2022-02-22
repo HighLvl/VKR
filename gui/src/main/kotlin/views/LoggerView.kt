@@ -1,5 +1,7 @@
 package views
 
+import imgui.ImVec4
+import imgui.flag.ImGuiCol
 import imgui.internal.ImGui
 import imgui.type.ImBoolean
 import imgui.type.ImString
@@ -44,20 +46,23 @@ class LoggerView : View {
             ImGui.separator()
         }
 
+        val titleColor = ImGui.getStyle().getColor(ImGuiCol.FrameBg)
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, titleColor.x, titleColor.y, titleColor.z, titleColor.w)
         ImGui.beginChild(ID_LOG_CONTAINER)
         for (log in filteredLogs) {
             val formattedLog = formatLog(log)
             val color = when (log.second) {
                 Level.ERROR -> ERROR_COLOR
-                Level.DEBUG -> DEBUG_COLOR
-                Level.INFO -> INFO_COLOR
+                Level.DEBUG -> ImGui.getStyle().getColor(ImGuiCol.Text)
+                Level.INFO -> ImGui.getStyle().getColor(ImGuiCol.Text)
             }
-            ImGui.textColored(color[0], color[1], color[2], color[3], formattedLog)
+            ImGui.textColored(color.x, color.y, color.z, color.w, formattedLog)
         }
         if (ImGui.getScrollY() == ImGui.getScrollMaxY()) {
             ImGui.setScrollHereY()
         }
         ImGui.endChild()
+        ImGui.popStyleColor()
     }
 
     private fun formatLog(log: Pair<String, Level>): String {
@@ -78,7 +83,7 @@ class LoggerView : View {
         const val TITLE_CLEAR_BUTTON = "Clear"
 
 
-        val ERROR_COLOR = listOf(255, 100, 100, 255)
+        val ERROR_COLOR = ImVec4(255f /255f, 100f/255f, 100f/255f, 255f/255f)
         val INFO_COLOR = listOf(255, 255, 255, 255)
         val DEBUG_COLOR = listOf(255, 255, 255, 255)
 
