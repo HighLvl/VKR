@@ -8,6 +8,7 @@ import core.services.AgentModelLifecycleEvent
 import core.services.EventBus
 import core.services.SnapshotReceive
 import core.services.listen
+import kotlinx.coroutines.delay
 
 class AgentModelControlContext(val apiClient: AgentModelApiClient) {
     private var currentState: State = DisconnectState

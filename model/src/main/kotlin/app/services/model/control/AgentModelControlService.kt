@@ -11,21 +11,13 @@ class AgentModelControlService(apiClient: AgentModelApiClient) : Service() {
     private val context = AgentModelControlContext(apiClient)
 
     override fun start() = context.start()
-
-    suspend fun connect(ip: String, port: Int): State = context.connect(ip, port)
-
-    suspend fun run() = context.run()
-
     fun changeRequestPeriod(periodSec: Float) = context.changeRequestPeriod(periodSec)
-
+    suspend fun connect(ip: String, port: Int): State = context.connect(ip, port)
+    suspend fun run() = context.run()
     suspend fun pause() = context.pause()
-
     suspend fun resume() = context.resume()
-
     suspend fun stop() = context.stop()
-
     suspend fun disconnect() = context.disconnect()
-
 }
 
 

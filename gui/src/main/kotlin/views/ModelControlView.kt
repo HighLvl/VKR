@@ -6,8 +6,8 @@ import imgui.flag.ImGuiStyleVar
 import imgui.internal.ImGui
 import imgui.internal.flag.ImGuiItemFlags
 import imgui.type.ImFloat
-import imgui.type.ImInt
-import imgui.type.ImString
+import views.input.InputInt
+import views.input.InputString
 
 class ModelControlView : View {
     var onClickConnectListener: (String, Int) -> Unit = { _, _ -> }
@@ -17,33 +17,25 @@ class ModelControlView : View {
     var onClickResumeListener: () -> Unit = {}
     var onClickDisconnectListener: () -> Unit = {}
     var onChangeDtListener: (Float) -> Unit = {}
-
-    private var ipText = ImString(DEFAULT_IP, 15)
-    private val port = ImInt(1024)
-
     var width = 0f
         private set
+    private var ipText = DEFAULT_IP
+    private var port = 1024
 
     private enum class State {
         CONNECT, RUN, PAUSE, STOP
     }
 
     private var state = State.CONNECT
-
-    private val connectButton = Button(TITLE_CONNECT_BUTTON).apply {
-        enabled = isValidIpAddress()
-        onClickListener = {
-            onClickConnectListener(ipText.get(), port.get())
-            onChangeDtListener(inputRequestDt.value)
-        }
-    }
-
+    private val connectButton = Button(TITLE_CONNECT_BUTTON)
     private val runButton = Button(TITLE_RUN_BUTTON).apply { bindKey(Key.R) }
     private val pauseButton = Button(TITLE_PAUSE_BUTTON).apply { bindKey(Key.P) }
     private val disconnectButton = Button(TITLE_DISCONNECT_BUTTON)
     private val inputRequestDt = InputRequestDt().apply {
         onChangeDtListener = { this@ModelControlView.onChangeDtListener(it) }
     }
+    private val ipInputString = InputString(ipText, LABEL_INPUT_IP, 15)
+    private val portInputInt = InputInt(port, LABEL_INPUT_PORT)
 
     override fun draw() {
         when (state) {
@@ -67,68 +59,31 @@ class ModelControlView : View {
     }
 
     private fun handleConnectState() {
-        disconnectButton.onClickListener = onClickDisconnectListener
-
         ImGui.setNextItemWidth(WIDTH_IP)
-        if (ImGui.inputText(LABEL_INPUT_IP, ipText)) {
-            connectButton.enabled = isValidIpAddress()
-        }
+        ipInputString.draw()
         ImGui.sameLine()
         ImGui.setNextItemWidth(WIDTH_PORT)
-        if (ImGui.inputInt(LABEL_INPUT_PORT, port)) {
-            port.set(port.get().coerceIn(1024, 49151))
-        }
+        portInputInt.draw()
         ImGui.sameLine()
 
         connectButton.draw()
     }
 
     private fun isValidIpAddress(): Boolean {
-        return InetAddresses.isInetAddress(ipText.get())
+        return InetAddresses.isInetAddress(ipText)
     }
 
     private fun handleRunState() {
-        runButton.apply {
-            pressed = true
-            enabled = true
-            onClickListener = onClickStopListener
-        }
-        pauseButton.apply {
-            enabled = true
-            pressed = false
-            onClickListener = onClickPauseListener
-        }
         drawControlViews()
     }
 
     private fun handlePauseState() {
-        runButton.apply {
-            pressed = true
-            enabled = true
-            onClickListener = onClickStopListener
-        }
-        pauseButton.apply {
-            enabled = true
-            pressed = true
-            onClickListener = onClickResumeListener
-        }
         drawControlViews()
     }
 
     private fun handleStopState() {
-        runButton.apply {
-            pressed = false
-            enabled = true
-            onClickListener = { onClickRunListener() }
-        }
-        pauseButton.apply {
-            pressed = false
-            enabled = false
-            onClickListener = {}
-        }
         drawControlViews()
     }
-
 
     private fun drawControlViews() {
         inputRequestDt.draw()
@@ -151,23 +106,100 @@ class ModelControlView : View {
     }
 
     fun connect() {
-        state = State.STOP
+        disconnectButton.onClickListener = { onClickDisconnectListener() }
+        stop()
     }
 
     fun stop() {
+        runButton.apply {
+            pressed = false
+            enabled = true
+            onClickListener = { onClickRunListener() }
+        }
+        pauseButton.apply {
+            pressed = false
+            enabled = false
+            onClickListener = {}
+        }
+        inputRequestDt.enabled = true
+        initDisconnectButton()
         state = State.STOP
     }
 
+    private fun initDisconnectButton() {
+        disconnectButton.apply {
+            pressed = false
+            enabled = true
+            onClickListener = { onClickDisconnectListener() }
+        }
+    }
+
     fun pause() {
+        runButton.apply {
+            pressed = true
+            enabled = true
+            onClickListener = { onClickStopListener() }
+        }
+        pauseButton.apply {
+            enabled = true
+            pressed = true
+            onClickListener = { onClickResumeListener() }
+        }
+        inputRequestDt.enabled = true
+        initDisconnectButton()
         state = State.PAUSE
     }
 
     fun run() {
+        runButton.apply {
+            pressed = true
+            enabled = true
+            onClickListener = {
+                onClickStopListener()
+            }
+        }
+        pauseButton.apply {
+            enabled = true
+            pressed = false
+            onClickListener = { onClickPauseListener() }
+        }
+        inputRequestDt.enabled = true
+        initDisconnectButton()
         state = State.RUN
     }
 
     fun disconnect() {
+        connectButton.apply {
+            enabled = isValidIpAddress()
+            pressed = false
+            onClickListener = { onClickConnectListener(ipText, port) }
+        }
+        inputRequestDt.enabled = true
+        ipInputString.apply {
+            enabled = true
+            onChangeValueListener = {
+                ipText = it
+                connectButton.enabled = isValidIpAddress()
+            }
+        }
+        portInputInt.apply {
+            enabled = true
+            onChangeValueListener = {
+                value = it.coerceIn(1024, 49151)
+                port = value
+            }
+        }
         state = State.CONNECT
+    }
+
+    fun disableAll() {
+        runButton.enabled = false
+        disconnectButton.enabled = false
+        pauseButton.enabled = false
+        connectButton.enabled = false
+        inputRequestDt.enabled = false
+        ipInputString.enabled = false
+        portInputInt.enabled = false
     }
 
     private class InputRequestDt : View {
