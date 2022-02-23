@@ -1,5 +1,6 @@
 package controllers
 
+import app.services.scene.SceneService
 import core.entities.Entity
 import core.scene.Scene
 import views.inspector.component.ComponentInspector
@@ -8,13 +9,20 @@ import views.objecttree.ObjectNode
 import views.objecttree.ObjectTree
 
 class SceneController(
-    private val scene: Scene,
+    private val sceneService: SceneService,
     private val componentInspector: ComponentInspector,
-    private val objectTree: ObjectTree
+    private val objectTree: ObjectTree,
+    sceneSetup: SceneSetup
 ) {
     private var selectedEntity: Pair<Entity, String>? = null
 
+    init {
+        sceneSetup.onClearSceneListener = ::clearScene
+        sceneSetup.onLoadConfigurationListener = ::loadConfiguration
+    }
+
     fun update() {
+        val scene = sceneService.scene
         val optimizer = scene.experimenter
         val environment = scene.environment
         val agents = scene.agents
@@ -39,6 +47,7 @@ class SceneController(
         when (val selectedEntity = selectedEntity) {
             null -> {
                 componentInspector.title = TITLE_OBJECT_NOT_SELECTED
+                componentInspector.components = emptyList()
             }
             else -> {
                 componentInspector.title = TITLE_COMPONENT_INSPECTOR.format(selectedEntity.second)
@@ -46,6 +55,15 @@ class SceneController(
                 componentInspector.onCloseComponent = { selectedEntity.first.removeComponent(it::class) }
             }
         }
+    }
+
+    private fun loadConfiguration(path: String) {
+        sceneService.loadConfiguration(path)
+    }
+
+    private fun clearScene() {
+        selectedEntity = null
+        sceneService.clearScene()
     }
 
     private companion object {

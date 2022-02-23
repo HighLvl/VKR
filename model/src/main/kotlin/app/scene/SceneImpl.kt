@@ -33,7 +33,7 @@ class SceneImpl : Scene {
         return entityMap.getValue(T::class) as List<T>
     }
 
-    fun setOptimizer(experimenter: Experimenter) {
+    fun setExperimenter(experimenter: Experimenter) {
         addToEntityMap(Experimenter::class, experimenter)
     }
 

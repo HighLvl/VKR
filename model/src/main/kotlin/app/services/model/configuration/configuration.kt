@@ -1,14 +1,24 @@
-package app.services.model.`interface`
+package app.services.model.configuration
 
 import core.uppercaseFirstChar
 import kotlin.reflect.KClass
 
-class ModelInterface {
+class ModelConfiguration {
     private val _agentInterfaces = mutableSetOf<AgentInterface>()
     val agentInterfaces: Set<AgentInterface> = _agentInterfaces
+    private val _globalArgs = mutableMapOf<String, Any>()
+    val globalArgs: Map<String, Any> = _globalArgs
 
     fun addAgentInterface(agentInterface: AgentInterface) {
         _agentInterfaces.add(agentInterface)
+    }
+
+    fun putGlobalArg(name: String, value: Any) {
+        _globalArgs[name] = value
+    }
+
+    override fun toString(): String {
+        return agentInterfaces.toString()
     }
 }
 
@@ -36,11 +46,19 @@ data class RequestSignature(val name: String, val returnType: KClass<*>) {
     }
 }
 
-class ModelInterfaceContext(private val modelInterface: ModelInterface) {
+class ModelConfigurationContext(private val modelConfiguration: ModelConfiguration) {
     fun agentInterface(name: String, builder: AgentInterfaceContext.() -> Unit) {
-        modelInterface.addAgentInterface(
+        modelConfiguration.addAgentInterface(
             AgentInterface(name).apply { AgentInterfaceContext(this).apply(builder) }
         )
+    }
+
+    fun globalArg(name: String, value: Any) {
+        modelConfiguration.putGlobalArg(name, value)
+    }
+
+    fun globalArgs(vararg args: Pair<String, Any>) {
+        args.forEach { modelConfiguration.putGlobalArg(it.first, it.second) }
     }
 }
 
@@ -71,8 +89,8 @@ class RequestSignatureContext(private val requestSignature: RequestSignature) {
     inline fun <reified T : Any> param(name: String) = param(T::class, name)
 }
 
-fun modelInterface(builder: ModelInterfaceContext.() -> Unit) =
-    ModelInterface().apply { ModelInterfaceContext(this).apply(builder) }
+fun modelConfiguration(builder: ModelConfigurationContext.() -> Unit) =
+    ModelConfiguration().apply { ModelConfigurationContext(this).apply(builder) }
 
 
 

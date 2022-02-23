@@ -1,4 +1,4 @@
-package app.services.model.`interface`
+package app.services.model.configuration
 
 import core.services.Service
 

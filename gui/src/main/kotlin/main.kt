@@ -3,17 +3,16 @@ import app.components.experiment.Experiment
 import app.logger.Log
 import app.logger.Logger
 import app.scene.SceneImpl
-import app.services.model.`interface`.modelInterface
+import app.services.model.configuration.modelConfiguration
 import app.services.scene.SceneService
 import controllers.SceneController
+import controllers.SceneSetup
 import core.components.Component
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
 import core.entities.Agent
 import core.entities.Entity
-import imgui.ImGuiStyle
 import imgui.ImGuiViewport
-import imgui.ImVec4
 import imgui.app.Application
 import imgui.app.Configuration
 import imgui.callback.ImPlatformFuncViewport
@@ -21,6 +20,7 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiConfigFlags
 import imgui.flag.ImGuiWindowFlags
 import imgui.internal.ImGui
+import imgui.type.ImBoolean
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
@@ -87,7 +87,7 @@ class Main : Application() {
 
     var entity: Entity? = run {
         val agent = Agent("Simple agent")
-        val modelInterface = modelInterface {
+        val modelInterface = modelConfiguration {
             agentInterface("SimpleAgent") {
                 setter<Int>("x")
                 setter<String>("text")
@@ -123,8 +123,9 @@ class Main : Application() {
     val componentInspectorWindow = Window("Inspector", componentInspector)
     private val objectTree = ObjectTree()
     val objectTreeWindow = Window("Object tree", objectTree)
+    val sceneSetup = SceneSetup()
 
-    private val sceneController = SceneController(sceneService.scene, componentInspector, objectTree)
+    private val sceneController = SceneController(sceneService, componentInspector, objectTree, sceneSetup)
 
 
 
@@ -150,6 +151,7 @@ class Main : Application() {
     }
 
     private val toolsHeight = 50f
+    private val isDarkTheme = ImBoolean()
     override fun process() {
 
         sceneController.update()
@@ -161,10 +163,16 @@ class Main : Application() {
         val menuBarPos = ImGui.getWindowPos()
         if(ImGui.beginMenu("File")) {
             if (ImGui.menuItem("Load configuration")) {
-
+                sceneSetup.onLoadConfigurationListener(FileOpenDialog().open("kts"))
             }
             if (ImGui.menuItem("Clear scene")) {
-
+                sceneSetup.onClearSceneListener()
+            }
+            ImGui.endMenu()
+        }
+        if(ImGui.beginMenu("View")) {
+            if (ImGui.checkbox("Dark theme", isDarkTheme)) {
+                setupImGuiStyle(isDarkTheme.get())
             }
             ImGui.endMenu()
         }
@@ -249,7 +257,7 @@ fun Log.Level.mapToLogViewLevel() = when (this) {
     Log.Level.DEBUG -> LoggerView.Level.DEBUG
 }
 
-fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float  ) {
+fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float = 1.0f ) {
     val style = ImGui.getStyle()
 
     // light style from Pacôme Danhiez (user itamago) https://github.com/ocornut/imgui/pull/511#issuecomment-175719267
@@ -257,7 +265,7 @@ fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float  ) {
     style.frameRounding = 3.0f;
     style.setColor(ImGuiCol.Text, 0.00f, 0.00f, 0.00f, 1.00f)
     style.setColor(ImGuiCol.TextDisabled, 0.60f, 0.60f, 0.60f, 1.00f);
-    style.setColor(ImGuiCol.WindowBg, 0.9f, 0.9f, 0.9f, 0.94f);
+    style.setColor(ImGuiCol.WindowBg, 0.94f, 0.94f, 0.94f, 0.94f);
     style.setColor(ImGuiCol.ChildBg, 0.00f, 0.00f, 0.00f, 0.00f);
     style.setColor(ImGuiCol.PopupBg, 0.9f, 0.9f, 0.9f, 0.94f);
     style.setColor(ImGuiCol.Border, 0.00f, 0.00f, 0.00f, 0.39f);

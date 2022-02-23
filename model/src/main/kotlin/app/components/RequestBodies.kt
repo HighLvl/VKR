@@ -2,7 +2,7 @@ package app.components
 
 import app.logger.Log
 import app.logger.Logger
-import app.services.model.`interface`.RequestSignature
+import app.services.model.configuration.RequestSignature
 import com.google.common.base.Defaults
 import core.components.AgentInterface
 import kotlin.reflect.KClass

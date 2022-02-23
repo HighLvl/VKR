@@ -2,7 +2,7 @@ package app.components
 
 import app.logger.Log
 import app.logger.Logger
-import app.services.model.`interface`.RequestSignature
+import app.services.model.configuration.RequestSignature
 import core.components.IgnoreInSnapshot
 import core.components.Script
 import core.components.AgentInterface

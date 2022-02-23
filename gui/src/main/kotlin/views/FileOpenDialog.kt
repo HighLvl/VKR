@@ -24,8 +24,9 @@ class FileOpenDialog {
     private fun checkResult(result: Int, path: PointerBuffer): String {
         when (result) {
             NFD_OKAY -> {
+                val pathString = path.stringUTF8
                 nNFD_Free(path[0])
-                return path.stringUTF8
+                return pathString
             }
             NFD_CANCEL -> {}
             else -> Logger.log(NFD_GetError().orEmpty(), Log.Level.ERROR)
