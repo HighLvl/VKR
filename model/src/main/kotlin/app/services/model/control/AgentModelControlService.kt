@@ -1,25 +1,30 @@
 package app.services.model.control
 
 
-import io.reactivex.rxjava3.core.Observable
-import core.api.AgentModelApiClient
-import core.services.Service
 import app.services.model.control.state.AgentModelControlContext
+import core.api.AgentModelApiClient
+import core.api.dto.State
+import core.services.Service
 
 
 class AgentModelControlService(apiClient: AgentModelApiClient) : Service() {
     private val context = AgentModelControlContext(apiClient)
-    val availableControlActions: Observable<List<ControlAction>> = context.availableControlActions
 
     override fun start() = context.start()
 
-    fun run(periodSec: Float) = context.run(periodSec)
+    suspend fun connect(ip: String, port: Int): State = context.connect(ip, port)
 
-    fun pause() = context.pause()
+    suspend fun run() = context.run()
 
-    fun resume() = context.resume()
+    fun changeRequestPeriod(periodSec: Float) = context.changeRequestPeriod(periodSec)
 
-    fun stop() = context.stop()
+    suspend fun pause() = context.pause()
+
+    suspend fun resume() = context.resume()
+
+    suspend fun stop() = context.stop()
+
+    suspend fun disconnect() = context.disconnect()
 
 }
 

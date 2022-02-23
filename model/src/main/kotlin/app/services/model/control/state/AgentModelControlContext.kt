@@ -1,22 +1,21 @@
 package app.services.model.control.state
 
-import app.logger.Log
-import app.logger.Logger
-import io.reactivex.rxjava3.subjects.PublishSubject
-import core.services.*
 import core.api.AgentModelApiClient
 import core.api.dto.GlobalArgs
 import core.api.dto.Snapshot
 import core.coroutines.PeriodTaskExecutor
-import app.services.model.control.ControlAction
+import core.services.AgentModelLifecycleEvent
+import core.services.EventBus
+import core.services.SnapshotReceive
+import core.services.listen
 
 class AgentModelControlContext(val apiClient: AgentModelApiClient) {
-    private var state: State = StopState
+    private var currentState: State = DisconnectState
+
     val periodTaskExecutor = PeriodTaskExecutor()
 
-    val availableControlActions: PublishSubject<List<ControlAction>> =
-        PublishSubject.create<List<ControlAction>>().apply { onNext(listOf()) }
     var globalArgs = GlobalArgs(mutableMapOf())
+    var periodSec: Float = 0.1f
 
     fun start() {
         subscribeOnGlobalArgs()
@@ -28,25 +27,31 @@ class AgentModelControlContext(val apiClient: AgentModelApiClient) {
         }
     }
 
-    fun run(periodSec: Float) {
-        state.run(this, periodSec)
+    suspend fun connect(ip: String, port: Int) = currentState.connect(this, ip, port)
+
+
+    suspend fun disconnect() {
+        currentState.disconnect(this)
     }
 
-    fun pause() {
-        state.pause(this)
+    suspend fun run() {
+        currentState.run(this, periodSec)
     }
 
-    fun resume() {
-        state.resume(this)
+    suspend fun pause() {
+        currentState.pause(this)
     }
 
-    fun stop() {
-        state.stop(this)
+    suspend fun resume() {
+        currentState.resume(this)
+    }
+
+    suspend fun stop() {
+        currentState.stop(this)
     }
 
     fun setState(state: State) {
-        this.state = state
-        state.onThisStateChanged(this)
+        this.currentState = state
     }
 
     fun onPause() {
@@ -67,5 +72,9 @@ class AgentModelControlContext(val apiClient: AgentModelApiClient) {
 
     fun onUpdate(snapshot: Snapshot) {
         EventBus.publish(SnapshotReceive(snapshot))
+    }
+
+    fun changeRequestPeriod(periodSec: Float) {
+        periodTaskExecutor.changePeriod(periodSec)
     }
 }

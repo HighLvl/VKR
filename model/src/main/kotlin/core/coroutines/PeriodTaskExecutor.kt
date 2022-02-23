@@ -3,18 +3,24 @@ package core.coroutines
 import app.logger.Log
 import app.logger.Logger
 import kotlinx.coroutines.*
-import java.time.Instant
 
 class PeriodTaskExecutor {
-    private var nextUpdateTime: Long = 0
-    private var periodMillis: Long = 0
-    private var remainingTimeToNextUpdate: Long = 0
+    private var nextUpdateTime: Long = 0L
+        get() {
+            if (field == 0L) {
+                field = System.currentTimeMillis() + periodMillis
+            }
+            return field
+        }
 
-    private var isRunning = false
+    private var periodMillis: Long = 100
+    private var remainingTimeToNextUpdate: Long = 0
+    private var startTime: Long = 0
     private var isPause = false
 
     private var task: suspend () -> Unit = {}
     private val coroutineScope = CoroutineScope(Dispatchers.Default + Job())
+    private var updateLoopJob: Job? = null
 
     init {
         initVars()
@@ -22,20 +28,25 @@ class PeriodTaskExecutor {
 
     private fun initVars() {
         nextUpdateTime = 0
-        periodMillis = 1000
         remainingTimeToNextUpdate = 0
+        isPause = false
+        updateLoopJob = null
+        task = {}
     }
 
-    fun scheduleTask(periodSec: Float, task: suspend () -> Unit) {
-        if (isRunning) throw IllegalStateException("Stop executor before schedule task")
+    fun scheduleTask(task: suspend () -> Unit) {
+        if (updateLoopJob != null) return
         this.task = task
-        this.periodMillis = (periodSec * 1000).toLong()
-        coroutineScope.launch { updateLoop() }
+        this.updateLoopJob = coroutineScope.launch { updateLoop() }
+    }
+
+    fun changePeriod(periodSec: Float) {
+        periodMillis = (periodSec * 1000).toLong()
+        nextUpdateTime = startTime + periodMillis
     }
 
     private suspend fun updateLoop() {
-        isRunning = true
-        while (isRunning) {
+        while (!updateLoopJob!!.isCancelled) {
             executeTaskOnUpdateTime()
         }
     }
@@ -46,36 +57,33 @@ class PeriodTaskExecutor {
                 Logger.log(Thread.currentThread().id.toString(), Log.Level.DEBUG)
                 Logger.log("execute task", Log.Level.DEBUG)
                 task()
+                startTime = System.currentTimeMillis()
+                nextUpdateTime = startTime + periodMillis
             }
         }
         delay(SLEEP_INTERVAL)
     }
 
     private fun isItTimeToUpdate(): Boolean {
-        val now = Instant.now().toEpochMilli()
-        if (nextUpdateTime == 0L) {
-            nextUpdateTime = now + periodMillis
-        }
+        val now = System.currentTimeMillis()
         if (now < nextUpdateTime)
             return false
-        nextUpdateTime += periodMillis
         return true
     }
 
 
     fun pause() {
         isPause = true
-        remainingTimeToNextUpdate = nextUpdateTime - Instant.now().toEpochMilli()
-
+        remainingTimeToNextUpdate = nextUpdateTime - System.currentTimeMillis()
+        Logger.log("Remaining time to next update: $remainingTimeToNextUpdate", Log.Level.DEBUG)
     }
 
     private fun stopUpdateLoop() {
-        isRunning = false
-        coroutineScope.cancel()
+        updateLoopJob?.cancel()
     }
 
     fun resume() {
-        nextUpdateTime = Instant.now().toEpochMilli() + remainingTimeToNextUpdate
+        nextUpdateTime = System.currentTimeMillis() + remainingTimeToNextUpdate
         isPause = false
     }
 

@@ -4,9 +4,13 @@ import app.logger.Log
 import app.logger.Logger
 import app.scene.SceneImpl
 import app.services.model.configuration.modelConfiguration
+import app.services.model.control.AgentModelControlService
 import app.services.scene.SceneService
+import controllers.ModelController
 import controllers.SceneController
 import controllers.SceneSetup
+import core.api.AgentModelApiClient
+import core.api.dto.*
 import core.components.Component
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
@@ -22,6 +26,8 @@ import imgui.flag.ImGuiWindowFlags
 import imgui.internal.ImGui
 import imgui.type.ImBoolean
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import org.lwjgl.glfw.GLFW
@@ -125,23 +131,13 @@ class Main : Application() {
     val objectTreeWindow = Window("Object tree", objectTree)
     val sceneSetup = SceneSetup()
 
-    private val sceneController = SceneController(sceneService, componentInspector, objectTree, sceneSetup)
+    private val sceneController = SceneController(sceneService.apply { start() }, componentInspector, objectTree, sceneSetup)
 
 
 
-    private val modelControlWindow = ModelControlView().apply {
-        onClickConnectListener = { ip, port ->
-            Logger.log("ip: $ip, port: $port", Log.Level.INFO)
-            connect()
-        }
-        onClickPauseListener = { pause() }
-        onClickRunListener = { run() }
-        onClickResumeListener = { run() }
-        onClickStopListener = { stop() }
-        onClickDisconnectListener = {
-            disconnect()
-        }
-    }
+    private val modelControlWindow = ModelControlView()
+    private val modelController = ModelController(modelControlWindow, agentMOdelControlService.apply { start() })
+
 
     private val dockspace = Dockspace().apply {
         dock(loggerDockedWindow, Dockspace.Position.LEFT_DOWN)
@@ -349,3 +345,81 @@ fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float = 1.0f ) {
     }
 }
 
+val agentMOdelControlService = AgentModelControlService(object : AgentModelApiClient {
+    override suspend fun connect(ip: String, port: Int): State {
+        delay(500)
+        Logger.log("Connected to $ip:$port", Log.Level.DEBUG)
+        return State.STOP
+    }
+
+    override suspend fun disconnect() {
+        delay(500)
+        Logger.log("Disconnected", Log.Level.DEBUG)
+    }
+
+    override suspend fun run(globalArgs: GlobalArgs) {
+        Logger.log("Request run", Log.Level.DEBUG)
+        delay(1000)
+        Logger.log("Requested run", Log.Level.DEBUG)
+    }
+
+    override suspend fun runAndSubscribeOnUpdate(globalArgs: GlobalArgs): Flow<Unit> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun callBehaviourFunctions(behaviour: Behaviour) {
+        TODO("Not yet implemented")
+    }
+
+    var count = 0
+
+    override suspend fun requestSnapshot(): Snapshot {
+        Logger.log("Request snapshot", Log.Level.DEBUG)
+        delay(10)
+        val snapshot = when (count) {
+            0 -> Snapshot(
+                1f, mutableListOf(
+                    AgentSnapshot(1, mutableMapOf("a" to 3, "b" to 7), mutableListOf()),
+                    AgentSnapshot(2, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot(3, mutableMapOf(), mutableListOf())
+                ), mutableListOf()
+            )
+            1 -> Snapshot(
+                1f, mutableListOf(
+                    AgentSnapshot(1, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot(2, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot(3, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot(4, mutableMapOf(), mutableListOf()),
+
+                    ), mutableListOf()
+            )
+            2 -> Snapshot(
+                1f, mutableListOf(
+                    AgentSnapshot(2, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot(3, mutableMapOf(), mutableListOf())
+                ), mutableListOf()
+            )
+            else -> Snapshot(
+                1f, mutableListOf(
+                    AgentSnapshot(1, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot(56, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot(3, mutableMapOf(), mutableListOf())
+                ), mutableListOf()
+            )
+        }
+        count++
+        return snapshot
+    }
+
+    override suspend fun pause() {
+        Logger.log("Request pause", Log.Level.DEBUG)
+    }
+
+    override suspend fun resume() {
+        Logger.log("Request resume", Log.Level.DEBUG)
+    }
+
+    override suspend fun stop() {
+        Logger.log("Request stop", Log.Level.DEBUG)
+    }
+})

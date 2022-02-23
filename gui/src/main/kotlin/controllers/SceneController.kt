@@ -2,7 +2,6 @@ package controllers
 
 import app.services.scene.SceneService
 import core.entities.Entity
-import core.scene.Scene
 import views.inspector.component.ComponentInspector
 import views.objecttree.FolderNode
 import views.objecttree.ObjectNode

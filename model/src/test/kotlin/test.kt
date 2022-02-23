@@ -6,10 +6,7 @@ import app.services.model.control.AgentModelControlService
 import app.services.scene.SceneService
 import com.fasterxml.jackson.databind.ObjectMapper
 import core.api.AgentModelApiClient
-import core.api.dto.AgentSnapshot
-import core.api.dto.Behaviour
-import core.api.dto.GlobalArgs
-import core.api.dto.Snapshot
+import core.api.dto.*
 import core.components.Property
 import core.components.getComponent
 import core.coroutines.AppContext
@@ -174,6 +171,17 @@ fun main() {
     }
 
     val agentMOdelControlService = AgentModelControlService(object : AgentModelApiClient {
+        override suspend fun connect(ip: String, port: Int): State {
+            delay(500)
+            Logger.log("Connected to $ip:$port", Log.Level.DEBUG)
+            return State.RUN
+        }
+
+        override suspend fun disconnect() {
+            delay(500)
+            Logger.log("Disconnected", Log.Level.DEBUG)
+        }
+
         override suspend fun run(globalArgs: GlobalArgs) {
             Logger.log("Request run", Log.Level.DEBUG)
             delay(1000)

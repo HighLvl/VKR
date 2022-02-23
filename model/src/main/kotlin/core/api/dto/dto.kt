@@ -8,3 +8,6 @@ data class Snapshot(val time: Float, val agentSnapshots: List<AgentSnapshot>, va
 data class Error(val code: Int, val text: String)
 data class Behaviour(val requests: List<AgentBehaviour>)
 data class GlobalArgs(val args: Map<String, Any>)
+enum class State {
+    RUN, STOP, PAUSE
+}

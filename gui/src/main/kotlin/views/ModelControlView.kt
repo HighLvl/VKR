@@ -1,6 +1,7 @@
 package views
 
 import com.google.common.net.InetAddresses
+import imgui.flag.ImGuiInputTextFlags
 import imgui.flag.ImGuiStyleVar
 import imgui.internal.ImGui
 import imgui.internal.flag.ImGuiItemFlags
@@ -11,10 +12,11 @@ import imgui.type.ImString
 class ModelControlView : View {
     var onClickConnectListener: (String, Int) -> Unit = { _, _ -> }
     var onClickStopListener: () -> Unit = {}
-    var onClickRunListener: (Float) -> Unit = {}
+    var onClickRunListener: () -> Unit = {}
     var onClickPauseListener: () -> Unit = {}
     var onClickResumeListener: () -> Unit = {}
     var onClickDisconnectListener: () -> Unit = {}
+    var onChangeDtListener: (Float) -> Unit = {}
 
     private var ipText = ImString(DEFAULT_IP, 15)
     private val port = ImInt(1024)
@@ -32,13 +34,16 @@ class ModelControlView : View {
         enabled = isValidIpAddress()
         onClickListener = {
             onClickConnectListener(ipText.get(), port.get())
+            onChangeDtListener(inputRequestDt.value)
         }
     }
 
     private val runButton = Button(TITLE_RUN_BUTTON).apply { bindKey(Key.R) }
     private val pauseButton = Button(TITLE_PAUSE_BUTTON).apply { bindKey(Key.P) }
     private val disconnectButton = Button(TITLE_DISCONNECT_BUTTON)
-    private val inputRequestDt = InputRequestDt()
+    private val inputRequestDt = InputRequestDt().apply {
+        onChangeDtListener = { this@ModelControlView.onChangeDtListener(it) }
+    }
 
     override fun draw() {
         when (state) {
@@ -93,7 +98,6 @@ class ModelControlView : View {
             pressed = false
             onClickListener = onClickPauseListener
         }
-        inputRequestDt.enabled = false
         drawControlViews()
     }
 
@@ -108,7 +112,6 @@ class ModelControlView : View {
             pressed = true
             onClickListener = onClickResumeListener
         }
-        inputRequestDt.enabled = false
         drawControlViews()
     }
 
@@ -116,14 +119,13 @@ class ModelControlView : View {
         runButton.apply {
             pressed = false
             enabled = true
-            onClickListener = { onClickRunListener(inputRequestDt.value) }
+            onClickListener = { onClickRunListener() }
         }
         pauseButton.apply {
             pressed = false
             enabled = false
             onClickListener = {}
         }
-        inputRequestDt.enabled = true
         drawControlViews()
     }
 
@@ -171,6 +173,7 @@ class ModelControlView : View {
     private class InputRequestDt : View {
         var enabled = true
         private val imDt = ImFloat(REQUEST_DT_VALUE_MIN)
+        var onChangeDtListener: (Float) -> Unit = {}
 
         val value: Float
             get() = imDt.get()
@@ -181,8 +184,17 @@ class ModelControlView : View {
                 ImGui.pushStyleVar(ImGuiStyleVar.Alpha, ImGui.getStyle().alpha * 0.5f)
             }
             ImGui.pushItemWidth(WIDTH_INPUT_REQUEST_DT)
-            if (ImGui.inputFloat(LABEL_INPUT_REQUEST_DT, imDt, 0f, 0f, "%g")) {
+            if (ImGui.inputFloat(
+                    LABEL_INPUT_REQUEST_DT,
+                    imDt,
+                    0f,
+                    0f,
+                    "%g",
+                    ImGuiInputTextFlags.EnterReturnsTrue
+                )
+            ) {
                 imDt.set(imDt.get().coerceIn(REQUEST_DT_VALUE_MIN, REQUEST_DT_VALUE_MAX))
+                onChangeDtListener(imDt.get())
             }
             if (!enabled) {
                 ImGui.popItemFlag()
@@ -210,7 +222,7 @@ class ModelControlView : View {
         const val WIDTH_PAUSE_BUTTON = 100f
         const val LABEL_INPUT_REQUEST_DT = "dt, s"
         const val WIDTH_INPUT_REQUEST_DT = 100f
-        const val REQUEST_DT_VALUE_MIN = 0.1f
+        const val REQUEST_DT_VALUE_MIN = 0.001f
         const val REQUEST_DT_VALUE_MAX = 60f
     }
 }

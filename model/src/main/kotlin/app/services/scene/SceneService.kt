@@ -99,7 +99,7 @@ class SceneService : Service() {
 
     fun clearScene() {
         _scene.apply {
-            agents.asSequence().map { it.key }.forEach { removeAgentById(it) }
+            agents.map { it.key }.forEach { removeAgentById(it) }
             environment.getComponents().forEach {
                 environment.removeComponent(it::class)
             }

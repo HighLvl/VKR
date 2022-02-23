@@ -5,11 +5,9 @@ import kotlinx.coroutines.withContext
 import core.coroutines.launchWithAppContext
 import app.services.model.control.ControlAction
 
-object PauseState : State() {
-    private val AVAILABLE_CONTROL_ACTIONS = listOf(ControlAction.RESUME, ControlAction.STOP)
-
-    override fun resume(context: AgentModelControlContext) {
-        launchWithAppContext { resumeAgentModel(context) }
+object PauseState : ConnectState() {
+    override suspend fun resume(context: AgentModelControlContext) {
+        resumeAgentModel(context)
     }
 
     private suspend fun resumeAgentModel(context: AgentModelControlContext) {
@@ -19,19 +17,10 @@ object PauseState : State() {
         context.setState(RunState)
     }
 
-    override fun stop(context: AgentModelControlContext) {
-        launchWithAppContext { stopAgentModel(context) }
-    }
-
-    private suspend fun stopAgentModel(context: AgentModelControlContext) {
+    override suspend fun stop(context: AgentModelControlContext) {
         context.periodTaskExecutor.stop()
         withContext(Dispatchers.IO) { context.apiClient.stop() }
         context.onStop()
         context.setState(StopState)
-    }
-
-    override fun onThisStateChanged(context: AgentModelControlContext) {
-        context.availableControlActions.onNext(AVAILABLE_CONTROL_ACTIONS)
-
     }
 }
