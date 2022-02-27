@@ -11,12 +11,20 @@ import views.input.InputString
 
 class ModelControlView : View {
     var onClickConnectListener: (String, Int) -> Unit = { _, _ -> }
+        set(value) {
+            field = value
+            connectButton.onClickListener = { value(ipText, port) }
+        }
     var onClickStopListener: () -> Unit = {}
     var onClickRunListener: () -> Unit = {}
     var onClickPauseListener: () -> Unit = {}
     var onClickResumeListener: () -> Unit = {}
     var onClickDisconnectListener: () -> Unit = {}
     var onChangeDtListener: (Float) -> Unit = {}
+        set(value) {
+            field = value
+            inputRequestDt.onChangeDtListener = value
+        }
     var width = 0f
         private set
     private var ipText = DEFAULT_IP
@@ -31,9 +39,7 @@ class ModelControlView : View {
     private val runButton = Button(TITLE_RUN_BUTTON).apply { bindKey(Key.R) }
     private val pauseButton = Button(TITLE_PAUSE_BUTTON).apply { bindKey(Key.P) }
     private val disconnectButton = Button(TITLE_DISCONNECT_BUTTON)
-    private val inputRequestDt = InputRequestDt().apply {
-        onChangeDtListener = { this@ModelControlView.onChangeDtListener(it) }
-    }
+    private val inputRequestDt = InputRequestDt()
     private val ipInputString = InputString(ipText, LABEL_INPUT_IP, 15)
     private val portInputInt = InputInt(port, LABEL_INPUT_PORT)
 
@@ -172,7 +178,6 @@ class ModelControlView : View {
         connectButton.apply {
             enabled = isValidIpAddress()
             pressed = false
-            onClickListener = { onClickConnectListener(ipText, port) }
         }
         inputRequestDt.enabled = true
         ipInputString.apply {
@@ -206,6 +211,10 @@ class ModelControlView : View {
         var enabled = true
         private val imDt = ImFloat(REQUEST_DT_VALUE_MIN)
         var onChangeDtListener: (Float) -> Unit = {}
+            set(value) {
+                field = value
+                value(imDt.get())
+            }
 
         val value: Float
             get() = imDt.get()

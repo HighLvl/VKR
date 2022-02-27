@@ -6,8 +6,8 @@ class ExperimentTaskContext(private val model: ExperimentTaskModel) {
 
     fun stopOn(stopOnContext: StopOnContext.() -> Unit) = stopOnContext(StopOnContext(model))
     fun constraint(name: String = "", predicate: () -> Boolean) = model.addConstraint(name, predicate)
-    fun observableVariables(vararg variables: ObservableVariable) = model.addObservableVariables(*variables)
-    fun mutableVariables(vararg variables: MutableVariable) = model.addMutableVariables(*variables)
+    fun observableVariables(vararg variables: Pair<String, () -> Float>) = model.addObservableVariables(*variables)
+    fun mutableVariables(vararg variables: Pair<String, (Float) -> Unit>) = model.addMutableVariables(*variables)
 }
 
 class StopOnContext(private val model: ExperimentTaskModel) {

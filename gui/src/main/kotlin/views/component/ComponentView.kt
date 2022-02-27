@@ -4,7 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiTreeNodeFlags
 import views.Decorator
 import views.inspector.property.base.PropertyInspector
-import views.inspector.splitOnCapitalLetters
+import views.splitOnCapitalLetters
 
 open class ComponentView(
     private val compClass: String,

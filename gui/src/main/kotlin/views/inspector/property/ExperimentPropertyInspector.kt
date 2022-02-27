@@ -6,7 +6,7 @@ import views.inspector.property.base.SimpleMutablePropertyFactory
 import views.properties.MutableProperty
 import views.properties.OpenFileProperty
 
-class OptimizationTaskPropertyInspector : PropertyInspector() {
+class ExperimentPropertyInspector : PropertyInspector() {
     init {
         mutablePropertyFactory = MutablePropertyFactory()
     }

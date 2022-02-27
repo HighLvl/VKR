@@ -9,10 +9,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import imgui.ImGui
 import views.inspector.property.base.*
-import views.inspector.splitOnCapitalLetters
 import views.properties.ListObjectProperty
 import views.properties.ObjectProperty
 import views.properties.RequestBodyObjectProperty
+import views.splitOnCapitalLetters
 
 
 class AgentInterfacePropertyInspector(private val requestBodies: RequestBodies) :

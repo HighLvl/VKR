@@ -19,7 +19,7 @@ object EventBus {
 
 }
 
-inline fun <reified T : Event> EventBus.listen() = EventBus.listen(T::class)
+inline fun <reified T : Event> EventBus.listen() = listen(T::class)
 
 sealed class Event
 

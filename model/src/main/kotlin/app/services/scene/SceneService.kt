@@ -16,23 +16,23 @@ import core.services.*
 import core.api.dto.AgentSnapshot
 import core.api.dto.GlobalArgs
 import core.api.dto.Snapshot
+import core.components.Script
 
 class SceneService : Service() {
     private val _scene: SceneImpl = SceneFactory.createScene()
     val scene: Scene = _scene
     var configuration: ModelConfiguration = ModelConfiguration()
-    private set
+        private set
 
     private val _globalArgs = (mapOf<String, Any>())
     val globalArgs = EventBus.listen<AgentModelLifecycleEvent.GlobalArgsSet>().map { it.args.args }
 
     override fun start() {
-        updateAgentModelOnSnapshotReceive()
-    }
-
-    private fun updateAgentModelOnSnapshotReceive() {
         EventBus.listen<SnapshotReceive>().subscribe {
             updateAgentModel(it.snapshot)
+        }
+        EventBus.listen<AgentModelLifecycleEvent.Start>().subscribe {
+            getScripts().forEach { it.start() }
         }
     }
 
@@ -69,11 +69,17 @@ class SceneService : Service() {
     private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterface>()!!
 
     private fun onUpdate(modelTime: Float) {
-        EventBus.publish(AgentModelLifecycleEvent.Update(modelTime))
+        getScripts().forEach { it.onModelUpdate(modelTime) }
     }
 
+    private fun getScripts(): List<Script> =
+        _scene.getEntities().asSequence()
+            .flatMap { it.getComponents() }
+            .filterIsInstance<Script>()
+            .toList()
+
     private fun onAfterUpdate() {
-        EventBus.publish(AgentModelLifecycleEvent.AfterUpdate)
+        getScripts().forEach { it.onModelAfterUpdate() }
     }
 
     fun setGlobalArgs(args: Map<String, Any>) {

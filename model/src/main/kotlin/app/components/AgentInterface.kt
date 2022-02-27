@@ -54,7 +54,7 @@ class AgentInterface(
         _requests.add(request)
     }
 
-    override fun afterUpdate() {
+    override fun onModelAfterUpdate() {
         _requests.clear()
     }
 }

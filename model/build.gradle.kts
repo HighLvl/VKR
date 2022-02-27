@@ -9,7 +9,6 @@ plugins {
     id("com.google.protobuf") version "0.8.17"
     kotlin("plugin.serialization") version "1.6.0"
     id("io.netifi.flatbuffers") version "1.0.7"
-
 }
 
 group = "me.cherepanov"
@@ -18,6 +17,8 @@ version = "1.0"
 repositories {
     mavenCentral()
 }
+
+val imguiVersion = "1.86.2"
 
 dependencies {
     testImplementation(kotlin("test"))
@@ -46,6 +47,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     runtimeOnly("org.jetbrains.kotlin:kotlin-scripting-jsr223:1.6.0")
 
+    implementation("io.github.spair:imgui-java-app:$imguiVersion")
+    implementation("io.github.spair:imgui-java-binding:$imguiVersion")
 }
 
 tasks.test {

@@ -8,8 +8,8 @@ fun ObjectNode.put(name: String, value: Any) {
         is Int -> put(name, value)
         is Double -> put(name, value)
         is String -> put(name, value)
-        else -> {
-        }
+        is Boolean -> put(name, value)
+        else -> { }
     }
 }
 

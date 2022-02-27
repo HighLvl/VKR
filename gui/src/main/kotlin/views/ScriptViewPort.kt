@@ -1,7 +1,8 @@
 package views
 
-class ScriptViewPort(private val doOnDraw: () -> Unit): View {
+class ScriptViewPort: View {
+    var onDrawListener: () -> Unit = {}
     override fun draw() {
-        doOnDraw()
+        onDrawListener()
     }
 }

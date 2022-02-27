@@ -2,7 +2,7 @@ package views
 
 import imgui.internal.ImGui
 
-class Window(
+open class Window(
     val name: String,
     view: View,
     val width: Float = 0f,
@@ -11,16 +11,19 @@ class Window(
 
     private var isInit = false
 
+    protected open fun drawWindow() {
+        if (ImGui.begin(name)) {
+            super.draw()
+        }
+        ImGui.end()
+    }
+
     override fun draw() {
         if (!isInit) {
             if (width != 0f && height != 0f)
                 ImGui.setNextWindowSize(width, height)
             isInit = true
         }
-
-        if (ImGui.begin(name)) {
-            super.draw()
-        }
-        ImGui.end()
+        drawWindow()
     }
 }

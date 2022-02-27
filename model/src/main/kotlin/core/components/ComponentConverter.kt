@@ -5,6 +5,7 @@ import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.jvm.javaMethod
 
 object ComponentConverter {
     fun convertToComponentSnapshot(component: Component): ComponentSnapshot {
@@ -13,7 +14,6 @@ object ComponentConverter {
         val publicProperties = publicMembers.filterIsInstance<KProperty<*>>()
         val mutableProps = mutableListOf<Property>()
         val immutableProps = mutableListOf<Property>()
-
         publicProperties.forEach {
             when (it) {
                 is KMutableProperty -> handleKMutableProperty(it, component, mutableProps, immutableProps)

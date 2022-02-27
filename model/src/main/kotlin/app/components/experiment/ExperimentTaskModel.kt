@@ -1,8 +1,5 @@
 package app.components.experiment
 
-typealias MutableVariable = Pair<String, (Float) -> Unit>
-typealias ObservableVariable = Pair<String, () -> Float>
-
 class ExperimentTaskModel {
     val targetFuncList: List<TargetFunc>
         get() = _targetFuncList
@@ -13,12 +10,12 @@ class ExperimentTaskModel {
     val constraintList: List<Predicate>
         get() = _constraintList
 
-    val observableVariables: List<ObservableVariable>
+    val observableVariables: Map<String, () -> Float>
         get() = _observableVariables
-    private val _observableVariables = mutableListOf<ObservableVariable>()
-    val mutableVariables: List<MutableVariable>
+    private val _observableVariables = mutableMapOf<String, () -> Float>()
+    val mutableVariables: Map<String, (Float) -> Unit>
         get() = _mutableVariables
-    private val _mutableVariables = mutableListOf<MutableVariable>()
+    private val _mutableVariables = mutableMapOf<String, (Float) -> Unit>()
 
 
     var stopScore = Int.MAX_VALUE
@@ -50,14 +47,12 @@ class ExperimentTaskModel {
         _constraintList += Predicate(name, predicate)
     }
 
-    fun addObservableVariables(vararg variables: ObservableVariable) = _observableVariables.addAll(variables)
-    fun addMutableVariables(vararg variables: MutableVariable) = _mutableVariables.addAll(variables)
+    fun addObservableVariables(vararg variables: Pair<String, () -> Float>) = _observableVariables.putAll(variables)
+    fun addMutableVariables(vararg variables: Pair<String, (Float) -> Unit>) = _mutableVariables.putAll(variables)
 
     class TargetFunc(val score: Int, val name: String, val predicate: () -> Boolean)
     class Predicate(val name: String, val predicate: () -> Boolean)
 }
-//
-//
 
 fun main() {
     val task = experimentTask {

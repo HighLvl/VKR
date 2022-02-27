@@ -1,5 +1,4 @@
 import app.components.AgentInterface
-import app.components.experiment.Experiment
 import app.logger.Log
 import app.logger.Logger
 import app.scene.SceneImpl
@@ -9,17 +8,24 @@ import app.services.scene.SceneService
 import controllers.ModelController
 import controllers.SceneController
 import controllers.SceneSetup
+import controllers.ScriptViewPortController
 import core.api.AgentModelApiClient
 import core.api.dto.*
 import core.components.Component
+import core.components.Script
 import core.coroutines.AppContext
 import core.coroutines.launchWithAppContext
 import core.entities.Agent
 import core.entities.Entity
+import imgui.ImFontConfig
+import imgui.ImFontGlyphRangesBuilder
+import imgui.ImGuiIO
 import imgui.ImGuiViewport
 import imgui.app.Application
 import imgui.app.Configuration
 import imgui.callback.ImPlatformFuncViewport
+import imgui.extension.implot.ImPlot
+import imgui.extension.implot.ImPlotContext
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiConfigFlags
 import imgui.flag.ImGuiWindowFlags
@@ -39,6 +45,7 @@ import java.io.IOException
 import java.net.URISyntaxException
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
@@ -50,6 +57,8 @@ class Main : Application() {
         config.isFullScreen = true
     }
 
+    private lateinit var imPlotContext: ImPlotContext
+
     override fun initImGui(config: Configuration?) {
         super.initImGui(config)
         val io = ImGui.getIO()
@@ -59,12 +68,25 @@ class Main : Application() {
         io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable) // Enable Multi-Viewport / Platform Windows
         io.configViewportsNoTaskBarIcon = true
 
-        ImGui.getIO().fonts.addFontFromMemoryTTF(
-            loadFromResources("Roboto-Regular.ttf"),
-            14f * SCALE_FACTOR
-        )
-        ImGui.getIO().fonts.build()
+        initFonts(io)
         setupImGuiStyle(false, 1f)
+        imPlotContext = ImPlot.createContext()
+    }
+
+    private fun initFonts(io: ImGuiIO) {
+        val fontConfig = ImFontConfig()
+        io.fonts.addFontFromMemoryTTF(
+            loadFromResources("Roboto-Regular.ttf"),
+            14f * SCALE_FACTOR,
+            fontConfig
+        )
+        io.fonts.build()
+        fontConfig.destroy()
+    }
+
+    override fun dispose() {
+        super.dispose()
+        ImPlot.destroyContext(imPlotContext)
     }
 
     var time: Duration? = null
@@ -72,20 +94,16 @@ class Main : Application() {
     @OptIn(ExperimentalTime::class)
     override fun preRun() {
         super.preRun()
-        val logger = Logger
         launchWithAppContext {
-            var count = 0
-        }
-        launchWithAppContext {
-            logger.logs.collect {
+            Logger.logs.collect {
                 loggerView.log(it.text, it.level.mapToLogViewLevel())
             }
         }
     }
 
     private val loggerDockedWindow = Window("Logger", loggerView)
-    private val scriptViewPortWindow = Window("ScriptView", ScriptViewPort {
-    })
+    private val scriptViewPort = ScriptViewPort()
+    private val scriptViewPortWindow = ScriptViewPortWindow("ScriptView", scriptViewPort)
 
     data class A(val x: Float = 0f, val y: String = ";jlk")
 
@@ -112,8 +130,7 @@ class Main : Application() {
         agent.setComponent(
             agentInterface
         )
-        agent.setComponent(Experiment())
-        agent.setComponent(object : Component() {
+        agent.setComponent(object : Component(), Script {
             var x = 0f
             var y = 0
             val name = "position"
@@ -131,12 +148,14 @@ class Main : Application() {
     val objectTreeWindow = Window("Object tree", objectTree)
     val sceneSetup = SceneSetup()
 
-    private val sceneController = SceneController(sceneService.apply { start() }, componentInspector, objectTree, sceneSetup)
-
+    private val sceneController =
+        SceneController(sceneService, componentInspector, objectTree, sceneSetup)
 
 
     private val modelControlWindow = ModelControlView()
     private val modelController = ModelController(modelControlWindow, agentMOdelControlService.apply { start() })
+
+    private val scriptViewPortController = ScriptViewPortController(scriptViewPort, sceneService.scene)
 
 
     private val dockspace = Dockspace().apply {
@@ -148,8 +167,8 @@ class Main : Application() {
 
     private val toolsHeight = 50f
     private val isDarkTheme = ImBoolean()
-    override fun process() {
 
+    override fun process() {
         sceneController.update()
 
         val viewport = ImGui.getMainViewport()
@@ -157,7 +176,7 @@ class Main : Application() {
         val menuBarHeight = ImGui.getWindowHeight()
         val menuBarWidth = ImGui.getWindowWidth()
         val menuBarPos = ImGui.getWindowPos()
-        if(ImGui.beginMenu("File")) {
+        if (ImGui.beginMenu("File")) {
             if (ImGui.menuItem("Load configuration")) {
                 sceneSetup.onLoadConfigurationListener(FileOpenDialog().open("kts"))
             }
@@ -166,7 +185,7 @@ class Main : Application() {
             }
             ImGui.endMenu()
         }
-        if(ImGui.beginMenu("View")) {
+        if (ImGui.beginMenu("View")) {
             if (ImGui.checkbox("Dark theme", isDarkTheme)) {
                 setupImGuiStyle(isDarkTheme.get())
             }
@@ -183,12 +202,12 @@ class Main : Application() {
         ImGui.setNextWindowSize(menuBarWidth, toolsHeight)
         ImGui.setNextWindowPos(menuBarPos.x, menuBarPos.y + menuBarHeight)
         if (ImGui.begin("Tools window", flags)) {
-                val width = modelControlWindow.width
-                ImGui.setWindowPos(
-                    menuBarPos.x + (menuBarWidth - width) / 2,
-                    menuBarPos.y + menuBarHeight
-                )
-                modelControlWindow.draw()
+            val width = modelControlWindow.width
+            ImGui.setWindowPos(
+                menuBarPos.x + (menuBarWidth - width) / 2,
+                menuBarPos.y + menuBarHeight
+            )
+            modelControlWindow.draw()
         }
         ImGui.end()
 
@@ -228,12 +247,12 @@ class Main : Application() {
         const val SCALE_FACTOR = 2f
 
         @JvmStatic
-        fun main(args: Array<String>) {
-            runBlocking {
-                AppContext.context = currentCoroutineContext()
-                launch(Main())
-            }
+        fun main(args: Array<String>): Unit = runBlocking {
+            AppContext.context = currentCoroutineContext()
+            launch(Main())
+            exitProcess(0)
         }
+
 
         private fun loadFromResources(name: String): ByteArray {
             return try {
@@ -253,7 +272,7 @@ fun Log.Level.mapToLogViewLevel() = when (this) {
     Log.Level.DEBUG -> LoggerView.Level.DEBUG
 }
 
-fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float = 1.0f ) {
+fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float = 1.0f) {
     val style = ImGui.getStyle()
 
     // light style from Pacôme Danhiez (user itamago) https://github.com/ocornut/imgui/pull/511#issuecomment-175719267
@@ -277,7 +296,7 @@ fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float = 1.0f ) {
     style.setColor(ImGuiCol.ScrollbarGrab, 0.69f, 0.69f, 0.69f, 1.00f);
     style.setColor(ImGuiCol.ScrollbarGrabHovered, 0.59f, 0.59f, 0.59f, 1.00f);
     style.setColor(ImGuiCol.ScrollbarGrabActive, 0.49f, 0.49f, 0.49f, 1.00f);
-   // style.setColor(ImGuiCol.ComboBg, 0.86f, 0.86f, 0.86f, 0.99f);
+    // style.setColor(ImGuiCol.ComboBg, 0.86f, 0.86f, 0.86f, 0.99f);
     style.setColor(ImGuiCol.CheckMark, 0.26f, 0.59f, 0.98f, 1.00f);
     style.setColor(ImGuiCol.SliderGrab, 0.24f, 0.52f, 0.88f, 1.00f);
     style.setColor(ImGuiCol.SliderGrabActive, 0.26f, 0.59f, 0.98f, 1.00f);
@@ -292,6 +311,7 @@ fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float = 1.0f ) {
     style.setColor(ImGuiCol.Header, 0.26f, 0.59f, 0.98f, 0.31f);
     style.setColor(ImGuiCol.HeaderHovered, 0.26f, 0.59f, 0.98f, 0.80f);
     style.setColor(ImGuiCol.HeaderActive, 0.26f, 0.59f, 0.98f, 1.00f);
+    style.setColor(ImGuiCol.TableHeaderBg, 0.9f, 0.9f, 0.9f, 1.00f);
 //    style.setColor(ImGuiCol.Column, 0.39f, 0.39f, 0.39f, 1.00f);
 //    style.setColor(ImGuiCol.ColumnHovered, 0.26f, 0.59f, 0.98f, 0.78f);
 //    style.setColor(ImGuiCol.ColumnActive, 0.26f, 0.59f, 0.98f, 1.00f);
@@ -308,33 +328,25 @@ fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float = 1.0f ) {
     style.setColor(ImGuiCol.TextSelectedBg, 0.26f, 0.59f, 0.98f, 0.35f);
     //style.setColor(ImGuiCol.ModalWindowDarkening, 0.20f, 0.20f, 0.20f, 0.35f);
 
-    if( bStyleDark_ )
-    {
-        for (i in 0 until ImGuiCol.COUNT)
-        {
+    if (bStyleDark_) {
+        for (i in 0 until ImGuiCol.COUNT) {
             val col = style.colors[i]
             val hsv = FloatArray(4)
-            ImGui.colorConvertRGBtoHSV( col, hsv)
+            ImGui.colorConvertRGBtoHSV(col, hsv)
 
-            if( hsv[1] < 0.1f )
-            {
+            if (hsv[1] < 0.1f) {
                 hsv[2] = 1.0f - hsv[2]
             }
             ImGui.colorConvertHSVtoRGB(hsv, col)
-            if( col[3] < 1.00f )
-            {
+            if (col[3] < 1.00f) {
                 col[3] *= alpha_
             }
             style.setColor(i, col[0], col[1], col[2], col[3])
         }
-    }
-    else
-    {
-        for (i in 0 until ImGuiCol.COUNT)
-        {
+    } else {
+        for (i in 0 until ImGuiCol.COUNT) {
             val col = style.colors[i]
-            if( col[3] < 1.00f )
-            {
+            if (col[3] < 1.00f) {
                 col[0] *= alpha_
                 col[1] *= alpha_
                 col[2] *= alpha_
@@ -373,19 +385,28 @@ val agentMOdelControlService = AgentModelControlService(object : AgentModelApiCl
 
     var count = 0
 
+    val timeSeq = sequence {
+        var time = 0f
+        while (true) {
+            yield(time)
+            time += 0.1f
+        }
+    }.iterator()
+
     override suspend fun requestSnapshot(): Snapshot {
         Logger.log("Request snapshot", Log.Level.DEBUG)
         delay(10)
+        val time = timeSeq.next()
         val snapshot = when (count) {
             0 -> Snapshot(
-                1f, mutableListOf(
+                time, mutableListOf(
                     AgentSnapshot(1, mutableMapOf("a" to 3, "b" to 7), mutableListOf()),
                     AgentSnapshot(2, mutableMapOf(), mutableListOf()),
                     AgentSnapshot(3, mutableMapOf(), mutableListOf())
                 ), mutableListOf()
             )
             1 -> Snapshot(
-                1f, mutableListOf(
+                time, mutableListOf(
                     AgentSnapshot(1, mutableMapOf(), mutableListOf()),
                     AgentSnapshot(2, mutableMapOf(), mutableListOf()),
                     AgentSnapshot(3, mutableMapOf(), mutableListOf()),
@@ -394,13 +415,13 @@ val agentMOdelControlService = AgentModelControlService(object : AgentModelApiCl
                     ), mutableListOf()
             )
             2 -> Snapshot(
-                1f, mutableListOf(
+                time, mutableListOf(
                     AgentSnapshot(2, mutableMapOf(), mutableListOf()),
                     AgentSnapshot(3, mutableMapOf(), mutableListOf())
                 ), mutableListOf()
             )
             else -> Snapshot(
-                1f, mutableListOf(
+                time, mutableListOf(
                     AgentSnapshot(1, mutableMapOf(), mutableListOf()),
                     AgentSnapshot(56, mutableMapOf(), mutableListOf()),
                     AgentSnapshot(3, mutableMapOf(), mutableListOf())
