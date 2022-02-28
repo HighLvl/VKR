@@ -1,6 +1,8 @@
 package app.components.experiment.view
 
 import core.datatypes.base.Series
+import imgui.ImGuiListClipper
+import imgui.callback.ImListClipperCallback
 import imgui.flag.ImGuiTableColumnFlags
 import imgui.flag.ImGuiTableFlags
 import imgui.internal.ImGui
@@ -60,14 +62,16 @@ open class TableView(private val windowTitle: String, private val dataSource: Ma
 
     protected open fun fillInTableWithData() {
         val rowsNumber = dataSource.values.first().size
-        for (i in 0 until rowsNumber) {
-            ImGui.tableNextRow()
-            dataSource.entries.forEach { (varName, values) ->
-                val columnIndex = nameIndexMap[varName]!!
-                ImGui.tableSetColumnIndex(columnIndex)
-                drawCell(varName, i, values[i])
+        ImGuiListClipper.forEach(rowsNumber, object : ImListClipperCallback() {
+            override fun accept(rowIndex: Int) {
+                ImGui.tableNextRow()
+                dataSource.entries.forEach { (varName, values) ->
+                    val columnIndex = nameIndexMap[varName]!!
+                    ImGui.tableSetColumnIndex(columnIndex)
+                    drawCell(varName, rowIndex, values[rowIndex])
+                }
             }
-        }
+        })
     }
 
     protected open fun drawCell(columnTitle: String, row: Int, value: Any?) {

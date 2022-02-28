@@ -46,6 +46,7 @@ import java.net.URISyntaxException
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.system.exitProcess
+import kotlin.system.measureTimeMillis
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
@@ -237,8 +238,10 @@ class Main : Application() {
     override fun run() {
         runBlocking {
             while (!GLFW.glfwWindowShouldClose(handle)) {
-                runFrame()
-                yield()
+                println(measureTimeMillis {
+                    runFrame()
+                    yield()
+                })
             }
         }
     }

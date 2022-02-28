@@ -1,6 +1,8 @@
 package views
 
+import imgui.ImGuiListClipper
 import imgui.ImVec4
+import imgui.callback.ImListClipperCallback
 import imgui.flag.ImGuiCol
 import imgui.internal.ImGui
 import imgui.type.ImBoolean
@@ -25,8 +27,7 @@ class LoggerView : View {
     }
 
     override fun draw() {
-        if (ImGui.beginPopup("Options"))
-        {
+        if (ImGui.beginPopup("Options")) {
             ImGui.checkbox("Filter", openFilter);
             ImGui.endPopup();
         }
@@ -49,15 +50,20 @@ class LoggerView : View {
         val titleColor = ImGui.getStyle().getColor(ImGuiCol.FrameBg)
         ImGui.pushStyleColor(ImGuiCol.ChildBg, titleColor.x, titleColor.y, titleColor.z, titleColor.w)
         ImGui.beginChild(ID_LOG_CONTAINER)
-        for (log in filteredLogs) {
-            val formattedLog = formatLog(log)
-            val color = when (log.second) {
-                Level.ERROR -> ERROR_COLOR
-                Level.DEBUG -> ImGui.getStyle().getColor(ImGuiCol.Text)
-                Level.INFO -> ImGui.getStyle().getColor(ImGuiCol.Text)
+        val filteredLogsList = filteredLogs.toList()
+        ImGuiListClipper.forEach(filteredLogsList.size, object : ImListClipperCallback() {
+            override fun accept(logIndex: Int) {
+                val log = filteredLogsList[logIndex]
+                val formattedLog = formatLog(log)
+                val color = when (log.second) {
+                    Level.ERROR -> ERROR_COLOR
+                    Level.DEBUG -> ImGui.getStyle().getColor(ImGuiCol.Text)
+                    Level.INFO -> ImGui.getStyle().getColor(ImGuiCol.Text)
+                }
+                ImGui.textColored(color.x, color.y, color.z, color.w, formattedLog)
             }
-            ImGui.textColored(color.x, color.y, color.z, color.w, formattedLog)
-        }
+        })
+
         if (ImGui.getScrollY() == ImGui.getScrollMaxY()) {
             ImGui.setScrollHereY()
         }
@@ -82,8 +88,7 @@ class LoggerView : View {
         const val FORMATTED_DEBUG_LOG = "[debug] %s"
         const val TITLE_CLEAR_BUTTON = "Clear"
 
-
-        val ERROR_COLOR = ImVec4(255f /255f, 100f/255f, 100f/255f, 255f/255f)
+        val ERROR_COLOR = ImVec4(255f / 255f, 100f / 255f, 100f / 255f, 255f / 255f)
         val INFO_COLOR = listOf(255, 255, 255, 255)
         val DEBUG_COLOR = listOf(255, 255, 255, 255)
 
