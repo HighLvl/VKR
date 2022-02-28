@@ -1,6 +1,7 @@
 package app.components.experiment
 
 import app.components.experiment.constraints.Constraints
+import app.components.experiment.goals.Goals
 import app.components.experiment.variables.mutable.MutableVariables
 import app.components.experiment.variables.observable.ObservableVariables
 import app.logger.Log
@@ -27,6 +28,9 @@ class Experiment : SystemComponent(), Script {
             }
             field = value
             observableVariables.trackedDataSize = value
+            mutableVariables.trackedDataSize = value
+            constraints.trackedDataSize = value
+
         }
     var showObservableVariables
         set(value) {
@@ -43,15 +47,28 @@ class Experiment : SystemComponent(), Script {
             constraints.enabled = value
         }
         get() = constraints.enabled
+    var showGoals
+        set(value) {
+            goals.enabled = value
+        }
+        get() = goals.enabled
 
     private val observableVariables = ObservableVariables()
     private val mutableVariables = MutableVariables()
     private val constraints = Constraints()
+    private val goals = Goals()
 
     init {
         taskModel = experimentTask {
-            targetFunc(10, "some Func") {
-                4 < 100
+            val f = sequence<Int> {
+                var a = 0
+                while (true) {
+                    a++
+                    yield(a)
+                }
+            }.iterator()
+            goal(10, "some Func") {
+                f.next() < 100
             }
             constraint("d") {
                 1 > 12
@@ -107,17 +124,20 @@ class Experiment : SystemComponent(), Script {
         observableVariables.reset(taskModel.observableVariables)
         mutableVariables.reset(taskModel.mutableVariables)
         constraints.reset(taskModel.constraints)
+        goals.reset(taskModel.goals, taskModel.stopScore)
     }
 
     override fun onModelUpdate(modelTime: Float) {
         observableVariables.onModelUpdate(modelTime)
         mutableVariables.onModelUpdate(modelTime)
         constraints.onModelUpdate(modelTime)
+        goals.onModelUpdate(modelTime)
     }
 
     override fun update() {
         observableVariables.update()
         mutableVariables.update()
         constraints.update()
+        goals.update()
     }
 }

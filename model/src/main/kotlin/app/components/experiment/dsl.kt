@@ -1,7 +1,7 @@
 package app.components.experiment
 
 class ExperimentTaskContext(private val model: ExperimentTaskModel) {
-    fun targetFunc(score: Int, name: String, predicate: () -> Boolean) =
+    fun goal(score: Int, name: String, predicate: () -> Boolean) =
         model.addTargetFunc(score, name, predicate)
     fun stopOn(stopOnContext: StopOnContext.() -> Unit) = stopOnContext(StopOnContext(model))
     fun constraint(name: String, predicate: () -> Boolean) = model.addConstraint(name, predicate)

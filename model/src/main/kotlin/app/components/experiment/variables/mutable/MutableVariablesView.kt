@@ -1,101 +1,44 @@
 package app.components.experiment.variables.mutable
 
-import app.components.experiment.fillInTableWithData
+import app.components.experiment.view.TableView
 import core.datatypes.base.Series
 import imgui.flag.ImGuiInputTextFlags
-import imgui.flag.ImGuiTableColumnFlags
-import imgui.flag.ImGuiTableFlags
 import imgui.internal.ImGui
-import imgui.type.ImBoolean
 import imgui.type.ImFloat
 
-class MutableVariablesView(private val dataSource: Map<String, Series<Float>>) {
-    private var docked = false
-    private val nameIndexMap = mutableMapOf<String, Int>()
-    var enabled
-        set(value) {
-            showMutableVariablesImBoolean.set(value)
-        }
-        get() = showMutableVariablesImBoolean.get()
-    private val showMutableVariablesImBoolean = ImBoolean(false)
+class MutableVariablesView(private val dataSource: Map<String, Series<Float>>) :
+    TableView(TITLE_MUTABLE_VARIABLES_WINDOW, dataSource) {
     var onChangeValueListener: (String, Float) -> Unit = { _, _ -> }
     private val varValueImFloats = mutableMapOf<String, ImFloat>()
 
-    fun reset() {
-        nameIndexMap.clear()
-        dataSource.entries.forEachIndexed() { index, (varName, _) ->
-            nameIndexMap[varName] = index
+    override fun reset() {
+        super.reset()
+        dataSource.keys.forEach { varName ->
             varValueImFloats[varName] = ImFloat()
         }
     }
 
-    fun update() {
-        showOpenedMutableVariables()
-    }
-
-    private fun showOpenedMutableVariables() {
-        if (showMutableVariablesImBoolean.get()) {
-            showMutableVariables()
-            if (!docked) {
-                ImGui.dockBuilderDockWindow(TITLE_MUTABLE_VARIABLES_WINDOW, ImGui.getWindowDockID())
-                docked = true
-            }
-        }
-    }
-
-    private fun showMutableVariables() {
-        if (ImGui.begin(TITLE_MUTABLE_VARIABLES_WINDOW, showMutableVariablesImBoolean)) {
-            val columnsNumber = dataSource.keys.size
-            if (columnsNumber > 0) {
-                ImGui.beginTable(ID_MUTABLE_VARIABLES_TABLE, columnsNumber, ImGuiTableFlags.Borders)
-                setupObservableVarTableHeader()
-                inputValues()
-                fillInTableWithData(dataSource, nameIndexMap)
-                ImGui.endTable()
-            }
-        }
-        ImGui.end()
-    }
-
-
-    private fun setupObservableVarTableHeader() {
-        nameIndexMap.entries.forEach { (varName, index) ->
-            ImGui.tableSetupColumn(
-                varName,
-                ImGuiTableColumnFlags.None,
-                0f,
-                index
-            )
-        }
-        ImGui.tableHeadersRow()
+    override fun fillInTableWithData() {
+        inputValues()
+        super.fillInTableWithData()
     }
 
     private fun inputValues() {
         ImGui.tableNextRow()
         nameIndexMap.entries.forEach { (varName, index) ->
             ImGui.tableSetColumnIndex(index)
-            when (varName) {
-                "t" -> {
+            if (varName != "t") {
+                val valueImFloat = varValueImFloats[varName]!!
+                ImGui.pushID(index)
+                if (ImGui.inputFloat("", valueImFloat, 0f, 0f, "%g", ImGuiInputTextFlags.EnterReturnsTrue)) {
+                    onChangeValueListener(varName, valueImFloat.get())
                 }
-                else -> {
-                    val valueImFloat = varValueImFloats[varName]!!
-                    ImGui.pushID(index)
-                    if (ImGui.inputFloat(
-                            "", valueImFloat, 0f, 0f, "%g",
-                            ImGuiInputTextFlags.EnterReturnsTrue
-                        )
-                    ) {
-                        onChangeValueListener(varName, valueImFloat.get())
-                    }
-                    ImGui.popID()
-                }
+                ImGui.popID()
             }
-
         }
     }
 
     private companion object {
         const val TITLE_MUTABLE_VARIABLES_WINDOW = "Mutable Variables"
-        const val ID_MUTABLE_VARIABLES_TABLE = "mutable_table_id"
     }
 }

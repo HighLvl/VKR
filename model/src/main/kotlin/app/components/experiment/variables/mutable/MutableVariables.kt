@@ -11,7 +11,11 @@ class MutableVariables {
         set(value) {
             mutableVariablesView.enabled = value
         }
-    var trackedDataSize: Int = 1
+    var trackedDataSize = Int.MAX_VALUE
+        set(value) {
+            field = value
+            mutableVariablesSeries.entries.forEach { (_, series) -> series.capacity = value }
+        }
 
     private val mutableVariablesSeries = mutableMapOf<String, MutableSeries<Float>>()
     private val mutableVariablesView = MutableVariablesView(mutableVariablesSeries)

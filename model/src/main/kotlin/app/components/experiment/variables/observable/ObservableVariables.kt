@@ -11,10 +11,10 @@ class ObservableVariables {
         }
 
     var enabled: Boolean
-    set(value) {
-        observableVariablesView.enabled = value
-    }
-    get() = observableVariablesView.enabled
+        set(value) {
+            observableVariablesView.enabled = value
+        }
+        get() = observableVariablesView.enabled
     private val observableVariablesSeries = mutableMapOf<String, MutableSeries<Float>>()
     private val observableVariablesView = ObservableVariablesView(observableVariablesSeries)
     private lateinit var observableVars: Map<String, () -> Float>

@@ -5,7 +5,12 @@ import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
 
 class Constraints {
-    var trackedDataSize: Int = 1
+    var trackedDataSize = Int.MAX_VALUE
+        set(value) {
+            field = value
+            constraintSeries.entries.forEach { (_, series) -> series.capacity = value }
+        }
+
     var enabled: Boolean
         set(value) {
             constraintsView.enabled = value

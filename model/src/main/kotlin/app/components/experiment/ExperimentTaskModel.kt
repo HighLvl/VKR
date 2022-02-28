@@ -1,8 +1,8 @@
 package app.components.experiment
 
 class ExperimentTaskModel {
-    val targetFunctions: Set<TargetFun>
-        get() = _targetFunctions
+    val goals: Set<Goal>
+        get() = _goals
     val stopConditions: Set<Predicate>
         get() = _stopConditions
     val constraints: Set<Predicate>
@@ -18,12 +18,12 @@ class ExperimentTaskModel {
 
     private val _observableVariables = mutableMapOf<String, () -> Float>()
     private val _mutableVariables = mutableMapOf<String, (Float) -> Unit>()
-    private val _targetFunctions = mutableSetOf<TargetFun>()
+    private val _goals = mutableSetOf<Goal>()
     private val _stopConditions = mutableSetOf<Predicate>()
     private val _constraints = mutableSetOf<Predicate>()
 
     fun addTargetFunc(score: Int, name: String = "", predicate: () -> Boolean) {
-        _targetFunctions += TargetFun(score, Predicate(name, predicate))
+        _goals += Goal(score, Predicate(name, predicate))
     }
 
     fun addStopOnCondition(name: String = "", predicate: () -> Boolean) {
@@ -45,7 +45,7 @@ class ExperimentTaskModel {
     fun addObservableVariables(vararg variables: Pair<String, () -> Float>) = _observableVariables.putAll(variables)
     fun addMutableVariables(vararg variables: Pair<String, (Float) -> Unit>) = _mutableVariables.putAll(variables)
 
-    data class TargetFun(val score: Int, val predicate: Predicate)
+    data class Goal(val score: Int, val predicate: Predicate)
     data class Predicate(val name: String, val predicateFun: () -> Boolean) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -66,7 +66,7 @@ class ExperimentTaskModel {
 
 fun main() {
     val task = experimentTask {
-        targetFunc(10, "some Func") {
+        goal(10, "some Func") {
             4 < 100
         }
         constraint("one more than twelve") {

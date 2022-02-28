@@ -25,7 +25,7 @@ class ScriptViewPortController(scriptViewPort: ScriptViewPort, scene: Scene) {
                 this.update()
             } catch (e: Exception) {
                 Logger.log(e.toString(), Log.Level.ERROR)
-                println(e)
+                e.printStackTrace()
             }
         }
     }
