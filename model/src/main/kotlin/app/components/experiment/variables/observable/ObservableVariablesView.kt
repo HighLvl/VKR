@@ -1,6 +1,7 @@
-package app.components.experiment
+package app.components.experiment.variables.observable
 
-import core.datatypes.base.MutableSeries
+import app.components.experiment.fillInTableWithData
+import core.datatypes.base.Series
 import imgui.ImVec2
 import imgui.extension.implot.ImPlot
 import imgui.extension.implot.flag.ImPlotAxisFlags
@@ -12,7 +13,7 @@ import imgui.internal.ImGui
 import imgui.type.ImBoolean
 
 class ObservableVariablesView(
-    private val dataSource: Map<String, MutableSeries<Float>>
+    private val dataSource: Map<String, Series<Float>>
 ) {
     private val showChartImBooleans = mutableMapOf<String, ImBoolean>()
     private var docked = false
@@ -79,7 +80,6 @@ class ObservableVariablesView(
         }
         ImGui.tableHeadersRow()
     }
-
 
 
     private fun showObservableVarPopup() {

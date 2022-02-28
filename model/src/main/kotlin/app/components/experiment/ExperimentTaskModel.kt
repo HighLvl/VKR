@@ -1,38 +1,33 @@
 package app.components.experiment
 
 class ExperimentTaskModel {
-    val targetFuncList: List<TargetFunc>
-        get() = _targetFuncList
-
-    val stopConditionList: List<Predicate>
-        get() = _stopConditionList
-
-    val constraintList: List<Predicate>
-        get() = _constraintList
-
+    val targetFunctions: Set<TargetFun>
+        get() = _targetFunctions
+    val stopConditions: Set<Predicate>
+        get() = _stopConditions
+    val constraints: Set<Predicate>
+        get() = _constraints
     val observableVariables: Map<String, () -> Float>
         get() = _observableVariables
-    private val _observableVariables = mutableMapOf<String, () -> Float>()
     val mutableVariables: Map<String, (Float) -> Unit>
         get() = _mutableVariables
-    private val _mutableVariables = mutableMapOf<String, (Float) -> Unit>()
-
-
     var stopScore = Int.MAX_VALUE
         private set
     var stopTime = Float.MAX_VALUE
         private set
 
-    private val _targetFuncList = mutableListOf<TargetFunc>()
-    private val _stopConditionList = mutableListOf<Predicate>()
-    private val _constraintList = mutableListOf<Predicate>()
+    private val _observableVariables = mutableMapOf<String, () -> Float>()
+    private val _mutableVariables = mutableMapOf<String, (Float) -> Unit>()
+    private val _targetFunctions = mutableSetOf<TargetFun>()
+    private val _stopConditions = mutableSetOf<Predicate>()
+    private val _constraints = mutableSetOf<Predicate>()
 
     fun addTargetFunc(score: Int, name: String = "", predicate: () -> Boolean) {
-        _targetFuncList += TargetFunc(score, name, predicate)
+        _targetFunctions += TargetFun(score, Predicate(name, predicate))
     }
 
     fun addStopOnCondition(name: String = "", predicate: () -> Boolean) {
-        _stopConditionList += Predicate(name, predicate)
+        _stopConditions += Predicate(name, predicate)
     }
 
     fun setConditionStopOnScoreMoreThan(score: Int) {
@@ -44,14 +39,29 @@ class ExperimentTaskModel {
     }
 
     fun addConstraint(name: String = "", predicate: () -> Boolean) {
-        _constraintList += Predicate(name, predicate)
+        _constraints += Predicate(name, predicate)
     }
 
     fun addObservableVariables(vararg variables: Pair<String, () -> Float>) = _observableVariables.putAll(variables)
     fun addMutableVariables(vararg variables: Pair<String, (Float) -> Unit>) = _mutableVariables.putAll(variables)
 
-    class TargetFunc(val score: Int, val name: String, val predicate: () -> Boolean)
-    class Predicate(val name: String, val predicate: () -> Boolean)
+    data class TargetFun(val score: Int, val predicate: Predicate)
+    data class Predicate(val name: String, val predicateFun: () -> Boolean) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Predicate
+
+            if (name != other.name) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return name.hashCode()
+        }
+    }
 }
 
 fun main() {
@@ -59,10 +69,10 @@ fun main() {
         targetFunc(10, "some Func") {
             4 < 100
         }
-        constraint {
+        constraint("one more than twelve") {
             1 > 12
         }
-        constraint {
+        constraint("twelve more than fifteen") {
             3 > 15
         }
         stopOn {

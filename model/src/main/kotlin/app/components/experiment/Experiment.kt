@@ -1,13 +1,14 @@
 package app.components.experiment
 
+import app.components.experiment.constraints.Constraints
+import app.components.experiment.variables.mutable.MutableVariables
+import app.components.experiment.variables.observable.ObservableVariables
 import app.logger.Log
 import app.logger.Logger
 import app.utils.KtsScriptEngine
 import core.components.IgnoreInSnapshot
 import core.components.Script
 import core.components.SystemComponent
-import core.datatypes.base.MutableSeries
-import core.datatypes.mutableSeriesOf
 import kotlin.math.sin
 
 class Experiment : SystemComponent(), Script {
@@ -15,7 +16,6 @@ class Experiment : SystemComponent(), Script {
         set(value) {
             field = tryLoadExperimentTaskModel(value)
         }
-
     @IgnoreInSnapshot
     var taskModel: ExperimentTaskModel = ExperimentTaskModel()
         private set
@@ -26,38 +26,45 @@ class Experiment : SystemComponent(), Script {
                 return
             }
             field = value
-            observableVariables.entries.forEach { (_, series) -> series.capacity = value }
+            observableVariables.trackedDataSize = value
         }
-    private val observableVariables = mutableMapOf<String, MutableSeries<Float>>()
     var showObservableVariables
         set(value) {
-            observableVariablesView.enabled = value
+            observableVariables.enabled = value
         }
-        get() = observableVariablesView.enabled
-    private val observableVariablesView = ObservableVariablesView(observableVariables)
-
-
-    private val mutableVariables = mutableMapOf<String, MutableSeries<Float>>()
+        get() = observableVariables.enabled
     var showMutableVariables
         set(value) {
-            mutableVariablesView.enabled = value
+            mutableVariables.enabled = value
         }
-        get() = mutableVariablesView.enabled
-    private val mutableVariablesView = MutableVariablesView(mutableVariables)
-        .apply { onChangeValueListener = ::onChangeMutableVarValue }
+        get() = mutableVariables.enabled
+    var showConstraints
+        set(value) {
+            constraints.enabled = value
+        }
+        get() = constraints.enabled
 
-    private val mutableVarValues = mutableMapOf<String, Float>()
+    private val observableVariables = ObservableVariables()
+    private val mutableVariables = MutableVariables()
+    private val constraints = Constraints()
 
     init {
         taskModel = experimentTask {
             targetFunc(10, "some Func") {
                 4 < 100
             }
-            constraint {
+            constraint("d") {
                 1 > 12
             }
-            constraint {
-                3 > 15
+            val v = sequence<Int> {
+                var a = 0
+                while (true) {
+                    a++
+                    yield(a)
+                }
+            }.iterator()
+            constraint("f") {
+                15 < v.next()
             }
             stopOn {
                 condition { 2 + 5 > 10 }
@@ -97,52 +104,20 @@ class Experiment : SystemComponent(), Script {
     }
 
     private fun importTaskModel() {
-        observableVariables.clear()
-        observableVariables["t"] = mutableSeriesOf(trackedDataSize)
-        taskModel.observableVariables.entries.forEach { (varName, _) ->
-            observableVariables[varName] = mutableSeriesOf(trackedDataSize)
-        }
-        observableVariablesView.reset()
-
-        mutableVariables.clear()
-        mutableVariables["t"] = mutableSeriesOf(trackedDataSize)
-        taskModel.mutableVariables.entries.forEach { (varName, _) ->
-            mutableVariables[varName] = mutableSeriesOf(trackedDataSize)
-        }
-        mutableVariablesView.reset()
-
-        mutableVarValues.clear()
+        observableVariables.reset(taskModel.observableVariables)
+        mutableVariables.reset(taskModel.mutableVariables)
+        constraints.reset(taskModel.constraints)
     }
 
     override fun onModelUpdate(modelTime: Float) {
-        taskModel.observableVariables.forEach { (varName, getValue) ->
-            observableVariables[varName]!!.append(getValue())
-        }
-        observableVariables["t"]!!.append(modelTime)
-
-        commitMutableVarChanges(modelTime)
-    }
-
-    private fun commitMutableVarChanges(modelTime: Float) {
-        if (mutableVarValues.isEmpty()) return
-        mutableVariables["t"]!!.append(modelTime)
-        mutableVariables.asSequence().filterNot { it.key == "t" }.forEach { (varName, series) ->
-            val mutableVarValue = mutableVarValues[varName]
-            if (mutableVarValue != null) {
-                taskModel.mutableVariables[varName]!!.invoke(mutableVarValue)
-            }
-            series.append(mutableVarValue)
-        }
-        mutableVarValues.clear()
+        observableVariables.onModelUpdate(modelTime)
+        mutableVariables.onModelUpdate(modelTime)
+        constraints.onModelUpdate(modelTime)
     }
 
     override fun update() {
-        observableVariablesView.update()
-        mutableVariablesView.update()
-    }
-
-    private fun onChangeMutableVarValue(varName: String, value: Float) {
-        Logger.log("Set $varName to $value", Log.Level.DEBUG)
-        mutableVarValues[varName] = value
+        observableVariables.update()
+        mutableVariables.update()
+        constraints.update()
     }
 }

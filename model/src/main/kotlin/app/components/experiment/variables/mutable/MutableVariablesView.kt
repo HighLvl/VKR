@@ -1,6 +1,7 @@
-package app.components.experiment
+package app.components.experiment.variables.mutable
 
-import core.datatypes.base.MutableSeries
+import app.components.experiment.fillInTableWithData
+import core.datatypes.base.Series
 import imgui.flag.ImGuiInputTextFlags
 import imgui.flag.ImGuiTableColumnFlags
 import imgui.flag.ImGuiTableFlags
@@ -8,7 +9,7 @@ import imgui.internal.ImGui
 import imgui.type.ImBoolean
 import imgui.type.ImFloat
 
-class MutableVariablesView(private val dataSource: MutableMap<String, MutableSeries<Float>>) {
+class MutableVariablesView(private val dataSource: Map<String, Series<Float>>) {
     private var docked = false
     private val nameIndexMap = mutableMapOf<String, Int>()
     var enabled

@@ -1,11 +1,10 @@
 package app.components.experiment
 
 class ExperimentTaskContext(private val model: ExperimentTaskModel) {
-    fun targetFunc(score: Int, name: String = "", predicate: () -> Boolean) =
+    fun targetFunc(score: Int, name: String, predicate: () -> Boolean) =
         model.addTargetFunc(score, name, predicate)
-
     fun stopOn(stopOnContext: StopOnContext.() -> Unit) = stopOnContext(StopOnContext(model))
-    fun constraint(name: String = "", predicate: () -> Boolean) = model.addConstraint(name, predicate)
+    fun constraint(name: String, predicate: () -> Boolean) = model.addConstraint(name, predicate)
     fun observableVariables(vararg variables: Pair<String, () -> Float>) = model.addObservableVariables(*variables)
     fun mutableVariables(vararg variables: Pair<String, (Float) -> Unit>) = model.addMutableVariables(*variables)
 }
