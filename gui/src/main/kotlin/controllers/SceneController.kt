@@ -1,6 +1,7 @@
 package controllers
 
 import app.services.scene.SceneService
+import app.utils.splitOnCapitalChars
 import core.entities.Entity
 import views.inspector.component.ComponentInspector
 import views.objecttree.FolderNode
@@ -12,12 +13,11 @@ class SceneController(
     private val componentInspector: ComponentInspector,
     private val objectTree: ObjectTree,
     private val sceneSetup: SceneSetup
-): Controller() {
+) : Controller() {
     private var selectedEntity: Pair<Entity, String>? = null
 
     override fun start() {
         super.start()
-        sceneSetup.onClearSceneListener = ::clearScene
         sceneSetup.onLoadConfigurationListener = ::loadConfiguration
     }
 
@@ -37,15 +37,38 @@ class SceneController(
                 selectedEntity = optimizer to TITLE_OPTIMIZER_OBJECT
             })
             addNode(FolderNode(TITLE_AGENT_FOLDER).apply {
-                agents.forEach { (id, agent) ->
-                    val name = TITLE_AGENT_OBJECT.format(agent.agentType, id)
-                    addNode(ObjectNode(name) {
-                        selectedEntity = agent to name
-                    })
-                }
+                agents.entries
+                    .groupBy { it.value.agentType }
+                    .toSortedMap()
+                    .forEach { (agentType, idAgentMap) ->
+                        val sortedIdAgentMap = idAgentMap.asSequence()
+                            .map { it.key to it.value }
+                            .toMap()
+                            .toSortedMap()
+                        addNode(FolderNode(agentType.splitOnCapitalChars()).apply {
+                            sortedIdAgentMap.forEach { (id, agent) ->
+                                addNode(ObjectNode(id.toString()) {
+                                    val name = TITLE_AGENT_OBJECT.format(agent.agentType, id)
+                                    selectedEntity = agent to name
+                                })
+                            }
+                        })
+                    }
             })
         }
-        when (val selectedEntity = selectedEntity) {
+
+        updateComponentInspector(agents.values + optimizer + environment)
+    }
+
+    private fun updateComponentInspector(entities: List<Entity>) {
+        val selectedEntity = selectedEntity
+        selectedEntity?.let {
+            if (selectedEntity.first !in entities) {
+                this.selectedEntity = null
+                return
+            }
+        }
+        when (selectedEntity) {
             null -> {
                 componentInspector.title = TITLE_OBJECT_NOT_SELECTED
                 componentInspector.components = emptyList()
@@ -62,14 +85,8 @@ class SceneController(
         sceneService.loadConfiguration(path)
     }
 
-    private fun clearScene() {
-        selectedEntity = null
-        sceneService.clearScene()
-    }
-
     override fun stop() {
         super.stop()
-        sceneSetup.onClearSceneListener = { }
         sceneSetup.onLoadConfigurationListener = { }
         selectedEntity = null
     }

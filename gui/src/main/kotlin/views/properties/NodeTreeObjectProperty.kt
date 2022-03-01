@@ -28,7 +28,7 @@ open class NodeTreeObjectProperty(name: String) : ObjectProperty(name) {
     }
 }
 
-class ListObjectProperty: ObjectProperty("") {
+class ListObjectProperty : ObjectProperty("") {
     override fun draw() {
         super.drawValue()
     }

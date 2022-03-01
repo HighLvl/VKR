@@ -16,6 +16,11 @@ class Dockspace : View {
     override fun draw() {
         drawDockspace()
         dockWindows()
+        drawWindows()
+    }
+
+    private fun drawWindows() {
+        dockedWindows.values.forEach { it.draw() }
     }
 
     private fun drawDockspace() {

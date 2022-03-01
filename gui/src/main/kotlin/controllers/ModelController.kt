@@ -38,25 +38,25 @@ class ModelController(
             onClickPauseListener = {
                 launchWithAppContext {
                     disableAll()
-                    modelControlService.pause()
+                    modelControlService.pauseModel()
                 }
             }
             onClickRunListener = {
                 launchWithAppContext {
                     disableAll()
-                    modelControlService.run()
+                    modelControlService.runModel()
                 }
             }
             onClickResumeListener = {
                 launchWithAppContext {
                     disableAll()
-                    modelControlService.resume()
+                    modelControlService.resumeModel()
                 }
             }
             onClickStopListener = {
                 launchWithAppContext {
                     disableAll()
-                    modelControlService.stop()
+                    modelControlService.stopModel()
                 }
             }
             onClickDisconnectListener = {

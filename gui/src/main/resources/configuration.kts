@@ -1,7 +1,7 @@
 import app.services.model.configuration.modelConfiguration
 
 modelConfiguration {
-    agentInterface("SimpleAgent") {
+    agentInterface("Type1") {
         setter<Int>("x")
         setter<String>("text")
         setter<Main.A>("n")

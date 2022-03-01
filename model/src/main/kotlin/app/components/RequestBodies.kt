@@ -2,14 +2,14 @@ package app.components
 
 import app.logger.Log
 import app.logger.Logger
-import app.services.model.configuration.RequestSignature
+import app.services.model.configuration.MutableRequestSignature
 import com.google.common.base.Defaults
 import core.components.AgentInterface
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 class RequestBodies(
-    private val requests: List<RequestSignature>,
+    private val requests: List<MutableRequestSignature>,
     private val agentInterface: AgentInterface
 ) {
     private val _requestBodies: MutableList<RequestBody> = create()

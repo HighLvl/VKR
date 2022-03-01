@@ -53,5 +53,5 @@ class SceneImpl : Scene {
         agentMap.remove(id)
     }
 
-    fun getEntities(): List<Entity> = entityMap.values.flatten()
+    fun getEntities(): List<Entity> = entityMap.values.flatten() + agentMap.values
 }

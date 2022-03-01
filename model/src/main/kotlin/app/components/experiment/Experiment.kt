@@ -12,6 +12,7 @@ import core.components.IgnoreInSnapshot
 import core.components.Script
 import core.components.SystemComponent
 import kotlin.math.sin
+import kotlin.system.measureTimeMillis
 
 class Experiment : SystemComponent(), Script {
     var task: String = ""

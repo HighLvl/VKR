@@ -1,6 +1,6 @@
 package views.component
 
-import app.utils.splitOnCapitalLetters
+import app.utils.splitOnCapitalChars
 import imgui.ImGui
 import imgui.flag.ImGuiTreeNodeFlags
 import views.Decorator
@@ -28,5 +28,5 @@ open class ComponentView(
 
     protected fun getName(componentId: String) = componentId.split(".")
         .last()
-        .splitOnCapitalLetters()
+        .splitOnCapitalChars()
 }

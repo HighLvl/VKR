@@ -4,7 +4,7 @@ import app.components.experiment.ExperimentTaskModel
 import app.logger.Log
 import app.logger.Logger
 import app.services.Service
-import app.utils.splitOnCapitalLetters
+import app.utils.splitOnCapitalChars
 import kotlinx.coroutines.runBlocking
 
 class ExperimentController {
@@ -20,14 +20,14 @@ class ExperimentController {
 
     private fun stopModelOnTrueStopConditions(modelTime: Float) {
         val stopConditions =
-            taskModel.stopConditions.associate { it.name.splitOnCapitalLetters() to it.predicateFun() } +
+            taskModel.stopConditions.associate { it.name.splitOnCapitalChars() to it.predicateFun() } +
                     ("Model Time More Than ${taskModel.stopTime}" to (modelTime > taskModel.stopTime)) +
                     ("Total Score More Than ${taskModel.stopScore}" to isTotalScoreMoreThan())
 
 
         stopConditions.entries.firstOrNull { it.value }?.let { (condName, _) ->
             runBlocking {
-                Service.agentModelControl.stop()
+                Service.agentModelControl.stopModel()
                 Logger.log("Stopped on $condName", Log.Level.INFO)
             }
         }

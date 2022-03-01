@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
-import app.utils.splitOnCapitalLetters
+import app.utils.splitOnCapitalChars
 import imgui.ImGui
 import views.inspector.property.base.*
 import views.properties.ListObjectProperty
@@ -89,7 +89,7 @@ class AgentInterfacePropertyInspector(private val requestBodies: RequestBodies) 
         private val rootNode: JsonNode
     ) : MutablePropertyFactory(SimpleMutablePropertyFactory(), onChangeValueListenerFactory) {
         override fun createObjectProperty(name: String, parentNode: JsonNode): ObjectProperty = when (rootNode) {
-            parentNode -> RequestBodyObjectProperty(name.splitOnCapitalLetters()) {
+            parentNode -> RequestBodyObjectProperty(name) {
                 requestBodies.commit(name)
             }
             else -> super.createObjectProperty(name, parentNode)

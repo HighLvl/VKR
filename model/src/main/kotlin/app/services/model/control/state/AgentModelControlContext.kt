@@ -7,8 +7,12 @@ import core.api.dto.Snapshot
 import core.coroutines.PeriodTaskExecutor
 import core.coroutines.launchWithAppContext
 import core.services.*
+import io.reactivex.rxjava3.disposables.Disposable
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 class AgentModelControlContext(val apiClient: AgentModelApiClient) {
     val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow<ControlState>().apply {
@@ -19,38 +23,49 @@ class AgentModelControlContext(val apiClient: AgentModelApiClient) {
     var periodSec: Float = 0.1f
 
     private lateinit var currentState: State
+    val disposables = mutableListOf<Disposable>()
 
     fun start() {
         subscribeOnGlobalArgs()
+        subscribeOnBehaviourRequestsReady()
         setState(DisconnectState)
     }
 
+    private fun subscribeOnBehaviourRequestsReady() {
+        disposables += EventBus.listen<BehaviourRequestsReady>().subscribe {
+            runBlocking {
+                withContext(Dispatchers.IO) {
+                    apiClient.callBehaviourFunctions(it.behaviour)
+                }
+            }
+        }
+    }
+
     private fun subscribeOnGlobalArgs() {
-        EventBus.listen<GlobalArgsSet>().subscribe() {
+        disposables += EventBus.listen<GlobalArgsSet>().subscribe {
             globalArgs = it.args
         }
     }
 
     suspend fun connect(ip: String, port: Int) = currentState.connect(this, ip, port)
 
-
     suspend fun disconnect() {
         currentState.disconnect(this)
     }
 
-    suspend fun run() {
+    suspend fun runModel() {
         currentState.run(this, periodSec)
     }
 
-    suspend fun pause() {
+    suspend fun pauseModel() {
         currentState.pause(this)
     }
 
-    suspend fun resume() {
+    suspend fun resumeModel() {
         currentState.resume(this)
     }
 
-    suspend fun stop() {
+    suspend fun stopModel() {
         currentState.stop(this)
     }
 
@@ -93,5 +108,11 @@ class AgentModelControlContext(val apiClient: AgentModelApiClient) {
 
     fun changeRequestPeriod(periodSec: Float) {
         periodTaskExecutor.changePeriod(periodSec)
+    }
+
+    fun stop() {
+        periodTaskExecutor.stop()
+        disposables.forEach { it.dispose() }
+        disposables.clear()
     }
 }

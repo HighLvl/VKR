@@ -16,24 +16,37 @@ class LoggerView : View {
 
     private val logs = LinkedList<Pair<String, Level>>()
     private val filterString = ImString()
-    private lateinit var filteredLogs: Sequence<Pair<String, Level>>
+    private var filteredLogs: Sequence<Pair<String, Level>> = logs.asSequence()
     private val openFilter = ImBoolean()
     private val showDebug = ImBoolean(true)
     private val showError = ImBoolean(true)
     private val showInfo = ImBoolean(true)
 
     fun log(text: String, level: Level) {
-        if (logs.size == MAX_LOG_LIST_SIZE) {
-            logs.removeFirst()
+        val lines = text.split('\n').toMutableList()
+        lines[0] = formatLog(lines[0], level)
+        lines.forEach {
+            if (logs.size < MAX_LOG_LIST_SIZE)
+                logs.add(it to level)
         }
-        logs.add(text to level)
+        if (logs.size == MAX_LOG_LIST_SIZE) {
+            repeat(lines.size) {
+                if (logs.isNotEmpty()) logs.removeFirst()
+            }
+        }
     }
 
     override fun draw() {
         if (ImGui.beginPopup("Options")) {
-            ImGui.checkbox("Info", showInfo)
-            ImGui.checkbox("Debug", showDebug)
-            ImGui.checkbox("Error", showError)
+            if (ImGui.checkbox("Info", showInfo)) {
+                filterLogsByLevel()
+            }
+            if (ImGui.checkbox("Debug", showDebug)) {
+                filterLogsByLevel()
+            }
+            if (ImGui.checkbox("Error", showError)) {
+                filterLogsByLevel()
+            }
             ImGui.checkbox("Filter", openFilter)
             ImGui.endPopup()
         }
@@ -46,18 +59,12 @@ class LoggerView : View {
         }
         ImGui.separator()
 
-        filteredLogs = logs.asSequence()
         if (openFilter.get()) {
             ImGui.setNextItemWidth(FILTER_WIDTH)
             if (ImGui.inputText("Filter", filterString)) {
                 filteredLogs = filteredLogs.filter { filterString.get() in it.first }
             }
             ImGui.separator()
-        }
-        filteredLogs = filteredLogs.filter {
-            it.second == Level.DEBUG && showDebug.get() ||
-                    it.second == Level.INFO && showInfo.get() ||
-                    it.second == Level.ERROR && showInfo.get()
         }
 
         val titleColor = ImGui.getStyle().getColor(ImGuiCol.FrameBg)
@@ -66,14 +73,13 @@ class LoggerView : View {
         val filteredLogsList = filteredLogs.toList()
         ImGuiListClipper.forEach(filteredLogsList.size, object : ImListClipperCallback() {
             override fun accept(logIndex: Int) {
-                val log = filteredLogsList[logIndex]
-                val formattedLog = formatLog(log)
-                val color = when (log.second) {
+                val (text, level) = filteredLogsList[logIndex]
+                val color = when (level) {
                     Level.ERROR -> ERROR_COLOR
                     Level.DEBUG -> ImGui.getStyle().getColor(ImGuiCol.Text)
                     Level.INFO -> ImGui.getStyle().getColor(ImGuiCol.Text)
                 }
-                ImGui.textColored(color.x, color.y, color.z, color.w, formattedLog)
+                ImGui.textColored(color.x, color.y, color.z, color.w, text)
             }
         })
 
@@ -84,8 +90,15 @@ class LoggerView : View {
         ImGui.popStyleColor()
     }
 
-    private fun formatLog(log: Pair<String, Level>): String {
-        val (text, level) = log
+    private fun filterLogsByLevel() {
+        filteredLogs = filteredLogs.filter {
+            it.second == Level.DEBUG && showDebug.get() ||
+                    it.second == Level.INFO && showInfo.get() ||
+                    it.second == Level.ERROR && showError.get()
+        }
+    }
+
+    private fun formatLog(text: String, level: Level): String {
         return when (level) {
             Level.ERROR -> FORMATTED_ERROR_LOG.format(text)
             Level.INFO -> FORMATTED_INFO_LOG.format(text)

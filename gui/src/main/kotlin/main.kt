@@ -19,7 +19,6 @@ import core.coroutines.launchWithAppContext
 import core.entities.Agent
 import core.entities.Entity
 import imgui.ImFontConfig
-import imgui.ImFontGlyphRangesBuilder
 import imgui.ImGuiIO
 import imgui.ImGuiViewport
 import imgui.app.Application
@@ -113,7 +112,7 @@ class Main : Application() {
 
     var entity: Entity? = run {
         val agent = Agent("Simple agent")
-        val modelInterface = modelConfiguration {
+        val modelConfiguration = modelConfiguration {
             agentInterface("SimpleAgent") {
                 setter<Int>("x")
                 setter<String>("text")
@@ -124,10 +123,12 @@ class Main : Application() {
                     param<Float>("y")
                 }
             }
+
+
         }
         val agentInterface = AgentInterface(
-            modelInterface.agentInterfaces.first().setters.toList(),
-            modelInterface.agentInterfaces.first().requestSignatures.toList()
+            modelConfiguration.agentInterfaces.values.first().setters.toList(),
+            modelConfiguration.agentInterfaces.values.first().requestSignatures.toList()
         )
         agent.setComponent(
             agentInterface
@@ -184,9 +185,6 @@ class Main : Application() {
             if (ImGui.menuItem("Load configuration")) {
                 sceneSetup.onLoadConfigurationListener(FileOpenDialog().open("kts"))
             }
-            if (ImGui.menuItem("Clear scene")) {
-                sceneSetup.onClearSceneListener()
-            }
             ImGui.endMenu()
         }
         if (ImGui.beginMenu("View")) {
@@ -221,11 +219,6 @@ class Main : Application() {
         dockspace.height = viewport.sizeY
         dockspace.width = viewport.sizeX
         dockspace.draw()
-
-        loggerDockedWindow.draw()
-        componentInspectorWindow.draw()
-        scriptViewPortWindow.draw()
-        objectTreeWindow.draw()
     }
 
     object OnChangedViewportListener : ImPlatformFuncViewport() {
@@ -384,7 +377,8 @@ val agentMOdelControlService = AgentModelControlService(object : AgentModelApiCl
     }
 
     override suspend fun callBehaviourFunctions(behaviour: Behaviour) {
-        TODO("Not yet implemented")
+        delay(10000)
+        Logger.log(behaviour.toString(), Log.Level.DEBUG)
     }
 
     var count = 0
@@ -399,36 +393,37 @@ val agentMOdelControlService = AgentModelControlService(object : AgentModelApiCl
 
     override suspend fun requestSnapshot(): Snapshot {
         Logger.log("Request snapshot", Log.Level.DEBUG)
-        delay(10)
+        //delay(10)
         val time = timeSeq.next()
         val snapshot = when (count) {
             0 -> Snapshot(
                 time, mutableListOf(
-                    AgentSnapshot(1, mutableMapOf("a" to 3, "b" to 7), mutableListOf()),
-                    AgentSnapshot(2, mutableMapOf(), mutableListOf()),
-                    AgentSnapshot(3, mutableMapOf(), mutableListOf())
+                    AgentSnapshot("Type1", 1, mutableMapOf("a" to 3, "b" to 7), mutableListOf()),
+                    AgentSnapshot("Type2", 2, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot("Type2",3, mutableMapOf(), mutableListOf())
                 ), mutableListOf()
             )
             1 -> Snapshot(
                 time, mutableListOf(
-                    AgentSnapshot(1, mutableMapOf(), mutableListOf()),
-                    AgentSnapshot(2, mutableMapOf(), mutableListOf()),
-                    AgentSnapshot(3, mutableMapOf(), mutableListOf()),
-                    AgentSnapshot(4, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot("Type1",1, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot("Type1",2, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot("Type1",3, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot("Type2",4, mutableMapOf(), mutableListOf()),
 
                     ), mutableListOf()
             )
             2 -> Snapshot(
                 time, mutableListOf(
-                    AgentSnapshot(2, mutableMapOf(), mutableListOf()),
-                    AgentSnapshot(3, mutableMapOf(), mutableListOf())
+                    AgentSnapshot("Type2", 2, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot("Type2", 3, mutableMapOf(), mutableListOf())
                 ), mutableListOf()
             )
             else -> Snapshot(
                 time, mutableListOf(
-                    AgentSnapshot(1, mutableMapOf(), mutableListOf()),
-                    AgentSnapshot(56, mutableMapOf(), mutableListOf()),
-                    AgentSnapshot(3, mutableMapOf(), mutableListOf())
+                    AgentSnapshot("Type2", 1, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot("Type1", 56, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot("Type1", 55, mutableMapOf(), mutableListOf()),
+                    AgentSnapshot("Type2", 3, mutableMapOf(), mutableListOf())
                 ), mutableListOf()
             )
         }

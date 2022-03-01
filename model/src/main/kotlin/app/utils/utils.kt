@@ -12,7 +12,7 @@ fun String.uppercaseFirstChar() = replaceFirstChar {
     if (it.isLowerCase()) it.uppercase(Locale.getDefault()) else it.toString()
 }
 
-fun String.splitOnCapitalLetters() = replace("([^_])([A-Z])".toRegex(), "$1 $2").uppercaseFirstChar()
+fun String.splitOnCapitalChars() = replace("([^_])([A-Z])".toRegex(), "$1 $2").uppercaseFirstChar()
 
 fun runBlockCatching(block: () -> Unit) {
     try {

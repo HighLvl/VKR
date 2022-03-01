@@ -1,12 +1,14 @@
 package views.properties
 
-import app.utils.splitOnCapitalLetters
+import app.utils.splitOnCapitalChars
+import app.utils.uppercaseFirstChar
 import imgui.ImGui
 import views.View
 
-abstract class Property(protected val name: String) : View {
+abstract class Property(name: String) : View {
+    protected val name = name.splitOnCapitalChars().uppercaseFirstChar()
     override fun draw() {
-        ImGui.text("      ${name.splitOnCapitalLetters()}")
+        ImGui.text("      $name")
         ImGui.nextColumn()
         drawValue()
         ImGui.nextColumn()

@@ -1,5 +1,6 @@
 package core.services
 
+import core.api.dto.Behaviour
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.subjects.PublishSubject
 import core.api.dto.GlobalArgs
@@ -31,3 +32,4 @@ sealed class AgentModelLifecycleEvent : Event() {
 class GlobalArgsSet(val args: GlobalArgs) : Event()
 class SnapshotReceive(val snapshot: Snapshot) : Event()
 object Update : Event()
+class BehaviourRequestsReady(val behaviour: Behaviour): Event()
