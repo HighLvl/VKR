@@ -1,6 +1,6 @@
 package app.components.experiment
 
-class ExperimentTaskContext(private val model: ExperimentTaskModel) {
+class ExperimentTaskContext(private val model: MutableExperimentTaskModel) {
     fun goal(score: Int, name: String, predicate: () -> Boolean) =
         model.addTargetFunc(score, name, predicate)
     fun stopOn(stopOnContext: StopOnContext.() -> Unit) = stopOnContext(StopOnContext(model))
@@ -9,7 +9,7 @@ class ExperimentTaskContext(private val model: ExperimentTaskModel) {
     fun mutableVariables(vararg variables: Pair<String, (Float) -> Unit>) = model.addMutableVariables(*variables)
 }
 
-class StopOnContext(private val model: ExperimentTaskModel) {
+class StopOnContext(private val model: MutableExperimentTaskModel) {
     fun condition(name: String = "", predicate: () -> Boolean) {
         model.addStopOnCondition(name, predicate)
     }
@@ -24,7 +24,7 @@ class StopOnContext(private val model: ExperimentTaskModel) {
 }
 
 fun experimentTask(buildTask: ExperimentTaskContext.() -> Unit): ExperimentTaskModel {
-    val model = ExperimentTaskModel()
+    val model = MutableExperimentTaskModel()
     ExperimentTaskContext(model).buildTask()
     return model
 }

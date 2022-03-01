@@ -1,29 +1,32 @@
 package app.services.model.control.state
 
+import app.services.model.control.ControlState
 import core.api.AgentModelApiClient
 import core.api.dto.GlobalArgs
 import core.api.dto.Snapshot
 import core.coroutines.PeriodTaskExecutor
-import core.services.AgentModelLifecycleEvent
-import core.services.EventBus
-import core.services.SnapshotReceive
-import core.services.listen
-import kotlinx.coroutines.delay
+import core.coroutines.launchWithAppContext
+import core.services.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.onSubscription
 
 class AgentModelControlContext(val apiClient: AgentModelApiClient) {
-    private var currentState: State = DisconnectState
-
+    val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow<ControlState>().apply {
+        onSubscription { emit(getControlState()) }
+    }
     val periodTaskExecutor = PeriodTaskExecutor()
-
     var globalArgs = GlobalArgs(mutableMapOf())
     var periodSec: Float = 0.1f
 
+    private lateinit var currentState: State
+
     fun start() {
         subscribeOnGlobalArgs()
+        setState(DisconnectState)
     }
 
     private fun subscribeOnGlobalArgs() {
-        EventBus.listen<AgentModelLifecycleEvent.GlobalArgsSet>().subscribe() {
+        EventBus.listen<GlobalArgsSet>().subscribe() {
             globalArgs = it.args
         }
     }
@@ -53,14 +56,27 @@ class AgentModelControlContext(val apiClient: AgentModelApiClient) {
 
     fun setState(state: State) {
         this.currentState = state
+        launchWithAppContext {
+            controlState.emit(getControlState())
+        }
     }
+
+    private fun getControlState(): ControlState = when (currentState::class) {
+        DisconnectState::class -> ControlState.DISCONNECT
+        ConnectState::class -> ControlState.CONNECT
+        StopState::class -> ControlState.STOP
+        RunState::class -> ControlState.RUN
+        PauseState::class -> ControlState.PAUSE
+        else -> throw IllegalStateException()
+    }
+
 
     fun onPause() {
         EventBus.publish(AgentModelLifecycleEvent.Pause)
     }
 
     fun onStart() {
-        EventBus.publish(AgentModelLifecycleEvent.Start)
+        EventBus.publish(AgentModelLifecycleEvent.Run)
     }
 
     fun onResume() {

@@ -1,8 +1,8 @@
 package views.properties
 
+import app.utils.splitOnCapitalLetters
 import imgui.ImGui
 import views.View
-import views.splitOnCapitalLetters
 
 abstract class Property(protected val name: String) : View {
     override fun draw() {

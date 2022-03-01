@@ -5,8 +5,6 @@ import app.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import core.coroutines.AppContext
-import core.coroutines.launchWithAppContext
-import app.services.model.control.ControlAction
 
 object StopState : ConnectState() {
     override suspend fun run(context: AgentModelControlContext, periodSec: Float) {

@@ -1,20 +1,46 @@
 package app.components.experiment
 
-class ExperimentTaskModel {
-    val goals: Set<Goal>
-        get() = _goals
-    val stopConditions: Set<Predicate>
-        get() = _stopConditions
-    val constraints: Set<Predicate>
-        get() = _constraints
-    val observableVariables: Map<String, () -> Float>
-        get() = _observableVariables
-    val mutableVariables: Map<String, (Float) -> Unit>
-        get() = _mutableVariables
+abstract class ExperimentTaskModel {
+    abstract val goals: Set<Goal>
+    abstract val stopConditions: Set<Predicate>
+    abstract val constraints: Set<Predicate>
+    abstract val observableVariables: Map<String, () -> Float>
+    abstract val mutableVariables: Map<String, (Float) -> Unit>
     var stopScore = Int.MAX_VALUE
-        private set
+        protected set
     var stopTime = Float.MAX_VALUE
-        private set
+        protected set
+
+    data class Goal(val score: Int, val predicate: Predicate)
+    data class Predicate(val name: String, val predicateFun: () -> Boolean) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Predicate
+
+            if (name != other.name) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return name.hashCode()
+        }
+    }
+}
+
+class MutableExperimentTaskModel: ExperimentTaskModel() {
+    override val goals: Set<Goal>
+        get() = _goals
+    override val stopConditions: Set<Predicate>
+        get() = _stopConditions
+    override val constraints: Set<Predicate>
+        get() = _constraints
+    override val observableVariables: Map<String, () -> Float>
+        get() = _observableVariables
+    override val mutableVariables: Map<String, (Float) -> Unit>
+        get() = _mutableVariables
 
     private val _observableVariables = mutableMapOf<String, () -> Float>()
     private val _mutableVariables = mutableMapOf<String, (Float) -> Unit>()
@@ -44,24 +70,6 @@ class ExperimentTaskModel {
 
     fun addObservableVariables(vararg variables: Pair<String, () -> Float>) = _observableVariables.putAll(variables)
     fun addMutableVariables(vararg variables: Pair<String, (Float) -> Unit>) = _mutableVariables.putAll(variables)
-
-    data class Goal(val score: Int, val predicate: Predicate)
-    data class Predicate(val name: String, val predicateFun: () -> Boolean) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Predicate
-
-            if (name != other.name) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            return name.hashCode()
-        }
-    }
 }
 
 fun main() {

@@ -11,16 +11,18 @@ class SceneController(
     private val sceneService: SceneService,
     private val componentInspector: ComponentInspector,
     private val objectTree: ObjectTree,
-    sceneSetup: SceneSetup
-) {
+    private val sceneSetup: SceneSetup
+): Controller() {
     private var selectedEntity: Pair<Entity, String>? = null
 
-    init {
+    override fun start() {
+        super.start()
         sceneSetup.onClearSceneListener = ::clearScene
         sceneSetup.onLoadConfigurationListener = ::loadConfiguration
     }
 
-    fun update() {
+    override fun update() {
+        super.update()
         val scene = sceneService.scene
         val optimizer = scene.experimenter
         val environment = scene.environment
@@ -63,6 +65,13 @@ class SceneController(
     private fun clearScene() {
         selectedEntity = null
         sceneService.clearScene()
+    }
+
+    override fun stop() {
+        super.stop()
+        sceneSetup.onClearSceneListener = { }
+        sceneSetup.onLoadConfigurationListener = { }
+        selectedEntity = null
     }
 
     private companion object {

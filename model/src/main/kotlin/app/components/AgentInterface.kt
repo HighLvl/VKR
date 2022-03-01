@@ -10,7 +10,7 @@ import core.components.Props
 import core.api.dto.AgentSnapshot
 import core.api.dto.Request
 import core.components.SystemComponent
-import core.uppercaseFirstChar
+import app.utils.uppercaseFirstChar
 
 class AgentInterface(
     @property:IgnoreInSnapshot

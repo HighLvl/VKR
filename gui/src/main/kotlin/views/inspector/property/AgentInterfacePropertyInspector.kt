@@ -7,13 +7,12 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
+import app.utils.splitOnCapitalLetters
 import imgui.ImGui
 import views.inspector.property.base.*
 import views.properties.ListObjectProperty
 import views.properties.ObjectProperty
 import views.properties.RequestBodyObjectProperty
-import views.splitOnCapitalLetters
-
 
 class AgentInterfacePropertyInspector(private val requestBodies: RequestBodies) :
     PropertyInspector() {

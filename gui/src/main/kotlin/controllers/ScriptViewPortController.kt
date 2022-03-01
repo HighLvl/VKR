@@ -1,32 +1,19 @@
 package controllers
 
-import app.logger.Log
-import app.logger.Logger
-import core.components.Component
-import core.components.Script
-import core.scene.Scene
+import core.services.EventBus
+import core.services.Update
 import views.ScriptViewPort
 
-class ScriptViewPortController(scriptViewPort: ScriptViewPort, scene: Scene) {
-    init {
+class ScriptViewPortController(private val scriptViewPort: ScriptViewPort): Controller() {
+    override fun start() {
+        super.start()
         scriptViewPort.onDrawListener = {
-            val components = scene.agents.flatMap { it.value.getComponents() } +
-                    scene.environment.getComponents() +
-                    scene.experimenter.getComponents()
-            components.forEach {
-                it.callUpdateFunIfScript()
-            }
+            EventBus.publish(Update)
         }
     }
 
-    private fun Component.callUpdateFunIfScript() {
-        if (this is Script) {
-            try {
-                this.update()
-            } catch (e: Exception) {
-                Logger.log(e.toString(), Log.Level.ERROR)
-                e.printStackTrace()
-            }
-        }
+    override fun stop() {
+        super.stop()
+        scriptViewPort.onDrawListener = { }
     }
 }

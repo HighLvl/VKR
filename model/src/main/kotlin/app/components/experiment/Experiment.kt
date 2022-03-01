@@ -1,6 +1,7 @@
 package app.components.experiment
 
 import app.components.experiment.constraints.Constraints
+import app.components.experiment.controller.ExperimentController
 import app.components.experiment.goals.Goals
 import app.components.experiment.variables.mutable.MutableVariables
 import app.components.experiment.variables.observable.ObservableVariables
@@ -18,7 +19,7 @@ class Experiment : SystemComponent(), Script {
             field = tryLoadExperimentTaskModel(value)
         }
     @IgnoreInSnapshot
-    var taskModel: ExperimentTaskModel = ExperimentTaskModel()
+    var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
         private set
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
@@ -30,7 +31,6 @@ class Experiment : SystemComponent(), Script {
             observableVariables.trackedDataSize = value
             mutableVariables.trackedDataSize = value
             constraints.trackedDataSize = value
-
         }
     var showObservableVariables
         set(value) {
@@ -57,6 +57,7 @@ class Experiment : SystemComponent(), Script {
     private val mutableVariables = MutableVariables()
     private val constraints = Constraints()
     private val goals = Goals()
+    private val experimentController = ExperimentController()
 
     init {
         taskModel = experimentTask {
@@ -112,11 +113,12 @@ class Experiment : SystemComponent(), Script {
             path
         } catch (e: Exception) {
             Logger.log("Bad experiment task file", Log.Level.ERROR)
+            Logger.log(e.stackTraceToString(), Log.Level.ERROR)
             ""
         }
     }
 
-    override fun start() {
+    override fun onModelRun() {
         importTaskModel()
     }
 
@@ -125,6 +127,7 @@ class Experiment : SystemComponent(), Script {
         mutableVariables.reset(taskModel.mutableVariables)
         constraints.reset(taskModel.constraints)
         goals.reset(taskModel.goals, taskModel.stopScore)
+        experimentController.setTaskModel(taskModel)
     }
 
     override fun onModelUpdate(modelTime: Float) {
@@ -132,6 +135,7 @@ class Experiment : SystemComponent(), Script {
         mutableVariables.onModelUpdate(modelTime)
         constraints.onModelUpdate(modelTime)
         goals.onModelUpdate(modelTime)
+        experimentController.onModelUpdate(modelTime)
     }
 
     override fun update() {

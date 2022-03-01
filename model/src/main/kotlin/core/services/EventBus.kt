@@ -15,8 +15,6 @@ object EventBus {
     }
 
     fun <T : Event> listen(eventType: KClass<T>): Observable<T> = publisher.ofType(eventType.java)
-
-
 }
 
 inline fun <reified T : Event> EventBus.listen() = listen(T::class)
@@ -24,13 +22,12 @@ inline fun <reified T : Event> EventBus.listen() = listen(T::class)
 sealed class Event
 
 sealed class AgentModelLifecycleEvent : Event() {
-    object Start : AgentModelLifecycleEvent()
+    object Run : AgentModelLifecycleEvent()
     object Pause : AgentModelLifecycleEvent()
     object Resume : AgentModelLifecycleEvent()
     object Stop : AgentModelLifecycleEvent()
-    class Update(val modelTime: Float) : AgentModelLifecycleEvent()
-    object AfterUpdate : AgentModelLifecycleEvent()
-    class GlobalArgsSet(val args: GlobalArgs) : Event()
 }
 
+class GlobalArgsSet(val args: GlobalArgs) : Event()
 class SnapshotReceive(val snapshot: Snapshot) : Event()
+object Update : Event()

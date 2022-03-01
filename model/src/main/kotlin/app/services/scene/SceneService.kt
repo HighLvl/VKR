@@ -1,9 +1,5 @@
 package app.services.scene
 
-import core.entities.Agent
-import core.entities.Environment
-import core.entities.Experimenter
-import core.scene.Scene
 import app.components.AgentInterface
 import app.components.experiment.Experiment
 import app.logger.Log
@@ -11,12 +7,17 @@ import app.logger.Logger
 import app.scene.SceneImpl
 import app.services.model.configuration.ModelConfiguration
 import app.utils.KtsScriptEngine
-import core.components.getComponent
-import core.services.*
+import app.utils.runBlockCatching
 import core.api.dto.AgentSnapshot
 import core.api.dto.GlobalArgs
 import core.api.dto.Snapshot
 import core.components.Script
+import core.components.getComponent
+import core.entities.Agent
+import core.entities.Environment
+import core.entities.Experimenter
+import core.scene.Scene
+import core.services.*
 
 class SceneService : Service() {
     private val _scene: SceneImpl = SceneFactory.createScene()
@@ -25,21 +26,27 @@ class SceneService : Service() {
         private set
 
     private val _globalArgs = (mapOf<String, Any>())
-    val globalArgs = EventBus.listen<AgentModelLifecycleEvent.GlobalArgsSet>().map { it.args.args }
+    val globalArgs = EventBus.listen<GlobalArgsSet>().map { it.args.args }
 
     override fun start() {
         EventBus.listen<SnapshotReceive>().subscribe {
             updateAgentModel(it.snapshot)
         }
-        EventBus.listen<AgentModelLifecycleEvent.Start>().subscribe {
-            getScripts().forEach { it.start() }
+        EventBus.listen<AgentModelLifecycleEvent.Run>().subscribe {
+            onModelRun()
+        }
+        EventBus.listen<AgentModelLifecycleEvent.Stop>().subscribe {
+            onModelStop()
+        }
+        EventBus.listen<Update>().subscribe {
+            onModelUpdate()
         }
     }
 
     private fun updateAgentModel(snapshot: Snapshot) {
         updateAgents(snapshot.agentSnapshots)
-        onUpdate(snapshot.time)
-        onAfterUpdate()
+        onModelUpdate(snapshot.time)
+        onAfterModelUpdate()
     }
 
     private fun updateAgents(agentSnapshots: List<AgentSnapshot>) {
@@ -68,8 +75,12 @@ class SceneService : Service() {
 
     private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterface>()!!
 
-    private fun onUpdate(modelTime: Float) {
-        getScripts().forEach { it.onModelUpdate(modelTime) }
+    private fun onModelUpdate(modelTime: Float) {
+        getScripts().forEach {
+            runBlockCatching {
+                it.onModelUpdate(modelTime)
+            }
+        }
     }
 
     private fun getScripts(): List<Script> =
@@ -78,25 +89,53 @@ class SceneService : Service() {
             .filterIsInstance<Script>()
             .toList()
 
-    private fun onAfterUpdate() {
-        getScripts().forEach { it.onModelAfterUpdate() }
+    private fun onAfterModelUpdate() {
+        getScripts().forEach {
+            runBlockCatching {
+                it.onModelAfterUpdate()
+            }
+        }
+    }
+
+    private fun onModelRun() {
+        getScripts().forEach {
+            runBlockCatching {
+                it.onModelRun()
+            }
+        }
+    }
+
+    private fun onModelStop() {
+        getScripts().forEach {
+            runBlockCatching {
+                it.onModelStop()
+            }
+        }
+    }
+
+    private fun onModelUpdate() {
+        getScripts().forEach {
+            runBlockCatching {
+                it.update()
+            }
+        }
     }
 
     fun setGlobalArgs(args: Map<String, Any>) {
-        EventBus.publish(AgentModelLifecycleEvent.GlobalArgsSet(GlobalArgs(args)))
+        EventBus.publish(GlobalArgsSet(GlobalArgs(args)))
     }
 
     fun loadConfiguration(path: String) {
         if (path.isEmpty()) return
         try {
-            _loadConfiguration(path)
+            loadConfigurationByPath(path)
             Logger.log("Configuration loaded\n $configuration", Log.Level.INFO)
         } catch (e: Exception) {
             Logger.log("Bad configuration file", Log.Level.ERROR)
         }
     }
 
-    private fun _loadConfiguration(path: String) {
+    private fun loadConfigurationByPath(path: String) {
         configuration = KtsScriptEngine.eval(path)
         setGlobalArgs(configuration.globalArgs)
         Logger.log("Global args\n${configuration.globalArgs}", Log.Level.DEBUG)

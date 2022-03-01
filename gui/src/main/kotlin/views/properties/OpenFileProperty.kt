@@ -17,7 +17,6 @@ class OpenFileProperty(
             val path = FileOpenDialog().open(extensionFilter)
             if (path.isNotBlank()) {
                 onChangeValue(path)
-                filePath.set(filePath)
             }
         }
         ImGui.sameLine()

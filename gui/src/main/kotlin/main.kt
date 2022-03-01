@@ -2,6 +2,7 @@ import app.components.AgentInterface
 import app.logger.Log
 import app.logger.Logger
 import app.scene.SceneImpl
+import app.services.Service
 import app.services.model.configuration.modelConfiguration
 import app.services.model.control.AgentModelControlService
 import app.services.scene.SceneService
@@ -46,7 +47,6 @@ import java.net.URISyntaxException
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.system.exitProcess
-import kotlin.system.measureTimeMillis
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
@@ -100,6 +100,7 @@ class Main : Application() {
                 loggerView.log(it.text, it.level.mapToLogViewLevel())
             }
         }
+        listOf(modelController, sceneController, scriptViewPortController).forEach { it.start() }
     }
 
     private val loggerDockedWindow = Window("Logger", loggerView)
@@ -149,14 +150,14 @@ class Main : Application() {
     val objectTreeWindow = Window("Object tree", objectTree)
     val sceneSetup = SceneSetup()
 
-    private val sceneController =
-        SceneController(sceneService, componentInspector, objectTree, sceneSetup)
+
 
 
     private val modelControlWindow = ModelControlView()
-    private val modelController = ModelController(modelControlWindow, agentMOdelControlService.apply { start() })
 
-    private val scriptViewPortController = ScriptViewPortController(scriptViewPort, sceneService.scene)
+    private val sceneController = SceneController(sceneService, componentInspector, objectTree, sceneSetup)
+    private val modelController = ModelController(modelControlWindow, agentMOdelControlService.apply { start() })
+    private val scriptViewPortController = ScriptViewPortController(scriptViewPort)
 
 
     private val dockspace = Dockspace().apply {
@@ -168,6 +169,8 @@ class Main : Application() {
 
     private val toolsHeight = 50f
     private val isDarkTheme = ImBoolean()
+
+
 
     override fun process() {
         sceneController.update()
@@ -238,10 +241,8 @@ class Main : Application() {
     override fun run() {
         runBlocking {
             while (!GLFW.glfwWindowShouldClose(handle)) {
-                println(measureTimeMillis {
-                    runFrame()
-                    yield()
-                })
+                runFrame()
+                yield()
             }
         }
     }
@@ -446,4 +447,6 @@ val agentMOdelControlService = AgentModelControlService(object : AgentModelApiCl
     override suspend fun stop() {
         Logger.log("Request stop", Log.Level.DEBUG)
     }
-})
+}).also {
+    Service.agentModelControl = it
+}

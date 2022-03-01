@@ -1,6 +1,6 @@
 package app.services.model.configuration
 
-import core.uppercaseFirstChar
+import app.utils.uppercaseFirstChar
 import kotlin.reflect.KClass
 
 class ModelConfiguration {

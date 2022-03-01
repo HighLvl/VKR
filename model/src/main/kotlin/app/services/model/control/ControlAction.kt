@@ -1,5 +1,5 @@
 package app.services.model.control
 
-enum class ControlAction {
-    RUN, PAUSE, STOP, RESUME
+enum class ControlState {
+    RUN, PAUSE, STOP, CONNECT, DISCONNECT
 }

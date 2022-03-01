@@ -16,8 +16,11 @@ class LoggerView : View {
 
     private val logs = LinkedList<Pair<String, Level>>()
     private val filterString = ImString()
-    private var filteredLogs = logs.asSequence()
+    private lateinit var filteredLogs: Sequence<Pair<String, Level>>
     private val openFilter = ImBoolean()
+    private val showDebug = ImBoolean(true)
+    private val showError = ImBoolean(true)
+    private val showInfo = ImBoolean(true)
 
     fun log(text: String, level: Level) {
         if (logs.size == MAX_LOG_LIST_SIZE) {
@@ -28,8 +31,11 @@ class LoggerView : View {
 
     override fun draw() {
         if (ImGui.beginPopup("Options")) {
-            ImGui.checkbox("Filter", openFilter);
-            ImGui.endPopup();
+            ImGui.checkbox("Info", showInfo)
+            ImGui.checkbox("Debug", showDebug)
+            ImGui.checkbox("Error", showError)
+            ImGui.checkbox("Filter", openFilter)
+            ImGui.endPopup()
         }
 
         if (ImGui.smallButton("Options")) ImGui.openPopup("Options")
@@ -39,12 +45,19 @@ class LoggerView : View {
             logs.clear()
         }
         ImGui.separator()
+
+        filteredLogs = logs.asSequence()
         if (openFilter.get()) {
             ImGui.setNextItemWidth(FILTER_WIDTH)
             if (ImGui.inputText("Filter", filterString)) {
-                filteredLogs = logs.asSequence().filter { filterString.get() in it.first }
+                filteredLogs = filteredLogs.filter { filterString.get() in it.first }
             }
             ImGui.separator()
+        }
+        filteredLogs = filteredLogs.filter {
+            it.second == Level.DEBUG && showDebug.get() ||
+                    it.second == Level.INFO && showInfo.get() ||
+                    it.second == Level.ERROR && showInfo.get()
         }
 
         val titleColor = ImGui.getStyle().getColor(ImGuiCol.FrameBg)
