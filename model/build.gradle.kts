@@ -7,7 +7,6 @@ plugins {
     kotlin("jvm") version "1.6.0"
     application
     id("com.google.protobuf") version "0.8.17"
-    kotlin("plugin.serialization") version "1.6.0"
     id("io.netifi.flatbuffers") version "1.0.7"
 }
 
@@ -30,8 +29,7 @@ dependencies {
     implementation("com.google.flatbuffers:flatbuffers-java:2.0.3")
     implementation("com.google.flatbuffers:flatbuffers-java-grpc:2.0.3")
     implementation("io.grpc:grpc-kotlin-stub:1.2.1")
-    implementation("io.grpc:grpc-okhttp:1.44.1")
-
+    implementation("io.grpc:grpc-netty:1.44.1")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC3")
     implementation("io.reactivex.rxjava3:rxjava:3.1.3")
@@ -41,6 +39,7 @@ dependencies {
 
     implementation("io.github.spair:imgui-java-app:$imguiVersion")
     implementation("io.github.spair:imgui-java-binding:$imguiVersion")
+
 }
 
 tasks.test {

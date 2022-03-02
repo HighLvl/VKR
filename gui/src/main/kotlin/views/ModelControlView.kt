@@ -43,6 +43,10 @@ class ModelControlView : View {
     private val ipInputString = InputString(ipText, LABEL_INPUT_IP, 15)
     private val portInputInt = InputInt(port, LABEL_INPUT_PORT)
 
+    init {
+        disconnect()
+    }
+
     override fun draw() {
         when (state) {
             State.CONNECT -> handleConnectState()

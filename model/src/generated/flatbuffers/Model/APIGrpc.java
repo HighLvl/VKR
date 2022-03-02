@@ -35,12 +35,12 @@ public final class APIGrpc {
   
   // Static method descriptors that strictly reflect the proto.
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
-  @java.lang.Deprecated // Use {@link #getConnectMethod()} instead. 
+  @java.lang.Deprecated // Use {@link #getGetStateMethod()} instead. 
   public static final io.grpc.MethodDescriptor<Model.Empty,
-      Model.ModelState> METHOD_CONNECT = getConnectMethod();
+      Model.ModelState> METHOD_GET_STATE = getGetStateMethod();
   
   private static volatile io.grpc.MethodDescriptor<Model.Empty,
-      Model.ModelState> getConnectMethod;
+      Model.ModelState> getGetStateMethod;
   
   private static volatile FlatbuffersUtils.FBExtactor<Model.Empty> extractorOfEmpty;
   private static FlatbuffersUtils.FBExtactor<Model.Empty> getExtractorOfEmpty() {
@@ -72,16 +72,16 @@ public final class APIGrpc {
   
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   public static io.grpc.MethodDescriptor<Model.Empty,
-      Model.ModelState> getConnectMethod() {
-    io.grpc.MethodDescriptor<Model.Empty, Model.ModelState> getConnectMethod;
-    if ((getConnectMethod = APIGrpc.getConnectMethod) == null) {
+      Model.ModelState> getGetStateMethod() {
+    io.grpc.MethodDescriptor<Model.Empty, Model.ModelState> getGetStateMethod;
+    if ((getGetStateMethod = APIGrpc.getGetStateMethod) == null) {
       synchronized (APIGrpc.class) {
-        if ((getConnectMethod = APIGrpc.getConnectMethod) == null) {
-          APIGrpc.getConnectMethod = getConnectMethod = 
+        if ((getGetStateMethod = APIGrpc.getGetStateMethod) == null) {
+          APIGrpc.getGetStateMethod = getGetStateMethod = 
               io.grpc.MethodDescriptor.<Model.Empty, Model.ModelState>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(
-                  "Model.API", "Connect"))
+                  "Model.API", "GetState"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(FlatbuffersUtils.marshaller(
                   Model.Empty.class, getExtractorOfEmpty()))
@@ -92,7 +92,7 @@ public final class APIGrpc {
           }
         }
      }
-     return getConnectMethod;
+     return getGetStateMethod;
   }
   
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
@@ -397,9 +397,9 @@ public final class APIGrpc {
     
     /**
      */
-    public     void connect(Model.Empty request,
+    public     void getState(Model.Empty request,
         io.grpc.stub.StreamObserver<Model.ModelState> responseObserver)     {
-      asyncUnimplementedUnaryCall(getConnectMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getGetStateMethod(), responseObserver);
     }
     
     /**
@@ -454,12 +454,12 @@ public final class APIGrpc {
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
           .addMethod(
-            getConnectMethod(),
+            getGetStateMethod(),
             asyncUnaryCall(
               new MethodHandlers<
                 Model.Empty,
                 Model.ModelState>(
-                  this, METHODID_CONNECT)))
+                  this, METHODID_GET_STATE)))
           .addMethod(
             getRunMethod(),
             asyncUnaryCall(
@@ -533,10 +533,10 @@ public final class APIGrpc {
     
     /**
      */
-    public     void connect(Model.Empty request,
+    public     void getState(Model.Empty request,
         io.grpc.stub.StreamObserver<Model.ModelState> responseObserver)     {
       asyncUnaryCall(
-          getChannel().newCall(getConnectMethod(), getCallOptions()), request, responseObserver);
+          getChannel().newCall(getGetStateMethod(), getCallOptions()), request, responseObserver);
     }
     
     /**
@@ -616,9 +616,9 @@ public final class APIGrpc {
     
     /**
      */
-    public     Model.ModelState connect(Model.Empty request)     {
+    public     Model.ModelState getState(Model.Empty request)     {
       return blockingUnaryCall(
-          getChannel(), getConnectMethod(), getCallOptions(), request);
+          getChannel(), getGetStateMethod(), getCallOptions(), request);
     }
     
     /**
@@ -692,10 +692,10 @@ public final class APIGrpc {
     
     /**
      */
-    public     com.google.common.util.concurrent.ListenableFuture<Model.ModelState> connect(
+    public     com.google.common.util.concurrent.ListenableFuture<Model.ModelState> getState(
         Model.Empty request)     {
       return futureUnaryCall(
-          getChannel().newCall(getConnectMethod(), getCallOptions()), request);
+          getChannel().newCall(getGetStateMethod(), getCallOptions()), request);
     }
     
     /**
@@ -747,7 +747,7 @@ public final class APIGrpc {
     }
   }
   
-  private static final int METHODID_CONNECT = 0;
+  private static final int METHODID_GET_STATE = 0;
   private static final int METHODID_RUN = 1;
   private static final int METHODID_RUN_AND_SUBSCRIBE_ON_UPDATE = 2;
   private static final int METHODID_CALL_BEHAVIOUR_FUNCTIONS = 3;
@@ -773,8 +773,8 @@ public final class APIGrpc {
     @java.lang.SuppressWarnings("unchecked")
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
-        case METHODID_CONNECT:
-          serviceImpl.connect((Model.Empty) request,
+        case METHODID_GET_STATE:
+          serviceImpl.getState((Model.Empty) request,
               (io.grpc.stub.StreamObserver<Model.ModelState>) responseObserver);
           break;
         case METHODID_RUN:
@@ -831,7 +831,7 @@ public final class APIGrpc {
         if (result == null) {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)              
               .setSchemaDescriptor(null)              
-              .addMethod(getConnectMethod())              
+              .addMethod(getGetStateMethod())              
               .addMethod(getRunMethod())              
               .addMethod(getRunAndSubscribeOnUpdateMethod())              
               .addMethod(getCallBehaviourFunctionsMethod())              

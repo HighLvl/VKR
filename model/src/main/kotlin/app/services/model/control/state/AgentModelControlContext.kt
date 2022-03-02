@@ -9,12 +9,9 @@ import core.coroutines.launchWithAppContext
 import core.services.*
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.onSubscription
 
 class AgentModelControlContext(val apiClient: AgentModelApiClient) {
-    val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow<ControlState>().apply {
-        onSubscription { emit(getControlState()) }
-    }
+    val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow()
     val periodTaskExecutor = PeriodTaskExecutor()
     var globalArgs = GlobalArgs(mutableMapOf())
     var periodSec: Float = 0.1f

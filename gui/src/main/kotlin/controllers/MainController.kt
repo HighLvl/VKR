@@ -53,8 +53,8 @@ class MainController : Controller() {
                 loggerView.log(it.text, it.level.mapToLogViewLevel())
             }
         }
-        ServiceManager.start()
         controllers.forEach { it.start() }
+        ServiceManager.start()
         setupImGuiStyle(false, 1f)
     }
 

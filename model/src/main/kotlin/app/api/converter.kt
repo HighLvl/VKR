@@ -1,6 +1,7 @@
 package app.api
 
 import Model.AgentBehaviour
+import Model.Empty
 import Model.ModelState
 import Model.Request
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -25,7 +26,8 @@ fun GlobalArgs.mapToGlobalArgsTable(): Model.GlobalArgs {
 
 private fun createGlobalArgs(jsonArgs: ByteBuffer): Model.GlobalArgs {
     flatBufferBuilder.clear()
-    Model.GlobalArgs.createGlobalArgs(flatBufferBuilder, flatBufferBuilder.createString(jsonArgs))
+    val offset = Model.GlobalArgs.createGlobalArgs(flatBufferBuilder, flatBufferBuilder.createString(jsonArgs))
+    flatBufferBuilder.finish(offset)
     return Model.GlobalArgs.getRootAsGlobalArgs(flatBufferBuilder.dataBuffer())
 }
 
@@ -42,10 +44,12 @@ fun Behaviour.mapToBehaviourTable(): Model.Behaviour {
     return createBehaviour(agentBehaviourOffsets)
 }
 
-private fun createBehaviour(agentBehaviourOffsets: IntArray): Model.Behaviour {
-    val vectorOfAgentBehaviours = flatBufferBuilder.createVectorOfTables(agentBehaviourOffsets)
-    Model.Behaviour.createBehaviour(flatBufferBuilder, vectorOfAgentBehaviours)
-    return Model.Behaviour.getRootAsBehaviour(flatBufferBuilder.dataBuffer())
+private fun createRequest(requestName: String, requestId: Int?, argsJson: ByteBuffer): Int {
+    Request.startRequest(flatBufferBuilder)
+    requestId?.let { Request.addId(flatBufferBuilder, it) }
+    Request.addName(flatBufferBuilder, flatBufferBuilder.createString(requestName))
+    Request.addArgs(flatBufferBuilder, flatBufferBuilder.createString(argsJson))
+    return Request.endRequest(flatBufferBuilder)
 }
 
 private fun createAgentBehaviour(
@@ -56,12 +60,11 @@ private fun createAgentBehaviour(
     return AgentBehaviour.createAgentBehaviour(flatBufferBuilder, id, vectorOfRequests)
 }
 
-private fun createRequest(requestName: String, requestId: Int?, argsJson: ByteBuffer): Int {
-    Request.startRequest(flatBufferBuilder)
-    requestId?.let { Request.addId(flatBufferBuilder, it) }
-    Request.addName(flatBufferBuilder, flatBufferBuilder.createString(requestName))
-    Request.addArgs(flatBufferBuilder, flatBufferBuilder.createString(argsJson))
-    return Request.endRequest(flatBufferBuilder)
+private fun createBehaviour(agentBehaviourOffsets: IntArray): Model.Behaviour {
+    val vectorOfAgentBehaviours = flatBufferBuilder.createVectorOfTables(agentBehaviourOffsets)
+    val offset = Model.Behaviour.createBehaviour(flatBufferBuilder, vectorOfAgentBehaviours)
+    flatBufferBuilder.finish(offset)
+    return Model.Behaviour.getRootAsBehaviour(flatBufferBuilder.dataBuffer())
 }
 
 fun Model.Snapshot.mapToSnapshot(): Snapshot {

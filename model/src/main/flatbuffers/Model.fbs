@@ -48,7 +48,7 @@ table ModelState {
 table Empty {}
 
 rpc_service API {
-  Connect(Empty):ModelState;
+  GetState(Empty):ModelState;
   Run(GlobalArgs):Empty;
   RunAndSubscribeOnUpdate(GlobalArgs):Empty (streaming: "server");
   CallBehaviourFunctions(Behaviour):Empty;

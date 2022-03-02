@@ -2,6 +2,7 @@ package app.api
 
 import Model.APIGrpc
 import Model.Empty
+import com.google.flatbuffers.FlatBufferBuilder
 import core.api.AgentModelApiClient
 import core.api.dto.Behaviour
 import core.api.dto.GlobalArgs
@@ -17,7 +18,7 @@ class ApiClientImpl : AgentModelApiClient {
 
     override suspend fun connect(ip: String, port: Int): State {
         apiClient = ApiClient(ip, port)
-        return apiClient!!.connect()
+        return apiClient!!.getState()
     }
 
     override suspend fun disconnect() {
@@ -59,11 +60,18 @@ class ApiClientImpl : AgentModelApiClient {
     private class ApiClient(
         ip: String, port: Int
     ) : Closeable {
-        private val channel = ManagedChannelBuilder.forAddress(ip, port).build()
+        private val channel = ManagedChannelBuilder.forAddress(ip, port).usePlaintext().build()
         private val stub = APIGrpc.newBlockingStub(channel)
+        private val empty by lazy {
+            val builder = FlatBufferBuilder()
+            Empty.startEmpty(builder)
+            val emptyOffset = Empty.endEmpty(builder)
+            builder.finish(emptyOffset)
+            Empty.getRootAsEmpty(builder.dataBuffer())
+        }
 
-        fun connect(): State {
-            val modelState = stub.connect(Model.Empty())
+        fun getState(): State {
+            val modelState = stub.getState(empty)
             return modelState.mapToStateTable()
         }
 
