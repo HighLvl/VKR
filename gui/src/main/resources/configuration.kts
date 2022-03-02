@@ -4,7 +4,6 @@ modelConfiguration {
     agentInterface("Type1") {
         setter<Int>("x")
         setter<String>("text")
-        setter<Main.A>("n")
 
         request<Unit>("putToMap") {
             param<Int>("x")

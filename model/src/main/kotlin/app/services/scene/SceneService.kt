@@ -1,10 +1,10 @@
 package app.services.scene
 
-import app.components.AgentInterface
+import app.components.AgentInterfaceImpl
 import app.components.experiment.Experiment
 import app.logger.Log
 import app.logger.Logger
-import app.scene.SceneImpl
+import app.services.user.Scene
 import app.services.model.configuration.ModelConfiguration
 import app.services.model.configuration.MutableModelConfiguration
 import app.services.model.configuration.MutableRequestSignature
@@ -16,7 +16,6 @@ import core.components.getComponent
 import core.entities.Agent
 import core.entities.Environment
 import core.entities.Experimenter
-import core.scene.Scene
 import core.services.*
 import io.reactivex.rxjava3.disposables.Disposable
 
@@ -103,7 +102,7 @@ class SceneService : Service() {
         getAgentInterfaceScript().snapshot = snapshot
     }
 
-    private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterface>()!!
+    private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterfaceImpl>()!!
 
     private fun updateScripts(modelTime: Float) {
         getScripts().forEach {
@@ -213,7 +212,7 @@ object EntityFactory {
         setterSignatures: List<MutableRequestSignature>,
         otherRequestSignatures: List<MutableRequestSignature>
     ): Agent {
-        val agentInterface = AgentInterface(setterSignatures, otherRequestSignatures)
+        val agentInterface = AgentInterfaceImpl(setterSignatures, otherRequestSignatures)
         val agent = Agent(agentType).apply {
             setComponent(agentInterface)
         }

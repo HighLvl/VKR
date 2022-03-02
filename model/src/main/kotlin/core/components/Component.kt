@@ -1,7 +1,7 @@
 package core.components
 
+import app.services.user.Scene
 import core.entities.Entity
-import core.scene.Scene
 
 annotation class IgnoreInSnapshot
 

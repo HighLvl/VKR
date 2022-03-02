@@ -1,10 +1,10 @@
-package app.scene
+package app.services.scene
 
+import app.services.user.Scene
 import core.entities.Agent
 import core.entities.Entity
 import core.entities.Environment
 import core.entities.Experimenter
-import core.scene.Scene
 import kotlin.reflect.KClass
 
 @Suppress("UNCHECKED_CAST")

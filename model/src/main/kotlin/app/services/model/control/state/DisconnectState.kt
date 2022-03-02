@@ -8,7 +8,9 @@ import kotlinx.coroutines.withContext
 object DisconnectState : State() {
     override suspend fun connect(context: AgentModelControlContext, ip: String, port: Int) {
         try {
-            val state = withContext(Dispatchers.IO) { context.apiClient.connect(ip, port) }
+            val state = withContext(Dispatchers.IO) {
+                context.apiClient.connect(ip, port)
+            }
             when (state) {
                 core.api.dto.State.RUN -> {
                     StopState.restoreRun(context)
@@ -21,7 +23,7 @@ object DisconnectState : State() {
                 }
             }
         } catch (e: Exception) {
-            disconnect(context)
+            context.setState(DisconnectState)
             Logger.log(e.message.orEmpty(), Log.Level.ERROR)
         }
     }

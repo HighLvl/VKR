@@ -71,7 +71,6 @@ class ModelControlView : View {
         ImGui.setNextItemWidth(WIDTH_PORT)
         portInputInt.draw()
         ImGui.sameLine()
-
         connectButton.draw()
     }
 

@@ -3,7 +3,7 @@ package app.components.experiment.controller
 import app.components.experiment.ExperimentTaskModel
 import app.logger.Log
 import app.logger.Logger
-import app.services.Service
+import app.services.user.Service
 import app.utils.splitOnCapitalChars
 import kotlinx.coroutines.runBlocking
 

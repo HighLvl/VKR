@@ -12,12 +12,12 @@ import core.api.dto.Request
 import core.components.SystemComponent
 import app.utils.uppercaseFirstChar
 
-class AgentInterface(
+class AgentInterfaceImpl(
     @property:IgnoreInSnapshot
     val setterSignatures: List<MutableRequestSignature> = listOf(),
     @property:IgnoreInSnapshot
     val otherRequestSignatures: List<MutableRequestSignature> = listOf()
-) : SystemComponent(), Script, AgentInterface {
+) : AgentInterface(), Script {
     @IgnoreInSnapshot
     val requestBodies = RequestBodies(setterSignatures + otherRequestSignatures, this)
 

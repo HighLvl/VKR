@@ -30,6 +30,8 @@ dependencies {
     implementation("com.google.flatbuffers:flatbuffers-java:2.0.3")
     implementation("com.google.flatbuffers:flatbuffers-java-grpc:2.0.3")
     implementation("io.grpc:grpc-kotlin-stub:1.2.1")
+    implementation("io.grpc:grpc-okhttp:1.44.1")
+
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC3")
     implementation("io.reactivex.rxjava3:rxjava:3.1.3")
