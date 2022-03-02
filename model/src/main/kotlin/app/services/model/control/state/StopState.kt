@@ -5,17 +5,32 @@ import app.logger.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import core.coroutines.AppContext
+import core.services.BehaviourRequestsReady
+import core.services.EventBus
+import core.services.listen
+import kotlinx.coroutines.runBlocking
 
 object StopState : ConnectState() {
     override suspend fun run(context: AgentModelControlContext, periodSec: Float) {
         withContext(Dispatchers.IO) {
             context.apiClient.run(context.globalArgs)
         }
+        context.subscribeOnBehaviourRequestsReady()
         context.periodTaskExecutor.scheduleTask {
             withContext(AppContext.context) { updateAgentModel(context) }
         }
         context.onStart()
         context.setState(RunState)
+    }
+
+    private fun AgentModelControlContext.subscribeOnBehaviourRequestsReady() {
+        behaviourRequestsReadyDisposable = EventBus.listen<BehaviourRequestsReady>().subscribe {
+            runBlocking {
+                withContext(Dispatchers.IO) {
+                    apiClient.callBehaviourFunctions(it.behaviour)
+                }
+            }
+        }
     }
 
     private suspend fun updateAgentModel(context: AgentModelControlContext) {

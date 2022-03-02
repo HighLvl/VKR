@@ -53,7 +53,7 @@ class Main : Application() {
     private val loggerView = LoggerView()
 
     override fun configure(config: Configuration) {
-        config.title = "Dear ImGui is Awesome!"
+        config.title = ""
         config.isFullScreen = true
     }
 

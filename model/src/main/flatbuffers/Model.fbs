@@ -1,15 +1,25 @@
 namespace Model;
 table AgentBehaviour {
     id:int;
-    requests:[string];
+    requests:[Request];
 }
 
-//send to client side only
-//common
+table Request {
+    id:int;
+    name:string;
+    args:string;
+}
+
 table AgentSnapshot {
-    id:int; //required
+    type:string;
+    id:int;
     props:string;
-    responses:string; //required
+    responses:[Response];
+}
+
+table Response {
+    id:int;
+    value:string;
 }
 
 table Error {
@@ -26,22 +36,24 @@ table Behaviour {
     requests:[AgentBehaviour];
 }
 
-//required
 table GlobalArgs {
     args:string;
+}
+
+enum State : byte { Run, Pause, Stop }
+table ModelState {
+    state: State;
 }
 
 table Empty {}
 
 rpc_service API {
+  Connect(Empty):ModelState;
   Run(GlobalArgs):Empty;
   RunAndSubscribeOnUpdate(GlobalArgs):Empty (streaming: "server");
-
   CallBehaviourFunctions(Behaviour):Empty;
   RequestSnapshot(Empty):Snapshot;
-
   Pause(Empty):Empty;
   Resume(Empty):Empty;
   Stop(Empty):Empty;
-
 }

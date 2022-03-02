@@ -4,7 +4,7 @@ package Model;
 
 import java.nio.*;
 import java.lang.*;
-
+import java.util.*;
 import com.google.flatbuffers.*;
 
 @SuppressWarnings("unused")
@@ -15,29 +15,39 @@ public final class AgentSnapshot extends Table {
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
   public AgentSnapshot __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  public int id() { int o = __offset(4); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
-  public String props() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
-  public ByteBuffer propsAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
-  public ByteBuffer propsInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }
-  public String responses() { int o = __offset(8); return o != 0 ? __string(o + bb_pos) : null; }
-  public ByteBuffer responsesAsByteBuffer() { return __vector_as_bytebuffer(8, 1); }
-  public ByteBuffer responsesInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 8, 1); }
+  public String type() { int o = __offset(4); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer typeAsByteBuffer() { return __vector_as_bytebuffer(4, 1); }
+  public ByteBuffer typeInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 4, 1); }
+  public int id() { int o = __offset(6); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public String props() { int o = __offset(8); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer propsAsByteBuffer() { return __vector_as_bytebuffer(8, 1); }
+  public ByteBuffer propsInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 8, 1); }
+  public Model.Response responses(int j) { return responses(new Model.Response(), j); }
+  public Model.Response responses(Model.Response obj, int j) { int o = __offset(10); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
+  public int responsesLength() { int o = __offset(10); return o != 0 ? __vector_len(o) : 0; }
+  public Model.Response.Vector responsesVector() { return responsesVector(new Model.Response.Vector()); }
+  public Model.Response.Vector responsesVector(Model.Response.Vector obj) { int o = __offset(10); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
 
   public static int createAgentSnapshot(FlatBufferBuilder builder,
+      int typeOffset,
       int id,
       int propsOffset,
       int responsesOffset) {
-    builder.startTable(3);
+    builder.startTable(4);
     AgentSnapshot.addResponses(builder, responsesOffset);
     AgentSnapshot.addProps(builder, propsOffset);
     AgentSnapshot.addId(builder, id);
+    AgentSnapshot.addType(builder, typeOffset);
     return AgentSnapshot.endAgentSnapshot(builder);
   }
 
-  public static void startAgentSnapshot(FlatBufferBuilder builder) { builder.startTable(3); }
-  public static void addId(FlatBufferBuilder builder, int id) { builder.addInt(0, id, 0); }
-  public static void addProps(FlatBufferBuilder builder, int propsOffset) { builder.addOffset(1, propsOffset, 0); }
-  public static void addResponses(FlatBufferBuilder builder, int responsesOffset) { builder.addOffset(2, responsesOffset, 0); }
+  public static void startAgentSnapshot(FlatBufferBuilder builder) { builder.startTable(4); }
+  public static void addType(FlatBufferBuilder builder, int typeOffset) { builder.addOffset(0, typeOffset, 0); }
+  public static void addId(FlatBufferBuilder builder, int id) { builder.addInt(1, id, 0); }
+  public static void addProps(FlatBufferBuilder builder, int propsOffset) { builder.addOffset(2, propsOffset, 0); }
+  public static void addResponses(FlatBufferBuilder builder, int responsesOffset) { builder.addOffset(3, responsesOffset, 0); }
+  public static int createResponsesVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
+  public static void startResponsesVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
   public static int endAgentSnapshot(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

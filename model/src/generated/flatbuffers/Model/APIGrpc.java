@@ -8,13 +8,18 @@ import com.google.flatbuffers.grpc.FlatbuffersUtils;
 
 import java.nio.ByteBuffer;
 import static io.grpc.MethodDescriptor.generateFullMethodName;
+import static io.grpc.stub.ClientCalls.asyncBidiStreamingCall;
+import static io.grpc.stub.ClientCalls.asyncClientStreamingCall;
 import static io.grpc.stub.ClientCalls.asyncServerStreamingCall;
 import static io.grpc.stub.ClientCalls.asyncUnaryCall;
 import static io.grpc.stub.ClientCalls.blockingServerStreamingCall;
 import static io.grpc.stub.ClientCalls.blockingUnaryCall;
 import static io.grpc.stub.ClientCalls.futureUnaryCall;
+import static io.grpc.stub.ServerCalls.asyncBidiStreamingCall;
+import static io.grpc.stub.ServerCalls.asyncClientStreamingCall;
 import static io.grpc.stub.ServerCalls.asyncServerStreamingCall;
 import static io.grpc.stub.ServerCalls.asyncUnaryCall;
+import static io.grpc.stub.ServerCalls.asyncUnimplementedStreamingCall;
 import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
@@ -29,6 +34,67 @@ public final class APIGrpc {
   public static final String SERVICE_NAME = "Model.API";
   
   // Static method descriptors that strictly reflect the proto.
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  @java.lang.Deprecated // Use {@link #getConnectMethod()} instead. 
+  public static final io.grpc.MethodDescriptor<Model.Empty,
+      Model.ModelState> METHOD_CONNECT = getConnectMethod();
+  
+  private static volatile io.grpc.MethodDescriptor<Model.Empty,
+      Model.ModelState> getConnectMethod;
+  
+  private static volatile FlatbuffersUtils.FBExtactor<Model.Empty> extractorOfEmpty;
+  private static FlatbuffersUtils.FBExtactor<Model.Empty> getExtractorOfEmpty() {
+      if (extractorOfEmpty != null) return extractorOfEmpty;
+      synchronized (APIGrpc.class) {
+          if (extractorOfEmpty != null) return extractorOfEmpty;
+          extractorOfEmpty = new FlatbuffersUtils.FBExtactor<Model.Empty>() {
+              public Model.Empty extract (ByteBuffer buffer) {
+                  return Model.Empty.getRootAsEmpty(buffer);
+              }
+          };
+          return extractorOfEmpty;
+      }
+  }
+  
+  private static volatile FlatbuffersUtils.FBExtactor<Model.ModelState> extractorOfModelState;
+  private static FlatbuffersUtils.FBExtactor<Model.ModelState> getExtractorOfModelState() {
+      if (extractorOfModelState != null) return extractorOfModelState;
+      synchronized (APIGrpc.class) {
+          if (extractorOfModelState != null) return extractorOfModelState;
+          extractorOfModelState = new FlatbuffersUtils.FBExtactor<Model.ModelState>() {
+              public Model.ModelState extract (ByteBuffer buffer) {
+                  return Model.ModelState.getRootAsModelState(buffer);
+              }
+          };
+          return extractorOfModelState;
+      }
+  }
+  
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  public static io.grpc.MethodDescriptor<Model.Empty,
+      Model.ModelState> getConnectMethod() {
+    io.grpc.MethodDescriptor<Model.Empty, Model.ModelState> getConnectMethod;
+    if ((getConnectMethod = APIGrpc.getConnectMethod) == null) {
+      synchronized (APIGrpc.class) {
+        if ((getConnectMethod = APIGrpc.getConnectMethod) == null) {
+          APIGrpc.getConnectMethod = getConnectMethod = 
+              io.grpc.MethodDescriptor.<Model.Empty, Model.ModelState>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(
+                  "Model.API", "Connect"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(FlatbuffersUtils.marshaller(
+                  Model.Empty.class, getExtractorOfEmpty()))
+              .setResponseMarshaller(FlatbuffersUtils.marshaller(
+                  Model.ModelState.class, getExtractorOfModelState()))
+                  .setSchemaDescriptor(null)
+                  .build();
+          }
+        }
+     }
+     return getConnectMethod;
+  }
+  
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   @java.lang.Deprecated // Use {@link #getRunMethod()} instead. 
   public static final io.grpc.MethodDescriptor<Model.GlobalArgs,
@@ -48,20 +114,6 @@ public final class APIGrpc {
               }
           };
           return extractorOfGlobalArgs;
-      }
-  }
-  
-  private static volatile FlatbuffersUtils.FBExtactor<Model.Empty> extractorOfEmpty;
-  private static FlatbuffersUtils.FBExtactor<Model.Empty> getExtractorOfEmpty() {
-      if (extractorOfEmpty != null) return extractorOfEmpty;
-      synchronized (APIGrpc.class) {
-          if (extractorOfEmpty != null) return extractorOfEmpty;
-          extractorOfEmpty = new FlatbuffersUtils.FBExtactor<Model.Empty>() {
-              public Model.Empty extract (ByteBuffer buffer) {
-                  return Model.Empty.getRootAsEmpty(buffer);
-              }
-          };
-          return extractorOfEmpty;
       }
   }
   
@@ -345,6 +397,13 @@ public final class APIGrpc {
     
     /**
      */
+    public     void connect(Model.Empty request,
+        io.grpc.stub.StreamObserver<Model.ModelState> responseObserver)     {
+      asyncUnimplementedUnaryCall(getConnectMethod(), responseObserver);
+    }
+    
+    /**
+     */
     public     void run(Model.GlobalArgs request,
         io.grpc.stub.StreamObserver<Model.Empty> responseObserver)     {
       asyncUnimplementedUnaryCall(getRunMethod(), responseObserver);
@@ -394,6 +453,13 @@ public final class APIGrpc {
     
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
+          .addMethod(
+            getConnectMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                Model.Empty,
+                Model.ModelState>(
+                  this, METHODID_CONNECT)))
           .addMethod(
             getRunMethod(),
             asyncUnaryCall(
@@ -463,6 +529,14 @@ public final class APIGrpc {
     protected APIStub build(io.grpc.Channel channel,
         io.grpc.CallOptions callOptions) {
       return new APIStub(channel, callOptions);
+    }
+    
+    /**
+     */
+    public     void connect(Model.Empty request,
+        io.grpc.stub.StreamObserver<Model.ModelState> responseObserver)     {
+      asyncUnaryCall(
+          getChannel().newCall(getConnectMethod(), getCallOptions()), request, responseObserver);
     }
     
     /**
@@ -542,6 +616,13 @@ public final class APIGrpc {
     
     /**
      */
+    public     Model.ModelState connect(Model.Empty request)     {
+      return blockingUnaryCall(
+          getChannel(), getConnectMethod(), getCallOptions(), request);
+    }
+    
+    /**
+     */
     public     Model.Empty run(Model.GlobalArgs request)     {
       return blockingUnaryCall(
           getChannel(), getRunMethod(), getCallOptions(), request);
@@ -611,6 +692,14 @@ public final class APIGrpc {
     
     /**
      */
+    public     com.google.common.util.concurrent.ListenableFuture<Model.ModelState> connect(
+        Model.Empty request)     {
+      return futureUnaryCall(
+          getChannel().newCall(getConnectMethod(), getCallOptions()), request);
+    }
+    
+    /**
+     */
     public     com.google.common.util.concurrent.ListenableFuture<Model.Empty> run(
         Model.GlobalArgs request)     {
       return futureUnaryCall(
@@ -658,13 +747,14 @@ public final class APIGrpc {
     }
   }
   
-  private static final int METHODID_RUN = 0;
-  private static final int METHODID_RUN_AND_SUBSCRIBE_ON_UPDATE = 1;
-  private static final int METHODID_CALL_BEHAVIOUR_FUNCTIONS = 2;
-  private static final int METHODID_REQUEST_SNAPSHOT = 3;
-  private static final int METHODID_PAUSE = 4;
-  private static final int METHODID_RESUME = 5;
-  private static final int METHODID_STOP = 6;
+  private static final int METHODID_CONNECT = 0;
+  private static final int METHODID_RUN = 1;
+  private static final int METHODID_RUN_AND_SUBSCRIBE_ON_UPDATE = 2;
+  private static final int METHODID_CALL_BEHAVIOUR_FUNCTIONS = 3;
+  private static final int METHODID_REQUEST_SNAPSHOT = 4;
+  private static final int METHODID_PAUSE = 5;
+  private static final int METHODID_RESUME = 6;
+  private static final int METHODID_STOP = 7;
   
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -683,6 +773,10 @@ public final class APIGrpc {
     @java.lang.SuppressWarnings("unchecked")
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
+        case METHODID_CONNECT:
+          serviceImpl.connect((Model.Empty) request,
+              (io.grpc.stub.StreamObserver<Model.ModelState>) responseObserver);
+          break;
         case METHODID_RUN:
           serviceImpl.run((Model.GlobalArgs) request,
               (io.grpc.stub.StreamObserver<Model.Empty>) responseObserver);
@@ -737,6 +831,7 @@ public final class APIGrpc {
         if (result == null) {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)              
               .setSchemaDescriptor(null)              
+              .addMethod(getConnectMethod())              
               .addMethod(getRunMethod())              
               .addMethod(getRunAndSubscribeOnUpdateMethod())              
               .addMethod(getCallBehaviourFunctionsMethod())              

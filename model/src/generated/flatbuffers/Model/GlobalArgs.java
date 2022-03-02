@@ -4,7 +4,7 @@ package Model;
 
 import java.nio.*;
 import java.lang.*;
-
+import java.util.*;
 import com.google.flatbuffers.*;
 
 @SuppressWarnings("unused")
@@ -18,20 +18,16 @@ public final class GlobalArgs extends Table {
   public String args() { int o = __offset(4); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer argsAsByteBuffer() { return __vector_as_bytebuffer(4, 1); }
   public ByteBuffer argsInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 4, 1); }
-  public float k() { int o = __offset(6); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
 
   public static int createGlobalArgs(FlatBufferBuilder builder,
-      int argsOffset,
-      float k) {
-    builder.startTable(2);
-    GlobalArgs.addK(builder, k);
+      int argsOffset) {
+    builder.startTable(1);
     GlobalArgs.addArgs(builder, argsOffset);
     return GlobalArgs.endGlobalArgs(builder);
   }
 
-  public static void startGlobalArgs(FlatBufferBuilder builder) { builder.startTable(2); }
+  public static void startGlobalArgs(FlatBufferBuilder builder) { builder.startTable(1); }
   public static void addArgs(FlatBufferBuilder builder, int argsOffset) { builder.addOffset(0, argsOffset, 0); }
-  public static void addK(FlatBufferBuilder builder, float k) { builder.addFloat(1, k, 0.0f); }
   public static int endGlobalArgs(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

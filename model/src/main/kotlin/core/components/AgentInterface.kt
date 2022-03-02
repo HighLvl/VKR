@@ -4,7 +4,7 @@ interface AgentInterface {
     val id: Int
     val props: Props
     fun requestSetValue(varName: String, value: Any)
-    fun request(name: String, value: Any)
+    fun request(name: String, value: Map<String, Any>)
 }
 
 data class Props(val props: Map<String, Any> = mapOf()) : Map<String, Any> by props

@@ -48,10 +48,10 @@ class AgentInterface(
 
     override fun requestSetValue(varName: String, value: Any) {
         val requestName = "Set${varName.uppercaseFirstChar()}"
-        request(requestName, value)
+        request(requestName, mapOf("value" to value))
     }
 
-    override fun request(name: String, value: Any) {
+    override fun request(name: String, value: Map<String, Any>) {
         val request = Request(null, name, value)
         Logger.log("Request scheduled: $request", Log.Level.INFO)
         _requests.add(request)

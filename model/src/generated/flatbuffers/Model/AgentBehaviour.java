@@ -4,7 +4,7 @@ package Model;
 
 import java.nio.*;
 import java.lang.*;
-
+import java.util.*;
 import com.google.flatbuffers.*;
 
 @SuppressWarnings("unused")
@@ -16,10 +16,11 @@ public final class AgentBehaviour extends Table {
   public AgentBehaviour __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public int id() { int o = __offset(4); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
-  public String requests(int j) { int o = __offset(6); return o != 0 ? __string(__vector(o) + j * 4) : null; }
+  public Model.Request requests(int j) { return requests(new Model.Request(), j); }
+  public Model.Request requests(Model.Request obj, int j) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
   public int requestsLength() { int o = __offset(6); return o != 0 ? __vector_len(o) : 0; }
-  public StringVector requestsVector() { return requestsVector(new StringVector()); }
-  public StringVector requestsVector(StringVector obj) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
+  public Model.Request.Vector requestsVector() { return requestsVector(new Model.Request.Vector()); }
+  public Model.Request.Vector requestsVector(Model.Request.Vector obj) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
 
   public static int createAgentBehaviour(FlatBufferBuilder builder,
       int id,
