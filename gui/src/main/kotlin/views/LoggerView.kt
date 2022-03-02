@@ -16,11 +16,21 @@ class LoggerView : View {
 
     private val logs = LinkedList<Pair<String, Level>>()
     private val filterString = ImString()
-    private var filteredLogs: Sequence<Pair<String, Level>> = logs.asSequence()
+    private var filteredLogs: Sequence<Pair<String, Level>> = getFilteredLogs()
     private val openFilter = ImBoolean()
     private val showDebug = ImBoolean(true)
     private val showError = ImBoolean(true)
     private val showInfo = ImBoolean(true)
+
+    private fun getFilteredLogs(): Sequence<Pair<String, Level>> {
+        return logs.asSequence().filter {
+            val filterByLogLevels = it.second == Level.DEBUG && showDebug.get() ||
+                    it.second == Level.INFO && showInfo.get() ||
+                    it.second == Level.ERROR && showError.get()
+            val filterBySubstring = filterString.get() in it.first
+            filterByLogLevels && filterBySubstring
+        }
+    }
 
     fun log(text: String, level: Level) {
         val lines = text.split('\n').toMutableList()
@@ -38,15 +48,9 @@ class LoggerView : View {
 
     override fun draw() {
         if (ImGui.beginPopup("Options")) {
-            if (ImGui.checkbox("Info", showInfo)) {
-                filterLogsByLevel()
-            }
-            if (ImGui.checkbox("Debug", showDebug)) {
-                filterLogsByLevel()
-            }
-            if (ImGui.checkbox("Error", showError)) {
-                filterLogsByLevel()
-            }
+            ImGui.checkbox("Info", showInfo)
+            ImGui.checkbox("Debug", showDebug)
+            ImGui.checkbox("Error", showError)
             ImGui.checkbox("Filter", openFilter)
             ImGui.endPopup()
         }
@@ -61,9 +65,7 @@ class LoggerView : View {
 
         if (openFilter.get()) {
             ImGui.setNextItemWidth(FILTER_WIDTH)
-            if (ImGui.inputText("Filter", filterString)) {
-                filteredLogs = filteredLogs.filter { filterString.get() in it.first }
-            }
+            ImGui.inputText("Filter", filterString)
             ImGui.separator()
         }
 
@@ -88,14 +90,6 @@ class LoggerView : View {
         }
         ImGui.endChild()
         ImGui.popStyleColor()
-    }
-
-    private fun filterLogsByLevel() {
-        filteredLogs = filteredLogs.filter {
-            it.second == Level.DEBUG && showDebug.get() ||
-                    it.second == Level.INFO && showInfo.get() ||
-                    it.second == Level.ERROR && showError.get()
-        }
     }
 
     private fun formatLog(text: String, level: Level): String {
