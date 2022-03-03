@@ -3,6 +3,7 @@ package core.coroutines
 import app.logger.Log
 import app.logger.Logger
 import kotlinx.coroutines.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 class PeriodTaskExecutor {
     private var nextUpdateTime: Long = 0L
@@ -19,8 +20,12 @@ class PeriodTaskExecutor {
     private var isPause = false
 
     private var task: suspend () -> Unit = {}
-    private val coroutineScope = CoroutineScope(Dispatchers.Default + Job())
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private val coroutineScope = CoroutineScope(newSingleThreadContext(PeriodTaskExecutor::class.qualifiedName.toString()))
     private var updateLoopJob: Job? = null
+
+    private var isStopped = false
 
     init {
         initVars()
@@ -46,7 +51,7 @@ class PeriodTaskExecutor {
     }
 
     private suspend fun updateLoop() {
-        while (!updateLoopJob!!.isCancelled) {
+        while (!isStopped) {
             executeTaskOnUpdateTime()
         }
     }
@@ -54,14 +59,12 @@ class PeriodTaskExecutor {
     private suspend fun executeTaskOnUpdateTime() {
         if (!isPause) {
             if (isItTimeToUpdate()) {
-                Logger.log(Thread.currentThread().id.toString(), Log.Level.DEBUG)
-                Logger.log("execute task", Log.Level.DEBUG)
                 task()
                 startTime = System.currentTimeMillis()
                 nextUpdateTime = startTime + periodMillis
             }
         }
-        delay(SLEEP_INTERVAL)
+        yield()
     }
 
     private fun isItTimeToUpdate(): Boolean {
@@ -78,17 +81,14 @@ class PeriodTaskExecutor {
         Logger.log("Remaining time to next update: $remainingTimeToNextUpdate", Log.Level.DEBUG)
     }
 
-    private fun stopUpdateLoop() {
-        updateLoopJob?.cancel()
-    }
-
     fun resume() {
         nextUpdateTime = System.currentTimeMillis() + remainingTimeToNextUpdate
         isPause = false
     }
 
     fun stop() {
-        stopUpdateLoop()
+        isStopped = false
+        updateLoopJob?.cancel()
         initVars()
     }
 

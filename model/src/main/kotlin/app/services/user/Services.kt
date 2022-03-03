@@ -12,7 +12,7 @@ object Service {
 }
 
 interface AgentModelControl {
-    fun changeRequestPeriod(periodSec: Float)
+    suspend fun changeRequestPeriod(periodSec: Float)
     suspend fun runModel()
     suspend fun pauseModel()
     suspend fun resumeModel()

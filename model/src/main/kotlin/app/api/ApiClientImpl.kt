@@ -86,24 +86,24 @@ class ApiClientImpl : AgentModelApiClient {
         }
 
         fun requestSnapshot(): Snapshot {
-            val snapshotTable = stub.requestSnapshot(Empty())
+            val snapshotTable = stub.requestSnapshot(empty)
             return snapshotTable.mapToSnapshot()
         }
 
         fun pause() {
-            stub.pause(Empty())
+            stub.pause(empty)
         }
 
         fun resume() {
-            stub.resume(Empty())
+            stub.resume(empty)
         }
 
         fun stop() {
-            stub.stop(Empty())
+            stub.stop(empty)
         }
 
         override fun close() {
-            channel.shutdown().awaitTermination(5, TimeUnit.SECONDS)
+            channel.shutdown()
         }
     }
 }

@@ -5,6 +5,7 @@ import app.logger.Log
 import app.logger.Logger
 import app.services.user.Service
 import app.utils.splitOnCapitalChars
+import core.coroutines.AppContext
 import kotlinx.coroutines.runBlocking
 
 class ExperimentController {

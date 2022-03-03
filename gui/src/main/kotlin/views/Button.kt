@@ -24,23 +24,28 @@ class Button(private val title: String) : View {
     }
 
     override fun draw() {
-        if (enabled && pressed) {
+        val enabledAndPressed = enabled && pressed
+        val notEnabled = !enabled
+
+
+        if (enabledAndPressed) {
             val color = ImVec4()
             ImGui.getStyleColorVec4(ImGuiCol.ButtonActive, color)
             ImGui.pushStyleColor(ImGuiCol.Button, color.x, color.y, color.z, color.w)
         }
-        if (!enabled) {
+
+        if (notEnabled) {
             ImGui.pushItemFlag(ImGuiItemFlags.Disabled, true)
             ImGui.pushStyleVar(ImGuiStyleVar.Alpha, ImGui.getStyle().alpha * 0.5f)
         }
         if (ImGui.button(formattedTitle) || isBoundKeyPressed()) {
             onClickListener()
         }
-        if (!enabled) {
-            ImGui.popItemFlag()
+        if (notEnabled) {
             imgui.ImGui.popStyleVar()
+            ImGui.popItemFlag()
         }
-        if (enabled && pressed) {
+        if (enabledAndPressed) {
             ImGui.popStyleColor()
         }
     }

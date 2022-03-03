@@ -12,7 +12,7 @@ import core.api.dto.Request
 import core.components.SystemComponent
 import app.utils.uppercaseFirstChar
 
-class AgentInterfaceImpl(
+class AgentInterface(
     @property:IgnoreInSnapshot
     val setterSignatures: List<MutableRequestSignature> = listOf(),
     @property:IgnoreInSnapshot

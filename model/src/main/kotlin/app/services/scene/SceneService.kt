@@ -1,6 +1,6 @@
 package app.services.scene
 
-import app.components.AgentInterfaceImpl
+import app.components.AgentInterface
 import app.components.experiment.Experiment
 import app.logger.Log
 import app.logger.Logger
@@ -102,7 +102,7 @@ class SceneService : Service() {
         getAgentInterfaceScript().snapshot = snapshot
     }
 
-    private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterfaceImpl>()!!
+    private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterface>()!!
 
     private fun updateScripts(modelTime: Float) {
         getScripts().forEach {
@@ -212,7 +212,7 @@ object EntityFactory {
         setterSignatures: List<MutableRequestSignature>,
         otherRequestSignatures: List<MutableRequestSignature>
     ): Agent {
-        val agentInterface = AgentInterfaceImpl(setterSignatures, otherRequestSignatures)
+        val agentInterface = AgentInterface(setterSignatures, otherRequestSignatures)
         val agent = Agent(agentType).apply {
             setComponent(agentInterface)
         }

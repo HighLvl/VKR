@@ -11,7 +11,7 @@ import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 class AgentModelControlContext(val apiClient: AgentModelApiClient) {
-    val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow()
+    val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow(extraBufferCapacity = 100)
     val periodTaskExecutor = PeriodTaskExecutor()
     var globalArgs = GlobalArgs(mutableMapOf())
     var periodSec: Float = 0.1f
@@ -37,7 +37,10 @@ class AgentModelControlContext(val apiClient: AgentModelApiClient) {
         currentState.disconnect(this)
     }
 
+    private var startTime: Long = 0
+
     suspend fun runModel() {
+        startTime = System.currentTimeMillis()
         currentState.run(this, periodSec)
     }
 
@@ -51,6 +54,7 @@ class AgentModelControlContext(val apiClient: AgentModelApiClient) {
 
     suspend fun stopModel() {
         currentState.stop(this)
+        println(System.currentTimeMillis() - startTime)
     }
 
     fun setState(state: State) {
@@ -90,6 +94,7 @@ class AgentModelControlContext(val apiClient: AgentModelApiClient) {
     }
 
     fun changeRequestPeriod(periodSec: Float) {
+        if (periodSec < 0) throw IllegalArgumentException("Period must be more than zero")
         periodTaskExecutor.changePeriod(periodSec)
     }
 

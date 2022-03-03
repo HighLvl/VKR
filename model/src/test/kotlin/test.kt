@@ -1,4 +1,4 @@
-import app.components.AgentInterfaceImpl
+import app.components.AgentInterface
 import app.components.getSnapshot
 import app.logger.Log
 import app.logger.Logger
@@ -258,8 +258,8 @@ fun main() {
         agentMOdelControlService.run(5f)
         EventBus.listen<AgentModelLifecycleEvent.Update>().subscribe {
             Logger.log(sceneService.scene.agents.values.map {
-                it.getComponent<AgentInterfaceImpl>()!!.id
-                val c = it.getComponent<AgentInterfaceImpl>()
+                it.getComponent<AgentInterface>()!!.id
+                val c = it.getComponent<AgentInterface>()
                 val json = ObjectMapper().writeValueAsString(
                     Property(
                         "df",
@@ -269,7 +269,7 @@ fun main() {
                 )
                 val res = ObjectMapper().readValue(json, Property::class.java)
                 Logger.log(
-                    ObjectMapper().writeValueAsString(it.getComponent<AgentInterfaceImpl>()!!.getSnapshot()).toString(),
+                    ObjectMapper().writeValueAsString(it.getComponent<AgentInterface>()!!.getSnapshot()).toString(),
                     Log.Level.DEBUG
                 )
             }.toString(), Log.Level.DEBUG)

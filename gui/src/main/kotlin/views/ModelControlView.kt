@@ -212,7 +212,7 @@ class ModelControlView : View {
 
     private class InputRequestDt : View {
         var enabled = true
-        private val imDt = ImFloat(REQUEST_DT_VALUE_MIN)
+        private val imDt = ImFloat(REQUEST_DT_VALUE_DEFAULT)
         var onChangeDtListener: (Float) -> Unit = {}
             set(value) {
                 field = value
@@ -266,7 +266,9 @@ class ModelControlView : View {
         const val WIDTH_PAUSE_BUTTON = 100f
         const val LABEL_INPUT_REQUEST_DT = "dt, s"
         const val WIDTH_INPUT_REQUEST_DT = 100f
-        const val REQUEST_DT_VALUE_MIN = 0.001f
+
+        const val REQUEST_DT_VALUE_DEFAULT = 0.001f
         const val REQUEST_DT_VALUE_MAX = 60f
+        const val REQUEST_DT_VALUE_MIN = 0.0001f
     }
 }

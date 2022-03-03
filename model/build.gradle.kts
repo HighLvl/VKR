@@ -39,7 +39,6 @@ dependencies {
 
     implementation("io.github.spair:imgui-java-app:$imguiVersion")
     implementation("io.github.spair:imgui-java-binding:$imguiVersion")
-
 }
 
 tasks.test {

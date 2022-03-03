@@ -9,6 +9,7 @@ import core.services.BehaviourRequestsReady
 import core.services.EventBus
 import core.services.listen
 import kotlinx.coroutines.runBlocking
+import kotlin.system.measureTimeMillis
 
 object StopState : ConnectState() {
     override suspend fun run(context: AgentModelControlContext, periodSec: Float) {
@@ -18,7 +19,7 @@ object StopState : ConnectState() {
             }
             context.subscribeOnBehaviourRequestsReady()
             context.periodTaskExecutor.scheduleTask {
-                withContext(AppContext.context) { updateAgentModel(context) }
+                updateAgentModel(context)
             }
             context.onStart()
             context.setState(RunState)
@@ -32,9 +33,7 @@ object StopState : ConnectState() {
         behaviourRequestsReadyDisposable = EventBus.listen<BehaviourRequestsReady>().subscribe {
             runBlocking {
                 try {
-                    withContext(Dispatchers.IO) {
-                        apiClient.callBehaviourFunctions(it.behaviour)
-                    }
+                    apiClient.callBehaviourFunctions(it.behaviour)
                 } catch (e: Exception) {
                     disconnect(this@subscribeOnBehaviourRequestsReady)
                     Logger.log(e.message.orEmpty(), Log.Level.ERROR)
@@ -60,7 +59,7 @@ object StopState : ConnectState() {
 
     fun restoreRun(context: AgentModelControlContext) {
         context.periodTaskExecutor.scheduleTask {
-            withContext(AppContext.context) { updateAgentModel(context) }
+            updateAgentModel(context)
         }
         context.onStart()
         context.setState(RunState)
@@ -69,7 +68,7 @@ object StopState : ConnectState() {
     fun restorePause(context: AgentModelControlContext) {
         context.periodTaskExecutor.pause()
         context.periodTaskExecutor.scheduleTask {
-            withContext(AppContext.context) { updateAgentModel(context) }
+            updateAgentModel(context)
         }
         context.onStart()
         context.onPause()

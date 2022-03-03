@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 object EventBus {
     private val publisher = PublishSubject.create<Event>()
 
-    fun publish(event: Event) {
+    fun publish(event: Event) = synchronized(this) {
         publisher.onNext(event)
     }
 

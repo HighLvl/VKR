@@ -1,7 +1,6 @@
 package app.api
 
 import Model.AgentBehaviour
-import Model.Empty
 import Model.ModelState
 import Model.Request
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper

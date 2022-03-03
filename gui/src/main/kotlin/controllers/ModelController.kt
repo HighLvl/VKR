@@ -29,44 +29,46 @@ class ModelController(
         }
         modelControlView.apply {
             onClickConnectListener = { ip, port ->
+                disableAll()
                 launchWithAppContext {
                     Logger.log("ip: $ip, port: $port", Log.Level.INFO)
-                    disableAll()
                     modelControlService.connect(ip, port)
                 }
             }
             onClickPauseListener = {
+                disableAll()
                 launchWithAppContext {
-                    disableAll()
                     modelControlService.pauseModel()
                 }
             }
             onClickRunListener = {
+                disableAll()
                 launchWithAppContext {
-                    disableAll()
                     modelControlService.runModel()
                 }
             }
             onClickResumeListener = {
+                disableAll()
                 launchWithAppContext {
-                    disableAll()
                     modelControlService.resumeModel()
                 }
             }
             onClickStopListener = {
+                disableAll()
                 launchWithAppContext {
-                    disableAll()
                     modelControlService.stopModel()
                 }
             }
             onClickDisconnectListener = {
+                disableAll()
                 launchWithAppContext {
-                    disableAll()
                     modelControlService.disconnect()
                 }
             }
             onChangeDtListener = {
-                modelControlService.changeRequestPeriod(it)
+                launchWithAppContext {
+                    modelControlService.changeRequestPeriod(it)
+                }
             }
         }
     }
