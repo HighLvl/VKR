@@ -1,5 +1,4 @@
-import controllers.*
-import core.coroutines.AppContext
+import controllers.MainController
 import imgui.ImFontConfig
 import imgui.ImGuiIO
 import imgui.ImGuiViewport
@@ -61,7 +60,7 @@ class Main : Application() {
     @OptIn(ExperimentalTime::class)
     override fun preRun() {
         super.preRun()
-        mainController.start()
+        mainController.onPreRun()
     }
 
     override fun postRun() {
@@ -97,7 +96,7 @@ class Main : Application() {
 
         @JvmStatic
         fun main(args: Array<String>): Unit = runBlocking {
-            AppContext.context = currentCoroutineContext()
+            Contexts.ui = currentCoroutineContext()
             launch(Main())
             exitProcess(0)
         }

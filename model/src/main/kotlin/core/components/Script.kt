@@ -5,5 +5,5 @@ interface Script {
     fun onModelUpdate(modelTime: Float) {}
     fun onModelAfterUpdate() {}
     fun onModelStop() {}
-    fun update() {}
+    fun updateUI() {}
 }

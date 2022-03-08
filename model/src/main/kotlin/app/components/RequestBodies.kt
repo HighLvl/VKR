@@ -1,10 +1,9 @@
 package app.components
 
-import app.logger.Log
-import app.logger.Logger
+import core.services.logger.Logger
 import app.services.model.configuration.MutableRequestSignature
 import com.google.common.base.Defaults
-import core.components.AgentInterface
+import core.services.logger.Level
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
@@ -26,7 +25,7 @@ class RequestBodies(
 
     fun commit(name: String) {
         val body = bodies.firstOrNull { it.name == name } ?: return
-        Logger.log("Commit $body", Log.Level.DEBUG)
+        Logger.log("Commit $body", Level.DEBUG)
         agentInterface.request(body.name, body.args.map { it.key to it.value.first }.toMap())
     }
 

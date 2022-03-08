@@ -1,7 +1,7 @@
 package app.utils
 
-import app.logger.Log
-import app.logger.Logger
+import core.services.logger.Level
+import core.services.logger.Logger
 import java.util.*
 
 fun String.lowercaseFirstChar() = replaceFirstChar {
@@ -18,6 +18,6 @@ fun runBlockCatching(block: () -> Unit) {
     try {
         block()
     } catch (e: Exception) {
-        Logger.log(e.stackTraceToString(), Log.Level.ERROR)
+        Logger.log(e.stackTraceToString(), Level.ERROR)
     }
 }

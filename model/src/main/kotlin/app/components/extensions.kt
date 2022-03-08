@@ -4,6 +4,9 @@ import core.components.Component
 import core.components.ComponentConverter
 import core.components.ComponentSnapshot
 import core.components.changePropertyValue
+import app.services.executeSynchronized
+import core.services.logger.Level
+import core.services.logger.Logger
 
 fun Component.getSnapshot(): ComponentSnapshot {
     return ComponentConverter.convertToComponentSnapshot(this)
@@ -11,7 +14,11 @@ fun Component.getSnapshot(): ComponentSnapshot {
 
 fun Component.loadSnapshot(snapshot: ComponentSnapshot) {
     snapshot.mutableProps.forEach {
-        changePropertyValue(it.name, it.value)
+        try {
+            changePropertyValue(it.name, it.value)
+        } catch (e: Exception) {
+            Logger.log(e.cause?.message.toString(), Level.ERROR)
+        }
     }
 }
 

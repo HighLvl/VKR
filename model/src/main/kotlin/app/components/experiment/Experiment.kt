@@ -5,12 +5,14 @@ import app.components.experiment.controller.ExperimentController
 import app.components.experiment.goals.Goals
 import app.components.experiment.variables.mutable.MutableVariables
 import app.components.experiment.variables.observable.ObservableVariables
-import app.logger.Log
-import app.logger.Logger
+import core.services.logger.Logger
 import app.utils.KtsScriptEngine
 import core.components.IgnoreInSnapshot
 import core.components.Script
 import core.components.SystemComponent
+import core.services.logger.Level
+import core.services.logger.Log
+import java.lang.ClassCastException
 import kotlin.math.sin
 
 class Experiment : SystemComponent(), Script {
@@ -24,7 +26,7 @@ class Experiment : SystemComponent(), Script {
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             if (value < 1) {
-                Logger.log("trackedDataSize should be more them 0", Log.Level.ERROR)
+                Logger.log("trackedDataSize should be more than 0", Level.ERROR)
                 return
             }
             field = value
@@ -52,6 +54,7 @@ class Experiment : SystemComponent(), Script {
             goals.enabled = value
         }
         get() = goals.enabled
+    var clearTrackedDataOnRun = true
 
     private val observableVariables = ObservableVariables()
     private val mutableVariables = MutableVariables()
@@ -60,49 +63,11 @@ class Experiment : SystemComponent(), Script {
     private val experimentController = ExperimentController()
 
     init {
-        taskModel = experimentTask {
-            val f = sequence<Int> {
-                var a = 0
-                while (true) {
-                    a++
-                    yield(a)
-                }
-            }.iterator()
-            goal(10, "some Func") {
-                f.next() < 100
-            }
-            constraint("d") {
-                1 > 12
-            }
-            val v = sequence<Int> {
-                var a = 0
-                while (true) {
-                    a++
-                    yield(a)
-                }
-            }.iterator()
-            constraint("f") {
-                15 < v.next()
-            }
-            stopOn {
-                condition { 2 + 5 > 10 }
-                scoreMoreThan(6)
-                timeMoreThan(9f)
-            }
-            val it = listOf(1f, 2f, 3f, 4f).iterator()
-            val seq = sequence<Double> {
-                var t = 0.0
-                while (true) {
-                    yield(sin(t))
-                    t += 0.1
-                }
-            }.iterator()
-            observableVariables(
-                "x" to { if (it.hasNext()) it.next() else 0f },
-                "y" to { seq.next().toFloat() }
-            )
-            mutableVariables("x" to {}, "y" to {})
-        }
+        importTaskModel()
+    }
+
+    override fun onModelRun() {
+        if (clearTrackedDataOnRun) importTaskModel()
     }
 
     private fun tryLoadExperimentTaskModel(path: String): String {
@@ -111,15 +76,16 @@ class Experiment : SystemComponent(), Script {
             taskModel = KtsScriptEngine.eval(path)
             importTaskModel()
             path
-        } catch (e: Exception) {
-            Logger.log("Bad experiment task file", Log.Level.ERROR)
-            Logger.log(e.stackTraceToString(), Log.Level.ERROR)
+        }
+        catch (e: ClassCastException) {
+            Logger.log("${ExperimentTaskModel::class} is expected", Level.ERROR)
             ""
         }
-    }
-
-    override fun onModelRun() {
-        importTaskModel()
+        catch (e: Exception) {
+            Logger.log("Bad experiment task file", Level.ERROR)
+            Logger.log(e.stackTraceToString(), Level.ERROR)
+            ""
+        }
     }
 
     private fun importTaskModel() {
@@ -138,7 +104,7 @@ class Experiment : SystemComponent(), Script {
         experimentController.onModelUpdate(modelTime)
     }
 
-    override fun update() {
+    override fun updateUI() {
         observableVariables.update()
         mutableVariables.update()
         constraints.update()

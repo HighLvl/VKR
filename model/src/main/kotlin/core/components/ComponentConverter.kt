@@ -5,7 +5,6 @@ import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.hasAnnotation
-import kotlin.reflect.jvm.javaMethod
 
 object ComponentConverter {
     fun convertToComponentSnapshot(component: Component): ComponentSnapshot {
@@ -18,7 +17,6 @@ object ComponentConverter {
             when (it) {
                 is KMutableProperty -> handleKMutableProperty(it, component, mutableProps, immutableProps)
                 else -> handleKProperty(it, component, mutableProps, immutableProps)
-
             }
         }
         return ComponentSnapshot(component::class.qualifiedName.toString(), immutableProps, mutableProps)

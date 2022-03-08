@@ -1,7 +1,6 @@
 package app.components.experiment.constraints
 
 import app.components.experiment.ExperimentTaskModel
-import app.components.experiment.MutableExperimentTaskModel
 import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
 

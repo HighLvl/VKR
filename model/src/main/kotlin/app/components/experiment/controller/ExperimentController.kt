@@ -1,12 +1,11 @@
 package app.components.experiment.controller
 
 import app.components.experiment.ExperimentTaskModel
-import app.logger.Log
-import app.logger.Logger
+import core.services.logger.Logger
 import app.services.user.Service
 import app.utils.splitOnCapitalChars
-import core.coroutines.AppContext
 import kotlinx.coroutines.runBlocking
+import core.services.logger.Level
 
 class ExperimentController {
     private lateinit var taskModel: ExperimentTaskModel
@@ -27,10 +26,8 @@ class ExperimentController {
 
 
         stopConditions.entries.firstOrNull { it.value }?.let { (condName, _) ->
-            runBlocking {
-                Service.agentModelControl.stopModel()
-                Logger.log("Stopped on $condName", Log.Level.INFO)
-            }
+            Service.agentModelControl.stopModel()
+            Logger.log("Stopped on $condName", Level.INFO)
         }
     }
 

@@ -2,9 +2,7 @@ package core.datatypes
 
 import core.datatypes.base.MutableSeries
 import core.datatypes.base.Series
-import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.reflect.KClass
 
 class ListSeries<T : Any>(initCapacity: Int = Int.MAX_VALUE,
                           private val list: MutableList<T?> = ArrayList(initCapacity)

@@ -1,20 +1,18 @@
 package app.services.model.control.state
 
-import app.logger.Log
-import app.logger.Logger
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import core.services.logger.Logger
+import core.services.logger.Level
 
 object PauseState : StoppableState() {
-    override suspend fun resume(context: AgentModelControlContext) {
+    override fun resume(context: AgentModelControlContext) {
         try {
-            withContext(Dispatchers.IO) { context.apiClient.resume() }
+            context.modelApi.resume()
             context.periodTaskExecutor.resume()
             context.onResume()
             context.setState(RunState)
         } catch (e: Exception) {
             disconnect(context)
-            Logger.log(e.message.orEmpty(), Log.Level.ERROR)
+            Logger.log(e.message.orEmpty(), Level.ERROR)
         }
     }
 }

@@ -1,9 +1,9 @@
 package app.components.experiment.variables.mutable
 
-import app.logger.Log
-import app.logger.Logger
+import core.services.logger.Logger
 import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
+import core.services.logger.Level
 
 class MutableVariables {
     var enabled: Boolean
@@ -52,7 +52,7 @@ class MutableVariables {
     }
 
     private fun onChangeMutableVarValue(varName: String, value: Float) {
-        Logger.log("Set $varName to $value", Log.Level.DEBUG)
+        Logger.log("Set $varName to $value", Level.DEBUG)
         mutableVarValues[varName] = value
     }
 }

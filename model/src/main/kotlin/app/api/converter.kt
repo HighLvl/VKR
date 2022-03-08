@@ -44,10 +44,12 @@ fun Behaviour.mapToBehaviourTable(): Model.Behaviour {
 }
 
 private fun createRequest(requestName: String, requestId: Int?, argsJson: ByteBuffer): Int {
+    val requestNameFB = flatBufferBuilder.createString(requestName)
+    val argsFB = flatBufferBuilder.createString(argsJson)
     Request.startRequest(flatBufferBuilder)
     requestId?.let { Request.addId(flatBufferBuilder, it) }
-    Request.addName(flatBufferBuilder, flatBufferBuilder.createString(requestName))
-    Request.addArgs(flatBufferBuilder, flatBufferBuilder.createString(argsJson))
+    Request.addName(flatBufferBuilder, requestNameFB)
+    Request.addArgs(flatBufferBuilder, argsFB)
     return Request.endRequest(flatBufferBuilder)
 }
 

@@ -1,17 +1,12 @@
 package app.services.model.control.state
 
-import app.logger.Log
-import app.logger.Logger
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import core.services.logger.Level
+import core.services.logger.Logger
 
 object DisconnectState : State() {
-    override suspend fun connect(context: AgentModelControlContext, ip: String, port: Int) {
+    override fun connect(context: AgentModelControlContext, ip: String, port: Int) {
         try {
-            val state = withContext(Dispatchers.IO) {
-                context.apiClient.connect(ip, port)
-            }
-            when (state) {
+            when (context.modelApi.connect(ip, port)) {
                 core.api.dto.State.RUN -> {
                     StopState.restoreRun(context)
                 }
@@ -24,7 +19,7 @@ object DisconnectState : State() {
             }
         } catch (e: Exception) {
             context.setState(DisconnectState)
-            Logger.log(e.message.orEmpty(), Log.Level.ERROR)
+            Logger.log(e.message.orEmpty(), Level.ERROR)
         }
     }
 }

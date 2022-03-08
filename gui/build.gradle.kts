@@ -38,4 +38,5 @@ dependencies {
     implementation("org.lwjgl:lwjgl-nfd:$lwjglVersion")
     runtimeOnly("org.lwjgl:lwjgl-nfd:$lwjglVersion:$lwjglNatives")
     implementation(kotlin("script-runtime"))
+    implementation("io.reactivex.rxjava3:rxjava:3.1.3")
 }

@@ -1,67 +1,26 @@
-import app.logger.Log
-import app.logger.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
 
 fun main() {
+    val context = Dispatchers.IO + Job()
+    val viewModelScope = CoroutineScope(context)
+    val controlScope = CoroutineScope(context)
 
-    runBlocking {
-        flow {
-            (1..100).forEach {
-                emit(it)
-                Logger.log("$it emitted", Log.Level.DEBUG)
-                delay(100)
-            }
-        }.flowOn(Dispatchers.Default).collect {
+    runBlocking(Dispatchers.IO) {
+        viewModelScope.launch {
             delay(10000)
-            Logger.log("$it consumed", Log.Level.DEBUG)
         }
+        controlScope.launch {
+            delay(10000)
+        }
+        delay(100)
+        controlScope.coroutineContext[Job]?.children?.forEach { println(it) }
+        viewModelScope.coroutineContext.cancelChildren()
+        controlScope.coroutineContext[Job]?.children?.forEach { println(it) }
+        delay(100)
+
+
     }
-//
-//    runBlocking {
-//        launch {
-//            delay(1000)
-//            launch {
-//                flow.emit(1)
-//                println("1 emitted")
-//            }
-//            launch {
-//                flow.emit(2)
-//                println("2 emitted")
-//            }
-//            launch {
-//                flow.emit(3)
-//                println("3 emitted")
-//            }
-//            launch {
-//                flow.emit(4)
-//                println("4 emitted")
-//            }
-//            println("wtf")
-//        }
-//        launch {
-//            flow.collect {
-//                println("FirstCoroutine $it")// false, true, false
-//            }
-//        }
-//
-//        launch {
-//            flow.collect {
-//                println("SecondCoroutine $it")// false, true, false
-//                delay(10000)
-//            }
-//        }
-//
-//
-//        launch {
-//            flow.collect {
-//                // false, true, false
-//                delay(200000)
-//                    println("ThirdCoroutine $it")
-//                }
-//
-//        }
-//    }
 }

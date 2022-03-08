@@ -1,17 +1,15 @@
 import app.services.model.configuration.modelConfiguration
 
 modelConfiguration {
-    agentInterface("Type1") {
-        setter<Int>("x")
+    agentInterface("Board") {
+        properties()
+        setter<Int>("a")
         setter<String>("text")
-
-        request<Unit>("putToMap") {
-            param<Int>("x")
-            param<Float>("y")
-        }
     }
     globalArgs(
-        "observable" to listOf("x", "y", "z"),
-        "mutable" to listOf("q", "w", "r")
+        "doodlebugs" to 100,
+        "ants" to 50
+//        "observable" to listOf("x", "y", "z"),
+//        "mutable" to listOf("q", "w", "r")
     )
 }

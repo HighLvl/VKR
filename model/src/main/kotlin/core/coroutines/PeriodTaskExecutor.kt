@@ -1,11 +1,23 @@
 package core.coroutines
 
-import app.logger.Log
-import app.logger.Logger
-import kotlinx.coroutines.*
-import java.util.concurrent.atomic.AtomicBoolean
+import core.services.logger.Level
+import core.services.logger.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
+import kotlin.coroutines.CoroutineContext
 
-class PeriodTaskExecutor {
+class PeriodTaskExecutor(context: CoroutineContext) {
+    private var periodMillis: Long = 100
+    private var remainingTimeToNextUpdate: Long = 0
+    private var startTime: Long = 0
+    private var isPause = false
+    private var task: suspend () -> Unit = {}
+    private val coroutineScope = CoroutineScope(context)
+    private var updateLoopJob: Job? = null
+    private var isStopped = false
+
     private var nextUpdateTime: Long = 0L
         get() {
             if (field == 0L) {
@@ -13,23 +25,6 @@ class PeriodTaskExecutor {
             }
             return field
         }
-
-    private var periodMillis: Long = 100
-    private var remainingTimeToNextUpdate: Long = 0
-    private var startTime: Long = 0
-    private var isPause = false
-
-    private var task: suspend () -> Unit = {}
-
-    @OptIn(DelicateCoroutinesApi::class)
-    private val coroutineScope = CoroutineScope(newSingleThreadContext(PeriodTaskExecutor::class.qualifiedName.toString()))
-    private var updateLoopJob: Job? = null
-
-    private var isStopped = false
-
-    init {
-        initVars()
-    }
 
     private fun initVars() {
         nextUpdateTime = 0
@@ -53,6 +48,7 @@ class PeriodTaskExecutor {
     private suspend fun updateLoop() {
         while (!isStopped) {
             executeTaskOnUpdateTime()
+            yield()
         }
     }
 
@@ -64,7 +60,6 @@ class PeriodTaskExecutor {
                 nextUpdateTime = startTime + periodMillis
             }
         }
-        yield()
     }
 
     private fun isItTimeToUpdate(): Boolean {
@@ -78,7 +73,7 @@ class PeriodTaskExecutor {
     fun pause() {
         isPause = true
         remainingTimeToNextUpdate = nextUpdateTime - System.currentTimeMillis()
-        Logger.log("Remaining time to next update: $remainingTimeToNextUpdate", Log.Level.DEBUG)
+        Logger.log("Remaining time to next update: $remainingTimeToNextUpdate", Level.DEBUG)
     }
 
     fun resume() {

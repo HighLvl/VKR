@@ -1,16 +1,15 @@
 package app.components
 
-import app.logger.Log
-import app.logger.Logger
+import core.services.logger.Logger
 import app.services.model.configuration.MutableRequestSignature
 import core.components.IgnoreInSnapshot
 import core.components.Script
-import core.components.AgentInterface
 import core.components.Props
 import core.api.dto.AgentSnapshot
 import core.api.dto.Request
-import core.components.SystemComponent
 import app.utils.uppercaseFirstChar
+import core.components.AgentInterface
+import core.services.logger.Level
 
 class AgentInterface(
     @property:IgnoreInSnapshot
@@ -53,7 +52,7 @@ class AgentInterface(
 
     override fun request(name: String, value: Map<String, Any>) {
         val request = Request(null, name, value)
-        Logger.log("Request scheduled: $request", Log.Level.INFO)
+        Logger.log("Request scheduled: $request", Level.INFO)
         _requests.add(request)
     }
 }

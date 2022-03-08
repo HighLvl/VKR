@@ -4,11 +4,11 @@ import app.utils.uppercaseFirstChar
 import kotlin.reflect.KClass
 
 interface ModelConfiguration {
-    val agentInterfaces: Map<String, MutableAgentInterface>
+    val agentInterfaces: Map<String, AgentInterface>
     val globalArgs: Map<String, Any>
 }
 
-class MutableModelConfiguration: ModelConfiguration {
+class MutableModelConfiguration : ModelConfiguration {
     private val _agentInterfaces = mutableSetOf<MutableAgentInterface>()
     override val agentInterfaces: Map<String, MutableAgentInterface> by lazy {
         _agentInterfaces.associateBy(MutableAgentInterface::agentType)
@@ -31,14 +31,19 @@ class MutableModelConfiguration: ModelConfiguration {
 
 interface AgentInterface {
     val agentType: String
-    val requestSignatures: Collection<MutableRequestSignature>
+    val properties: Set<String>
+    val otherRequests: Collection<MutableRequestSignature>
     val setters: Collection<MutableRequestSignature>
 
 }
-data class MutableAgentInterface(override val agentType: String): AgentInterface {
-    private val _requests = mutableMapOf<String, MutableRequestSignature>()
-    override val requestSignatures: Collection<MutableRequestSignature> = _requests.values
+
+data class MutableAgentInterface(override val agentType: String) : AgentInterface {
+    private val _properties = mutableSetOf<String>()
     private val _setters = mutableMapOf<String, MutableRequestSignature>()
+    private val _requests = mutableMapOf<String, MutableRequestSignature>()
+
+    override val properties: Set<String> = _properties
+    override val otherRequests: Collection<MutableRequestSignature> = _requests.values
     override val setters: Collection<MutableRequestSignature> = _setters.values
 
     fun addRequest(requestSignature: MutableRequestSignature) {
@@ -48,6 +53,10 @@ data class MutableAgentInterface(override val agentType: String): AgentInterface
     fun addSetter(setter: MutableRequestSignature) {
         _setters[setter.name] = setter
     }
+
+    fun addProperty(name: String) {
+        _properties += name
+    }
 }
 
 interface RequestSignature {
@@ -56,7 +65,7 @@ interface RequestSignature {
     val params: Map<String, KClass<*>>
 }
 
-data class MutableRequestSignature(override val name: String, override val returnType: KClass<*>): RequestSignature {
+data class MutableRequestSignature(override val name: String, override val returnType: KClass<*>) : RequestSignature {
     private val _params = mutableMapOf<String, KClass<*>>()
     override val params: Map<String, KClass<*>> = _params
 
@@ -96,6 +105,10 @@ class AgentInterfaceContext(private val agentInterface: MutableAgentInterface) {
                 "Set${varName.uppercaseFirstChar()}",
                 Unit::class
             ).apply { addParam("value", valueType) })
+
+    fun properties(vararg names: String) {
+        names.forEach { agentInterface.addProperty(it) }
+    }
 
     inline fun <reified T : Any> request(name: String, noinline builder: RequestSignatureContext.() -> Unit = {}) =
         request(T::class, name, builder)

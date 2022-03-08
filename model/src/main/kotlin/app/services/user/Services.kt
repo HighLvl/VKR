@@ -1,5 +1,6 @@
 package app.services.user
 
+import app.services.model.control.AgentModelControl
 import core.entities.Agent
 import core.entities.Environment
 import core.entities.Experimenter
@@ -9,14 +10,6 @@ object Service {
     internal set
     lateinit var scene: Scene
     internal set
-}
-
-interface AgentModelControl {
-    suspend fun changeRequestPeriod(periodSec: Float)
-    suspend fun runModel()
-    suspend fun pauseModel()
-    suspend fun resumeModel()
-    suspend fun stopModel()
 }
 
 interface Scene {
