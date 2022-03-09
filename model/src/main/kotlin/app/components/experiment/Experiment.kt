@@ -5,21 +5,19 @@ import app.components.experiment.controller.ExperimentController
 import app.components.experiment.goals.Goals
 import app.components.experiment.variables.mutable.MutableVariables
 import app.components.experiment.variables.observable.ObservableVariables
-import core.services.logger.Logger
 import app.utils.KtsScriptEngine
 import core.components.IgnoreInSnapshot
 import core.components.Script
 import core.components.SystemComponent
 import core.services.logger.Level
-import core.services.logger.Log
-import java.lang.ClassCastException
-import kotlin.math.sin
+import core.services.logger.Logger
 
 class Experiment : SystemComponent(), Script {
     var task: String = ""
         set(value) {
             field = tryLoadExperimentTaskModel(value)
         }
+
     @IgnoreInSnapshot
     var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
         private set
@@ -76,12 +74,10 @@ class Experiment : SystemComponent(), Script {
             taskModel = KtsScriptEngine.eval(path)
             importTaskModel()
             path
-        }
-        catch (e: ClassCastException) {
+        } catch (e: ClassCastException) {
             Logger.log("${ExperimentTaskModel::class} is expected", Level.ERROR)
             ""
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             Logger.log("Bad experiment task file", Level.ERROR)
             Logger.log(e.stackTraceToString(), Level.ERROR)
             ""
@@ -92,7 +88,7 @@ class Experiment : SystemComponent(), Script {
         observableVariables.reset(taskModel.observableVariables)
         mutableVariables.reset(taskModel.mutableVariables)
         constraints.reset(taskModel.constraints)
-        goals.reset(taskModel.goals, taskModel.stopScore)
+        goals.reset(taskModel.goals, taskModel.targetScore)
         experimentController.setTaskModel(taskModel)
     }
 

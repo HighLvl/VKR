@@ -6,7 +6,9 @@ abstract class ExperimentTaskModel {
     abstract val constraints: Set<Predicate>
     abstract val observableVariables: Map<String, () -> Float>
     abstract val mutableVariables: Map<String, (Float) -> Unit>
-    var stopScore = Int.MAX_VALUE
+
+    @set:JvmName("setTargetScore1")
+    var targetScore = Int.MAX_VALUE
         protected set
     var stopTime = Float.MAX_VALUE
         protected set
@@ -48,7 +50,7 @@ class MutableExperimentTaskModel: ExperimentTaskModel() {
     private val _stopConditions = mutableSetOf<Predicate>()
     private val _constraints = mutableSetOf<Predicate>()
 
-    fun addTargetFunc(score: Int, name: String = "", predicate: () -> Boolean) {
+    fun addGoal(score: Int, name: String = "", predicate: () -> Boolean) {
         _goals += Goal(score, Predicate(name, predicate))
     }
 
@@ -56,8 +58,8 @@ class MutableExperimentTaskModel: ExperimentTaskModel() {
         _stopConditions += Predicate(name, predicate)
     }
 
-    fun setConditionStopOnScoreMoreThan(score: Int) {
-        stopScore = score
+    fun setTargetScore(score: Int) {
+        targetScore = score
     }
 
     fun setConditionStopOnTimeMoreThan(stopTime: Float) {
@@ -72,29 +74,29 @@ class MutableExperimentTaskModel: ExperimentTaskModel() {
     fun addMutableVariables(vararg variables: Pair<String, (Float) -> Unit>) = _mutableVariables.putAll(variables)
 }
 
-fun main() {
-    val task = experimentTask {
-        goal(10, "some Func") {
-            4 < 100
-        }
-        constraint("one more than twelve") {
-            1 > 12
-        }
-        constraint("twelve more than fifteen") {
-            3 > 15
-        }
-        stopOn {
-            condition { 2 + 5 > 10 }
-            scoreMoreThan(6)
-            timeMoreThan(9f)
-        }
-        observableVariables(
-            "x" to { 1f },
-            "y" to { 2f }
-        )
-        mutableVariables("x" to {})
-    }
-    println()
-}
+//fun main() {
+//    val task = experimentTask {
+//        goal(10, "some Func") {
+//            4 < 100
+//        }
+//        constraint("one more than twelve") {
+//            1 > 12
+//        }
+//        constraint("twelve more than fifteen") {
+//            3 > 15
+//        }
+//        stopOn {
+//            condition { 2 + 5 > 10 }
+//            scoreMoreThan(6)
+//            timeMoreThan(9f)
+//        }
+//        observableVariables(
+//            "x" to { 1f },
+//            "y" to { 2f }
+//        )
+//        mutableVariables("x" to {})
+//    }
+//    println()
+//}
 
 

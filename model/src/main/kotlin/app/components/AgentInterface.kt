@@ -2,6 +2,7 @@ package app.components
 
 import core.services.logger.Logger
 import app.services.model.configuration.MutableRequestSignature
+import app.services.model.configuration.RequestSignature
 import core.components.IgnoreInSnapshot
 import core.components.Script
 import core.components.Props
@@ -11,22 +12,16 @@ import app.utils.uppercaseFirstChar
 import core.components.AgentInterface
 import core.services.logger.Level
 
-class AgentInterface(
-    @property:IgnoreInSnapshot
-    val setterSignatures: List<MutableRequestSignature> = listOf(),
-    @property:IgnoreInSnapshot
-    val otherRequestSignatures: List<MutableRequestSignature> = listOf()
-) : AgentInterface(), Script {
+class AgentInterface() : AgentInterface(), Script {
     @IgnoreInSnapshot
-    val requestBodies = RequestBodies(setterSignatures + otherRequestSignatures, this)
+    val requestBodies = RequestBodies( this)
+    private var _props: Props = Props()
+    private val _requests: MutableList<Request> = mutableListOf()
 
     override val id: Int
         get() = snapshot.id
     override val props: Props
         get() = _props
-    private var _props: Props = Props(mapOf("abc" to "3", "fff" to 4, "a" to 6))
-
-    private val _requests: MutableList<Request> = mutableListOf()
 
     @IgnoreInSnapshot
     var snapshot: AgentSnapshot = AgentSnapshot("", 0, mapOf(), listOf())
@@ -34,6 +29,10 @@ class AgentInterface(
             field = value
             updateProps(value.props)
         }
+
+    fun setRequestSignatures(signatures: List<RequestSignature>) {
+        requestBodies.setRequestSignatures(signatures)
+    }
 
     fun commitRequests(): List<Request> {
         val committedRequests = _requests.toList()

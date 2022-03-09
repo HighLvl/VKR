@@ -4,7 +4,6 @@ import app.components.experiment.ExperimentTaskModel
 import core.services.logger.Logger
 import app.services.user.Service
 import app.utils.splitOnCapitalChars
-import kotlinx.coroutines.runBlocking
 import core.services.logger.Level
 
 class ExperimentController {
@@ -21,8 +20,8 @@ class ExperimentController {
     private fun stopModelOnTrueStopConditions(modelTime: Float) {
         val stopConditions =
             taskModel.stopConditions.associate { it.name.splitOnCapitalChars() to it.predicateFun() } +
-                    ("Model Time More Than ${taskModel.stopTime}" to (modelTime > taskModel.stopTime)) +
-                    ("Total Score More Than ${taskModel.stopScore}" to isTotalScoreMoreThan())
+                    ("Model Time >= ${taskModel.stopTime}" to (modelTime >= taskModel.stopTime)) +
+                    ("Total Score >= ${taskModel.targetScore} and all constraints are true" to isTotalScoreGreaterThanOrEqualTo() )
 
 
         stopConditions.entries.firstOrNull { it.value }?.let { (condName, _) ->
@@ -31,8 +30,8 @@ class ExperimentController {
         }
     }
 
-    private fun isTotalScoreMoreThan() = taskModel.goals
+    private fun isTotalScoreGreaterThanOrEqualTo() = taskModel.goals
         .asSequence()
         .filter { it.predicate.predicateFun() }
-        .map { it.score }.sum() > taskModel.stopScore && (taskModel.constraints.all { it.predicateFun() })
+        .map { it.score }.sum() >= taskModel.targetScore && (taskModel.constraints.all { it.predicateFun() })
 }

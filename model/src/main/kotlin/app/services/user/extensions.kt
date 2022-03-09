@@ -7,7 +7,8 @@ import core.entities.Agent
 
 fun getAgent(agentId: Int) = Service.scene.agents[agentId]
 
-fun getAgents(): Map<Int, Agent> = Service.scene.agents
+fun getAgents(): Collection<Agent> = Service.scene.agents.values
+fun getAgentsAssociatedWithId() = Service.scene.agents
 
 val Agent.props: Props
     get() = this.getComponent<AgentInterface>()!!.props

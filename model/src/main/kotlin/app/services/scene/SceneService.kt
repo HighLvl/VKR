@@ -2,7 +2,10 @@ package app.services.scene
 
 import app.components.AgentInterface
 import app.components.experiment.Experiment
-import app.services.*
+import app.services.EventBus
+import app.services.GlobalArgsSet
+import app.services.Service
+import app.services.listen
 import app.services.model.configuration.ModelConfiguration
 import app.services.model.configuration.MutableModelConfiguration
 import app.services.model.configuration.MutableRequestSignature
@@ -13,10 +16,7 @@ import core.api.dto.*
 import core.components.Component
 import core.components.Script
 import core.components.getComponent
-import core.entities.Agent
-import core.entities.Entity
-import core.entities.Environment
-import core.entities.Experimenter
+import core.entities.*
 import core.services.logger.Level
 import core.services.logger.Logger
 import org.reflections.Reflections
@@ -203,7 +203,7 @@ class SceneService : Service(), SceneApi {
     private val componentTree = mutableMapOf<Int, KClass<out Component>>()
 
     fun addComponent(entity: Entity, id: Int) {
-        entity.setComponent(componentTree[id]!!.createInstance())
+        entity.setComponent(componentTree[id]!!)
     }
 
     fun getComponentTree(): Map<Int, Node> {
@@ -246,7 +246,7 @@ object SceneFactory {
 object EntityFactory {
     fun createExperimenter(): Experimenter {
         val experimenter = Experimenter()
-        experimenter.setComponent(Experiment())
+        experimenter.setComponent<Experiment>()
         return experimenter
     }
 
@@ -260,11 +260,11 @@ object EntityFactory {
         setterSignatures: List<MutableRequestSignature>,
         otherRequestSignatures: List<MutableRequestSignature>
     ): Agent {
-        val agentInterface = AgentInterface(setterSignatures, otherRequestSignatures)
-        val agent = Agent(agentType).apply {
-            setComponent(agentInterface)
+        return Agent(agentType).apply {
+            with(setComponent<AgentInterface>()) {
+                setRequestSignatures(setterSignatures + otherRequestSignatures)
+            }
         }
-        return agent
     }
 }
 

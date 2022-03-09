@@ -2,9 +2,12 @@ import app.services.model.configuration.modelConfiguration
 
 modelConfiguration {
     agentInterface("Board") {
-        properties()
+        properties("a")
         setter<Int>("a")
         setter<String>("text")
+        request<Unit>("nextStep") {
+            param<Float>("dt")
+        }
     }
     globalArgs(
         "doodlebugs" to 100,

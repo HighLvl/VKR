@@ -16,6 +16,8 @@ class ConstraintsView(dataSource: Map<String, Series<*>>) :
         }
         if (!(value as Boolean)) {
             ImGui.tableSetBgColor(ImGuiTableBgTarget.CellBg, ImColor.intToColor(255, 100, 100, 255))
+        } else {
+            ImGui.tableSetBgColor(ImGuiTableBgTarget.CellBg, ImColor.intToColor(100, 255, 100, 255))
         }
     }
 

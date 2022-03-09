@@ -27,11 +27,11 @@ class Dockspace : Widget {
 
     override fun draw() {
         drawDockspace()
-        dockWindows()
         drawWindows()
     }
 
     private fun drawWindows() {
+        dockWindows()
         toolsWindow?.draw()
         dockedWindows.values.forEach { it.draw() }
     }

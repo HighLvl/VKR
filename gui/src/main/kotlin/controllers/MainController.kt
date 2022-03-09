@@ -1,16 +1,15 @@
 package controllers
 
 import app.services.ServiceManager
-import model.LogService
-import view.*
 import dockspace.Dockspace
 import dockspace.ScriptViewPortWindow
 import dockspace.ToolsWindow
 import dockspace.Window
+import model.LogService
+import view.*
 import viewmodel.AgentModelControlViewModel
 import viewmodel.LoggerViewModel
 import viewmodel.SceneViewModel
-import widgets.*
 
 class MainController : Controller() {
     private val sceneViewModel = SceneViewModel(ServiceManager.sceneService)

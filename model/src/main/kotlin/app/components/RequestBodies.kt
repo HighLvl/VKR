@@ -2,17 +2,29 @@ package app.components
 
 import core.services.logger.Logger
 import app.services.model.configuration.MutableRequestSignature
+import app.services.model.configuration.RequestSignature
 import com.google.common.base.Defaults
 import core.services.logger.Level
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 class RequestBodies(
-    private val requests: List<MutableRequestSignature>,
     private val agentInterface: AgentInterface
 ) {
-    private val _requestBodies: MutableList<RequestBody> = create()
+    private val requests = mutableListOf<RequestSignature>()
+    private val _requestBodies = mutableListOf<RequestBody>()
     val bodies: List<RequestBody> = _requestBodies
+
+    fun setRequestSignatures(requests: List<RequestSignature>) {
+        with(this.requests) {
+            clear()
+            addAll(requests)
+        }
+        with(_requestBodies) {
+            clear()
+            addAll(create())
+        }
+    }
 
     private fun create(): MutableList<RequestBody> = requests.map { signature ->
         RequestBody(

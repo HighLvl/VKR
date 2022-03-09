@@ -1,20 +1,21 @@
 package core.entities
 
-import core.components.SystemComponent
 import core.components.Component
+import core.components.SystemComponent
 import kotlin.reflect.KClass
+import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.isSubclassOf
 
 class MapComponentHolder : ComponentHolder {
     private val components = mutableMapOf<KClass<out Component>, Component>()
 
-    override fun setComponent(component: Component) {
-        components[component::class] = component
+    override fun <C: Component> setComponent(type: KClass<out C>): C {
+        return type.createInstance().also { components[type] = it }
     }
 
     @Suppress("UNCHECKED_CAST")
     override fun <C : Component> getComponent(type: KClass<C>): C? {
-        return components[type] as? C
+        return components.entries.firstOrNull { it.key.isSubclassOf(type) }?.value as? C
     }
 
     @Suppress("UNCHECKED_CAST")
