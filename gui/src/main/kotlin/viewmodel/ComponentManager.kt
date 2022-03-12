@@ -1,7 +1,9 @@
 package viewmodel
 
 import app.components.*
-import app.components.AgentInterface
+import app.components.agent.AgentInterface
+import app.components.agent.RequestBodies
+import app.components.agent.RequestBody
 import app.components.experiment.Experiment
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -9,8 +11,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
-import core.components.Component
-import core.components.SystemComponent
+import core.components.base.Component
+import app.components.base.SystemComponent
 
 class ComponentManager {
     private val objectMapper = jacksonObjectMapper()

@@ -1,4 +1,5 @@
 
 rootProject.name = "DSL_test"
 include(":gui")
-include(":model")
+include(":app")
+include(":core")

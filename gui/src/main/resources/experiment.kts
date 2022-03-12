@@ -1,6 +1,6 @@
-import app.components.experiment.experimentTask
-import app.services.user.getAgents
-import app.services.user.requestSetValue
+import core.components.experiment.experimentTask
+import core.services.getAgents
+import core.services.requestSetValue
 
 experimentTask {
     setTargetScore(6)

@@ -1,7 +1,7 @@
 package widgets.properties
 
-import app.utils.splitOnCapitalChars
-import app.utils.uppercaseFirstChar
+import core.utils.splitOnCapitalChars
+import core.utils.uppercaseFirstChar
 import imgui.ImGui
 import widgets.Widget
 

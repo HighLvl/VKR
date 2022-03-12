@@ -1,7 +1,7 @@
 package viewmodel
 
 import app.services.scene.SceneService
-import app.utils.splitOnCapitalChars
+import core.utils.splitOnCapitalChars
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ticker

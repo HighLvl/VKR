@@ -1,7 +1,7 @@
 package model
 
 import app.services.provider.component.ComponentProvider
-import core.components.Component
+import core.components.base.Component
 
 import kotlin.reflect.KClass
 

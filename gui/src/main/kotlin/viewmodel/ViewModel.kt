@@ -1,6 +1,6 @@
 package viewmodel
 
-import core.coroutines.Contexts
+import app.coroutines.Contexts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch

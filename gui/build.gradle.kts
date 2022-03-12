@@ -22,9 +22,10 @@ val lwjglNatives = when(OperatingSystem.current()) {
 val lwjglVersion = "3.2.3"
 
 dependencies {
-    implementation(kotlin("stdlib"))
+    implementation(project(":app"))
+    implementation(project(":core"))
 
-    implementation(project(":model"))
+    implementation(kotlin("stdlib"))
 
     implementation("io.github.spair:imgui-java-app:$imguiVersion")
     implementation("io.github.spair:imgui-java-binding:$imguiVersion")

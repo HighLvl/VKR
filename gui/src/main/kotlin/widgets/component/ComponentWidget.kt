@@ -1,6 +1,6 @@
 package widgets.component
 
-import app.utils.splitOnCapitalChars
+import core.utils.splitOnCapitalChars
 import imgui.ImGui
 import imgui.flag.ImGuiTreeNodeFlags
 import widgets.Decorator

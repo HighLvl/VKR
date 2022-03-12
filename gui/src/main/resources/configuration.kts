@@ -1,4 +1,4 @@
-import app.components.configuration.modelConfiguration
+import core.components.configuration.modelConfiguration
 
 modelConfiguration {
     agentInterface("Board") {

@@ -1,7 +1,6 @@
 package widgets.inspector.component
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import core.components.SystemComponent
 import viewmodel.ComponentDto
 import widgets.Widget
 import widgets.component.CloseableComponentWidget
