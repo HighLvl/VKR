@@ -1,7 +1,8 @@
 package core.components.experiment
 
-import core.components.SystemComponent
-interface Experiment: SystemComponent {
+import core.components.Component
+
+interface Experiment: Component {
     val goals: Set<Goal>
     val observableVars: Map<String, GetterExp>
     val mutableVars: Map<String, SetterExp>

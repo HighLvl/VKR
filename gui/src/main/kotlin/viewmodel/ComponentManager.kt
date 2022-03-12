@@ -38,6 +38,7 @@ class ComponentManager {
                     component.requestBodies.mapToPropBuilderNodes()
                 )
                 is Experiment -> Experiment(index, compClassName, propInspectorNode)
+                is app.components.configuration.Configuration -> Configuration(index, compClassName, propInspectorNode)
                 is SystemComponent -> UnknownComponent(index, compClassName, false, propInspectorNode)
                 else -> UnknownComponent(index, compClassName, true, propInspectorNode)
             }

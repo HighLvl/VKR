@@ -1,7 +1,8 @@
 package widgets.inspector.component
 
-import app.services.scene.FolderNode
-import app.services.scene.Node
+
+import model.FolderNode
+import model.Node
 import imgui.ImGui
 import widgets.Widget
 

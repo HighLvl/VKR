@@ -9,13 +9,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.runBlocking
+import model.ComponentRepository
 
 @OptIn(ObsoleteCoroutinesApi::class)
-class SceneViewModel(private val sceneService: SceneService) : ViewModel() {
+class SceneViewModel(private val sceneService: SceneService,
+                     private val componentRepository: ComponentRepository) :
+    ViewModel() {
     private val _components = MutableStateFlow<List<ComponentDto>>(listOf())
     private val _selectedEntity = MutableStateFlow<Entity>(None)
     private val _objectTree = MutableStateFlow(Folder(ROOT_FOLDER_TITLE, listOf()))
-    private val _canAddComponents = MutableStateFlow(sceneService.getComponentTree())
+    private val _canAddComponents = MutableStateFlow(componentRepository.getComponentTree())
     private val componentManager = ComponentManager()
 
     val components = _components.asStateFlow()
@@ -44,10 +47,6 @@ class SceneViewModel(private val sceneService: SceneService) : ViewModel() {
             }
             _objectTree.value = Folder("root", listOf(Environment, Experimenter, AgentsFolder(buildAgentList())))
         }
-    }
-
-    fun loadConfiguration(path: String) {
-        sceneService.loadConfiguration(path)
     }
 
     fun selectEntity(entity: Entity) {
@@ -96,7 +95,9 @@ class SceneViewModel(private val sceneService: SceneService) : ViewModel() {
     fun addComponent(id: Int) {
         launchWithAppContext {
             val entity = getSelectedEntity() ?: return@launchWithAppContext
-            sceneService.addComponent(entity, id)
+            componentRepository.getComponentById(id)?.let {
+                entity.setComponent(it)
+            }
         }
     }
 
@@ -152,6 +153,10 @@ data class AgentInterface(
     override val name: String,
     override val properties: ObjectNode,
     val requestBodies: List<Pair<String, ObjectNode>>
+) : ComponentDto(id, name, false, properties)
+
+data class Configuration(
+    override val id: Int, override val name: String, override val properties: ObjectNode
 ) : ComponentDto(id, name, false, properties)
 
 data class UnknownComponent(

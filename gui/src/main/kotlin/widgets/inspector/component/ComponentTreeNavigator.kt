@@ -1,7 +1,7 @@
 package widgets.inspector.component
 
-import app.services.scene.FolderNode
-import app.services.scene.Node
+import model.FolderNode
+import model.Node
 
 class ComponentTreeNavigator {
     private val tree = mutableMapOf<Int, Node>()

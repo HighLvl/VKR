@@ -1,7 +1,7 @@
 package app.components
 
+import app.components.configuration.RequestSignature
 import core.services.logger.Logger
-import app.services.model.configuration.RequestSignature
 import core.components.AddInSnapshot
 import core.components.Script
 import core.components.Props

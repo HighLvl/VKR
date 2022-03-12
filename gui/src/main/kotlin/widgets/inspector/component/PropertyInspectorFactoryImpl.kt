@@ -3,8 +3,10 @@ package widgets.inspector.component
 import com.fasterxml.jackson.databind.node.ObjectNode
 import viewmodel.AgentInterface
 import viewmodel.ComponentDto
+import viewmodel.Configuration
 import viewmodel.Experiment
 import widgets.inspector.property.AgentInterfacePropertyInspector
+import widgets.inspector.property.ConfigurationPropertyInspector
 import widgets.inspector.property.ExperimentPropertyInspector
 import widgets.inspector.property.base.PropertyInspector
 
@@ -18,6 +20,7 @@ class PropertyInspectorFactoryImpl(
             onCommitListener = this@PropertyInspectorFactoryImpl.onCommitListener
         }
         is Experiment -> ExperimentPropertyInspector()
+        is Configuration -> ConfigurationPropertyInspector()
         else -> PropertyInspector()
     }
 }

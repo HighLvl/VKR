@@ -8,12 +8,13 @@ import app.components.experiment.variables.observable.ObservableVariablesControl
 import app.utils.KtsScriptEngine
 import core.components.AddInSnapshot
 import core.components.Script
+import core.components.SystemComponent
 import core.components.experiment.*
 import core.components.experiment.Experiment
 import core.services.logger.Level
 import core.services.logger.Logger
 
-class Experiment : Experiment, Script {
+class Experiment : Experiment, SystemComponent, Script {
     @AddInSnapshot(1)
     var task: String = ""
         set(value) {

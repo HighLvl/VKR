@@ -34,12 +34,6 @@ class MenuBarView(private val sceneViewModel: SceneViewModel) : View(), Widget {
         val menuBarPos = ImGui.getWindowPos()
         _menuBarX = menuBarPos.x
         _menuBarY = menuBarPos.y
-        if (ImGui.beginMenu("File")) {
-            if (ImGui.menuItem("Load configuration")) {
-                sceneViewModel.loadConfiguration(FileOpenDialog().open("kts"))
-            }
-            ImGui.endMenu()
-        }
         if (ImGui.beginMenu("View")) {
             if (ImGui.checkbox("Dark theme", isDarkTheme)) {
                 setupImGuiStyle(isDarkTheme.get())

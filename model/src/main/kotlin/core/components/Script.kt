@@ -6,4 +6,6 @@ interface Script {
     fun onModelAfterUpdate() {}
     fun onModelStop() {}
     fun updateUI() {}
+    fun onModelPause() {}
+    fun onModelResume() {}
 }

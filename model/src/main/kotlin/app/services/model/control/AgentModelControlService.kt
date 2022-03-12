@@ -1,15 +1,15 @@
 package app.services.model.control
 
 
-import app.services.model.control.state.AgentModelControlContext
-import core.api.AgentModelApi
 import app.services.Service
+import app.services.model.control.state.AgentModelControlContext
 import app.services.scene.SceneApi
+import core.api.AgentModelApi
 import kotlinx.coroutines.flow.SharedFlow
 
 class AgentModelControlService(modelApi: AgentModelApi, sceneApi: SceneApi) : Service(), AgentModelControl {
-        private val context = AgentModelControlContext(modelApi, sceneApi)
-        override val controlState: SharedFlow<ControlState> = context.controlState
+    private val context = AgentModelControlContext(modelApi, sceneApi)
+    override val controlState: SharedFlow<ControlState> = context.controlState
 
     override fun start() {
         super.start()

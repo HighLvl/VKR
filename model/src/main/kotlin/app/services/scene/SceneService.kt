@@ -1,31 +1,27 @@
 package app.services.scene
 
 import app.components.AgentInterface
+import app.components.configuration.Configuration
+import app.components.configuration.MutableRequestSignature
 import app.components.experiment.Experiment
-import app.services.EventBus
-import app.services.GlobalArgsSet
 import app.services.Service
-import app.services.listen
-import app.services.model.configuration.ModelConfiguration
-import app.services.model.configuration.MutableModelConfiguration
-import app.services.model.configuration.MutableRequestSignature
 import app.services.user.Scene
-import app.utils.KtsScriptEngine
 import app.utils.runBlockCatching
 import core.api.dto.*
 import core.components.Component
 import core.components.Script
+import core.components.configuration.AgentInterfaces
+import core.components.configuration.GlobalArgsComponent
 import core.components.getComponent
 import core.entities.*
-import core.services.logger.Level
-import core.services.logger.Logger
 import org.reflections.Reflections
 import org.reflections.util.ConfigurationBuilder
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 interface SceneApi {
-    fun updateSceneWith(snapshot: Snapshot)
+    fun getGlobalArgs(): GlobalArgs
+    fun updateWith(snapshot: Snapshot)
     fun getBehaviour(): Behaviour
     fun onModelRun()
     fun onModelStop()
@@ -36,11 +32,7 @@ interface SceneApi {
 class SceneService : Service(), SceneApi {
     val scene: Scene
         get() = _scene
-    var configuration: ModelConfiguration = MutableModelConfiguration()
-        private set
-    val globalArgs = EventBus.listen<GlobalArgsSet>().map { it.args.args }
 
-    private val _globalArgs = (mapOf<String, Any>())
     private val _scene: SceneImpl = SceneFactory.createScene()
 
     override fun getBehaviour(): Behaviour {
@@ -56,47 +48,54 @@ class SceneService : Service(), SceneApi {
         return Behaviour(agentBehaviourRequests)
     }
 
-    override fun updateSceneWith(snapshot: Snapshot) {
+    override fun getGlobalArgs(): GlobalArgs {
+        return GlobalArgs(scene.environment.getComponent<GlobalArgsComponent>()!!.globalArgs)
+    }
+
+    override fun updateWith(snapshot: Snapshot) {
         updateAgents(snapshot.agentSnapshots)
         updateScripts(snapshot.time)
         onAfterModelUpdate()
     }
 
     private fun updateAgents(agentSnapshots: List<AgentSnapshot>) {
-        val deadAgentIds = _scene.agents.keys.toMutableSet()
+        val deadAgentIds = scene.agents.keys.toMutableSet()
         for (agentSnapshot in agentSnapshots) {
-            runBlockCatching { updateAgentWithSnapshot(agentSnapshot) }
+            runBlockCatching {
+                val agentInterfacesComponent = scene.environment.getComponent<AgentInterfaces>()!!
+                updateAgentWithSnapshot(agentSnapshot, agentInterfacesComponent)
+            }
             deadAgentIds.remove(agentSnapshot.id)
         }
         deadAgentIds.forEach { _scene.removeAgentById(it) }
     }
 
-    private fun updateAgentWithSnapshot(agentSnapshot: AgentSnapshot) {
-        if (agentSnapshot.id in _scene.agents.keys) {
-            val oldAgent = _scene.agents[agentSnapshot.id]!!
-            oldAgent.updateSnapshot(agentSnapshot)
+    private fun updateAgentWithSnapshot(agentSnapshot: AgentSnapshot, agentInterfacesComponent: AgentInterfaces) {
+        if (agentSnapshot.id in scene.agents.keys) {
+            val oldAgent = scene.agents[agentSnapshot.id]!!
+            oldAgent.updateSnapshot(agentSnapshot, agentInterfacesComponent)
         } else {
-            val agentInterface = configuration.agentInterfaces[agentSnapshot.type]
+            val agentInterface = agentInterfacesComponent.agentInterfaces[agentSnapshot.type]
             val newAgent = EntityFactory.createAgent(
                 agentSnapshot.type,
                 agentInterface?.setters?.toList() ?: listOf(),
                 agentInterface?.otherRequests?.toList() ?: listOf()
             )
-            newAgent.updateSnapshot(agentSnapshot)
+            newAgent.updateSnapshot(agentSnapshot, agentInterfacesComponent)
             _scene.addAgent(agentSnapshot.id, newAgent)
         }
     }
 
-    private fun Agent.updateSnapshot(snapshot: AgentSnapshot) {
+    private fun Agent.updateSnapshot(snapshot: AgentSnapshot, agentInterfacesComponent: AgentInterfaces) {
         val properties = snapshot.props
         val configuredProperties = mutableMapOf<String, Any>()
-        val propertyConfiguration = configuration.agentInterfaces[snapshot.type]?.properties?.forEach {
+        val propertyConfiguration = agentInterfacesComponent.agentInterfaces[snapshot.type]?.properties?.forEach {
             if (it in properties) {
                 configuredProperties[it] = properties[it]!!
             }
         }
-        val configuredSnapshot = when {
-            propertyConfiguration == null -> snapshot
+        val configuredSnapshot = when (propertyConfiguration) {
+            null -> snapshot
             else -> snapshot.copy(props = configuredProperties)
         }
         getAgentInterfaceScript().snapshot = configuredSnapshot
@@ -104,87 +103,25 @@ class SceneService : Service(), SceneApi {
 
     private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterface>()!!
 
-    private fun updateScripts(modelTime: Float) {
-        getScripts().forEach {
-            runBlockCatching {
-                it.onModelUpdate(modelTime)
-            }
-        }
-    }
-
-    private fun getScripts(): List<Script> =
+    private fun getScripts(): Sequence<Script> =
         _scene.getEntities().asSequence()
             .flatMap { it.getComponents() }
             .filterIsInstance<Script>()
-            .toList()
 
-    private fun onAfterModelUpdate() {
+    private fun onAfterModelUpdate() = forEachScript(Script::onModelAfterUpdate)
+    private fun updateScripts(modelTime: Float) = forEachScript { onModelUpdate(modelTime) }
+    override fun onModelRun() = forEachScript(Script::onModelRun)
+    override fun onModelStop() = forEachScript(Script::onModelStop)
+    override fun onModelPause() = forEachScript(Script::onModelPause)
+    override fun onModelResume() = forEachScript(Script::onModelResume)
+    fun updateScriptsUI() = forEachScript(Script::updateUI)
+
+    private fun forEachScript(block: Script.() -> Unit) {
         getScripts().forEach {
             runBlockCatching {
-                it.onModelAfterUpdate()
+                it.block()
             }
         }
-    }
-
-    override fun onModelRun() {
-        getScripts().forEach {
-            runBlockCatching {
-                it.onModelRun()
-            }
-        }
-    }
-
-    override fun onModelStop() {
-        getScripts().forEach {
-            runBlockCatching {
-                it.onModelStop()
-            }
-        }
-    }
-
-    override fun onModelPause() {
-        getScripts().forEach {
-            runBlockCatching {
-                //TODO onModelPause
-            }
-        }
-    }
-
-    override fun onModelResume() {
-        getScripts().forEach {
-            runBlockCatching {
-                //TODO onModelResume
-            }
-        }
-    }
-
-    fun updateScriptsUI() {
-        getScripts().forEach {
-            runBlockCatching {
-                it.updateUI()
-            }
-        }
-    }
-
-    fun setGlobalArgs(args: Map<String, Any>) {
-        EventBus.publish(GlobalArgsSet(GlobalArgs(args)))
-    }
-
-    fun loadConfiguration(path: String) {
-        if (path.isEmpty()) return
-        try {
-            loadConfigurationByPath(path)
-            Logger.log("Configuration loaded\n $configuration", Level.INFO)
-        } catch (e: Exception) {
-            Logger.log("Bad configuration file", Level.ERROR)
-        }
-    }
-
-    private fun loadConfigurationByPath(path: String) {
-        configuration = KtsScriptEngine.eval(path)
-        setGlobalArgs(configuration.globalArgs)
-        Logger.log("Global args\n${configuration.globalArgs}", Level.DEBUG)
-        clearScene()
     }
 
     private fun clearScene() {
@@ -197,39 +134,6 @@ class SceneService : Service(), SceneApi {
                 experimenter.removeComponent(it::class)
             }
         }
-
-    }
-
-    private val componentTree = mutableMapOf<Int, KClass<out Component>>()
-
-    fun addComponent(entity: Entity, id: Int) {
-        entity.setComponent(componentTree[id]!!)
-    }
-
-    fun getComponentTree(): Map<Int, Node> {
-        val components = Reflections(
-            ConfigurationBuilder().forPackages(
-                "app.components",
-                "user"
-            )
-        ).getSubTypesOf(Component::class.java)
-            .asSequence()
-            .filter { !it.kotlin.isAbstract && kotlin.runCatching { it.kotlin.createInstance() }.isSuccess }
-            .map { it.kotlin }.filterNot { it in listOf(AgentInterface::class, Experiment::class) }.toList()
-        val userComponents = components.filter { it.qualifiedName.toString().startsWith("user.") }
-        val appComponents = components.filter { it.qualifiedName.toString().startsWith("app.") }
-        val userNodes = mutableListOf<Int>()
-        val tree = mutableMapOf<Int, Node>(
-            0 to FolderNode("Components", listOf(1)),
-            1 to FolderNode("User Components", userNodes)
-        )
-        for (i in userComponents.indices) {
-            val id = i + 2
-            userNodes.add(id)
-            tree[id] = ComponentNode(userComponents[i].qualifiedName.toString())
-            componentTree[id] = userComponents[i]
-        }
-        return tree
     }
 }
 
@@ -251,8 +155,9 @@ object EntityFactory {
     }
 
     fun createEnvironment(): Environment {
-        val environment = Environment()
-        return environment
+        return Environment().apply {
+            setComponent<Configuration>()
+        }
     }
 
     fun createAgent(
@@ -267,10 +172,3 @@ object EntityFactory {
         }
     }
 }
-
-sealed interface Node {
-    val name: String
-}
-
-data class ComponentNode(override val name: String) : Node
-data class FolderNode(override val name: String, val nodes: List<Int>) : Node

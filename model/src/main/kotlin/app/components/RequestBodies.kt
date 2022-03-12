@@ -1,8 +1,7 @@
 package app.components
 
+import app.components.configuration.RequestSignature
 import core.services.logger.Logger
-import app.services.model.configuration.MutableRequestSignature
-import app.services.model.configuration.RequestSignature
 import com.google.common.base.Defaults
 import core.services.logger.Level
 import kotlin.reflect.KClass
