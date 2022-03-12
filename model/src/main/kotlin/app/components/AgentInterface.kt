@@ -1,9 +1,8 @@
 package app.components
 
 import core.services.logger.Logger
-import app.services.model.configuration.MutableRequestSignature
 import app.services.model.configuration.RequestSignature
-import core.components.IgnoreInSnapshot
+import core.components.AddInSnapshot
 import core.components.Script
 import core.components.Props
 import core.api.dto.AgentSnapshot
@@ -12,18 +11,17 @@ import app.utils.uppercaseFirstChar
 import core.components.AgentInterface
 import core.services.logger.Level
 
-class AgentInterface() : AgentInterface(), Script {
-    @IgnoreInSnapshot
+class AgentInterface : AgentInterface(), Script {
     val requestBodies = RequestBodies( this)
     private var _props: Props = Props()
     private val _requests: MutableList<Request> = mutableListOf()
 
     override val id: Int
         get() = snapshot.id
+    @AddInSnapshot
     override val props: Props
         get() = _props
 
-    @IgnoreInSnapshot
     var snapshot: AgentSnapshot = AgentSnapshot("", 0, mapOf(), listOf())
         set(value) {
             field = value

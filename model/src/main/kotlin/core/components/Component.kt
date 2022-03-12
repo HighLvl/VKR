@@ -1,12 +1,6 @@
 package core.components
 
-import core.entities.Entity
+annotation class AddInSnapshot(val priority: Int = 0)
 
-annotation class IgnoreInSnapshot
-
-abstract class Component {
-    @IgnoreInSnapshot
-    var entity: Entity? = null
-        private set
-}
+interface Component
 

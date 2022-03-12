@@ -5,7 +5,7 @@ import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
 import core.services.logger.Level
 
-class MutableVariables {
+class MutableVariablesController {
     var enabled: Boolean
         get() = mutableVariablesView.enabled
         set(value) {
@@ -51,7 +51,7 @@ class MutableVariables {
         mutableVariablesView.update()
     }
 
-    private fun onChangeMutableVarValue(varName: String, value: Float) {
+    fun onChangeMutableVarValue(varName: String, value: Float) {
         Logger.log("Set $varName to $value", Level.DEBUG)
         mutableVarValues[varName] = value
     }

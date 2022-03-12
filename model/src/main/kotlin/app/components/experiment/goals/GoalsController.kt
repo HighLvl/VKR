@@ -1,10 +1,11 @@
 package app.components.experiment.goals
 
 import app.components.experiment.ExperimentTaskModel
+import core.components.experiment.Goal
 import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
 
-class Goals {
+class GoalsController {
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             field = value
@@ -20,10 +21,10 @@ class Goals {
     private val goalSeries = mutableMapOf<String, MutableSeries<Any>>()
     private val goalsView = GoalsView(goalSeries)
     private val goalValues = mutableMapOf<String, Int>()
-    private lateinit var goals: Map<String, ExperimentTaskModel.Goal>
+    private lateinit var goals: Map<String, Goal>
     private var targetScore: Int = 0
 
-    fun reset(goals: Set<ExperimentTaskModel.Goal>, targetScore: Int) {
+    fun reset(goals: Set<Goal>, targetScore: Int) {
         this.goals = goals.associateBy { it.predicate.name }
         this.targetScore = targetScore
         goalSeries.clear()
@@ -38,7 +39,7 @@ class Goals {
 
     fun onModelUpdate(modelTime: Float) {
         goals.values.forEach {
-            goalValues[it.predicate.name] = when (it.predicate.predicateFun()) {
+            goalValues[it.predicate.name] = when (it.predicate.predicateExp()) {
                 true -> it.score
                 else -> 0
             }

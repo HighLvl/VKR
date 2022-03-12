@@ -1,10 +1,11 @@
 package app.components.experiment.constraints
 
 import app.components.experiment.ExperimentTaskModel
+import core.components.experiment.Predicate
 import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
 
-class Constraints {
+class ConstraintsController {
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             field = value
@@ -20,9 +21,9 @@ class Constraints {
     private val constraintSeries = mutableMapOf<String, MutableSeries<Any>>()
     private val constraintsView = ConstraintsView(constraintSeries)
     private val constraintValues = mutableMapOf<String, Boolean>()
-    private lateinit var constraints: Set<ExperimentTaskModel.Predicate>
+    private lateinit var constraints: Set<Predicate>
 
-    fun reset(constraints: Set<ExperimentTaskModel.Predicate>) {
+    fun reset(constraints: Set<Predicate>) {
         this.constraints = constraints
         constraintSeries.clear()
         constraintValues.clear()
@@ -35,7 +36,7 @@ class Constraints {
 
     fun onModelUpdate(modelTime: Float) {
         constraints.forEach {
-            constraintValues[it.name] = it.predicateFun()
+            constraintValues[it.name] = it.predicateExp()
         }
         val prevConstraintValues = constraintSeries.entries.asSequence()
             .filterNot { it.key == "t" }.map {

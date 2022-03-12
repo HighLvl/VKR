@@ -1,26 +1,26 @@
 package app.components.experiment
 
-import app.components.experiment.constraints.Constraints
+import app.components.experiment.constraints.ConstraintsController
 import app.components.experiment.controller.ExperimentController
-import app.components.experiment.goals.Goals
-import app.components.experiment.variables.mutable.MutableVariables
-import app.components.experiment.variables.observable.ObservableVariables
+import app.components.experiment.goals.GoalsController
+import app.components.experiment.variables.mutable.MutableVariablesController
+import app.components.experiment.variables.observable.ObservableVariablesController
 import app.utils.KtsScriptEngine
-import core.components.IgnoreInSnapshot
+import core.components.AddInSnapshot
 import core.components.Script
-import core.components.SystemComponent
+import core.components.experiment.*
+import core.components.experiment.Experiment
 import core.services.logger.Level
 import core.services.logger.Logger
 
-class Experiment : SystemComponent(), Script {
+class Experiment : Experiment, Script {
+    @AddInSnapshot(1)
     var task: String = ""
         set(value) {
-            field = tryLoadExperimentTaskModel(value)
+            field = tryLoadExperimentTaskModel(value, field)
         }
 
-    @IgnoreInSnapshot
-    var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
-        private set
+    @AddInSnapshot(2)
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             if (value < 1) {
@@ -28,48 +28,76 @@ class Experiment : SystemComponent(), Script {
                 return
             }
             field = value
-            observableVariables.trackedDataSize = value
-            mutableVariables.trackedDataSize = value
-            constraints.trackedDataSize = value
+            observableVariablesController.trackedDataSize = value
+            mutableVariablesController.trackedDataSize = value
+            constraintsController.trackedDataSize = value
         }
+
+    @AddInSnapshot(3)
     var showObservableVariables
         set(value) {
-            observableVariables.enabled = value
+            observableVariablesController.enabled = value
         }
-        get() = observableVariables.enabled
+        get() = observableVariablesController.enabled
+
+    @AddInSnapshot(4)
     var showMutableVariables
         set(value) {
-            mutableVariables.enabled = value
+            mutableVariablesController.enabled = value
         }
-        get() = mutableVariables.enabled
+        get() = mutableVariablesController.enabled
+
+    @AddInSnapshot(5)
     var showConstraints
         set(value) {
-            constraints.enabled = value
+            constraintsController.enabled = value
         }
-        get() = constraints.enabled
+        get() = constraintsController.enabled
+
+    @AddInSnapshot(6)
     var showGoals
         set(value) {
-            goals.enabled = value
+            goalsController.enabled = value
         }
-        get() = goals.enabled
+        get() = goalsController.enabled
+
+    @AddInSnapshot(7)
     var clearTrackedDataOnRun = true
 
-    private val observableVariables = ObservableVariables()
-    private val mutableVariables = MutableVariables()
-    private val constraints = Constraints()
-    private val goals = Goals()
+    override val goals: Set<Goal>
+        get() = taskModel.goals
+    override val observableVars: Map<String, GetterExp>
+        get() = taskModel.observableVariables
+    override val mutableVars: Map<String, SetterExp>
+        get() = _mutableVars
+    override val constraints: Set<Predicate>
+        get() = taskModel.constraints
+
+    private val observableVariablesController = ObservableVariablesController()
+    private val mutableVariablesController = MutableVariablesController()
+    private val constraintsController = ConstraintsController()
+    private val goalsController = GoalsController()
     private val experimentController = ExperimentController()
+    private var isRunning = false
+    private val _mutableVars = mutableMapOf<String, SetterExp>()
+    private var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
+
 
     init {
         importTaskModel()
     }
 
     override fun onModelRun() {
+        isRunning = true
         if (clearTrackedDataOnRun) importTaskModel()
     }
 
-    private fun tryLoadExperimentTaskModel(path: String): String {
-        if (path.isEmpty()) return ""
+    private fun tryLoadExperimentTaskModel(path: String, oldPath: String): String {
+        if (isRunning) {
+            Logger.log("Stop model before loading task", Level.ERROR)
+            return oldPath
+        }
+        if (path.isEmpty()) return oldPath
         return try {
             taskModel = KtsScriptEngine.eval(path)
             importTaskModel()
@@ -80,30 +108,44 @@ class Experiment : SystemComponent(), Script {
         } catch (e: Exception) {
             Logger.log("Bad experiment task file", Level.ERROR)
             Logger.log(e.stackTraceToString(), Level.ERROR)
-            ""
+            oldPath
         }
     }
 
     private fun importTaskModel() {
-        observableVariables.reset(taskModel.observableVariables)
-        mutableVariables.reset(taskModel.mutableVariables)
-        constraints.reset(taskModel.constraints)
-        goals.reset(taskModel.goals, taskModel.targetScore)
+        subscribeControllerOnMutableVarsChange()
+        observableVariablesController.reset(taskModel.observableVariables)
+        mutableVariablesController.reset(taskModel.mutableVariables)
+        constraintsController.reset(taskModel.constraints)
+        goalsController.reset(taskModel.goals, taskModel.targetScore)
         experimentController.setTaskModel(taskModel)
     }
 
+    private fun subscribeControllerOnMutableVarsChange() {
+        with(_mutableVars) {
+            clear()
+            taskModel.mutableVariables.keys.asSequence().map { varName ->
+                varName to { value: Float -> mutableVariablesController.onChangeMutableVarValue(varName, value) }
+            }.also { putAll(it) }
+        }
+    }
+
     override fun onModelUpdate(modelTime: Float) {
-        observableVariables.onModelUpdate(modelTime)
-        mutableVariables.onModelUpdate(modelTime)
-        constraints.onModelUpdate(modelTime)
-        goals.onModelUpdate(modelTime)
+        observableVariablesController.onModelUpdate(modelTime)
+        mutableVariablesController.onModelUpdate(modelTime)
+        constraintsController.onModelUpdate(modelTime)
+        goalsController.onModelUpdate(modelTime)
         experimentController.onModelUpdate(modelTime)
     }
 
     override fun updateUI() {
-        observableVariables.update()
-        mutableVariables.update()
-        constraints.update()
-        goals.update()
+        observableVariablesController.update()
+        mutableVariablesController.update()
+        constraintsController.update()
+        goalsController.update()
+    }
+
+    override fun onModelStop() {
+        isRunning = false
     }
 }

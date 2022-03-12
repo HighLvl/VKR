@@ -1,6 +1,6 @@
 package core.components
 
-abstract class AgentInterface: SystemComponent() {
+abstract class AgentInterface: SystemComponent {
     abstract val id: Int
     abstract val props: Props
     abstract fun requestSetValue(varName: String, value: Any)

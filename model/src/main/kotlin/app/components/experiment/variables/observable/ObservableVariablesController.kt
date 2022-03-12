@@ -3,7 +3,7 @@ package app.components.experiment.variables.observable
 import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
 
-class ObservableVariables {
+class ObservableVariablesController {
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             field = value

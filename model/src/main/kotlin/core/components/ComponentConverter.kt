@@ -4,18 +4,22 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 import kotlin.reflect.KVisibility
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
 
 object ComponentConverter {
     fun convertToComponentSnapshot(component: Component): ComponentSnapshot {
-        val publicMembers =
-            component::class.members.filter { it.visibility == KVisibility.PUBLIC && !it.hasAnnotation<IgnoreInSnapshot>() }
-        val publicProperties = publicMembers.filterIsInstance<KProperty<*>>()
+        val properties = component::class.memberProperties.filter { it.hasAnnotation<AddInSnapshot>() }
+                .sortedBy {
+                    it.findAnnotation<AddInSnapshot>()!!.priority
+                }
         val mutableProps = mutableListOf<Property>()
         val immutableProps = mutableListOf<Property>()
-        publicProperties.forEach {
+        properties.forEach {
             when (it) {
-                is KMutableProperty -> handleKMutableProperty(it, component, mutableProps, immutableProps)
+                is KMutableProperty<*> -> handleKMutableProperty(it, component, mutableProps, immutableProps)
                 else -> handleKProperty(it, component, mutableProps, immutableProps)
             }
         }

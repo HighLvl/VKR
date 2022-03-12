@@ -1,35 +1,19 @@
 package app.components.experiment
 
+import core.components.experiment.*
+
 abstract class ExperimentTaskModel {
     abstract val goals: Set<Goal>
     abstract val stopConditions: Set<Predicate>
     abstract val constraints: Set<Predicate>
-    abstract val observableVariables: Map<String, () -> Float>
-    abstract val mutableVariables: Map<String, (Float) -> Unit>
+    abstract val observableVariables: Map<String, GetterExp>
+    abstract val mutableVariables: Map<String, SetterExp>
 
     @set:JvmName("setTargetScore1")
     var targetScore = Int.MAX_VALUE
         protected set
     var stopTime = Float.MAX_VALUE
         protected set
-
-    data class Goal(val score: Int, val predicate: Predicate)
-    data class Predicate(val name: String, val predicateFun: () -> Boolean) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Predicate
-
-            if (name != other.name) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            return name.hashCode()
-        }
-    }
 }
 
 class MutableExperimentTaskModel: ExperimentTaskModel() {
@@ -39,22 +23,22 @@ class MutableExperimentTaskModel: ExperimentTaskModel() {
         get() = _stopConditions
     override val constraints: Set<Predicate>
         get() = _constraints
-    override val observableVariables: Map<String, () -> Float>
+    override val observableVariables: Map<String, GetterExp>
         get() = _observableVariables
-    override val mutableVariables: Map<String, (Float) -> Unit>
+    override val mutableVariables: Map<String, SetterExp>
         get() = _mutableVariables
 
-    private val _observableVariables = mutableMapOf<String, () -> Float>()
-    private val _mutableVariables = mutableMapOf<String, (Float) -> Unit>()
+    private val _observableVariables = mutableMapOf<String, GetterExp>()
+    private val _mutableVariables = mutableMapOf<String, SetterExp>()
     private val _goals = mutableSetOf<Goal>()
     private val _stopConditions = mutableSetOf<Predicate>()
     private val _constraints = mutableSetOf<Predicate>()
 
-    fun addGoal(score: Int, name: String = "", predicate: () -> Boolean) {
+    fun addGoal(score: Int, name: String = "", predicate: PredicateExp) {
         _goals += Goal(score, Predicate(name, predicate))
     }
 
-    fun addStopOnCondition(name: String = "", predicate: () -> Boolean) {
+    fun addStopOnCondition(name: String = "", predicate: PredicateExp) {
         _stopConditions += Predicate(name, predicate)
     }
 
@@ -66,12 +50,12 @@ class MutableExperimentTaskModel: ExperimentTaskModel() {
         this.stopTime = stopTime
     }
 
-    fun addConstraint(name: String = "", predicate: () -> Boolean) {
+    fun addConstraint(name: String = "", predicate: PredicateExp) {
         _constraints += Predicate(name, predicate)
     }
 
-    fun addObservableVariables(vararg variables: Pair<String, () -> Float>) = _observableVariables.putAll(variables)
-    fun addMutableVariables(vararg variables: Pair<String, (Float) -> Unit>) = _mutableVariables.putAll(variables)
+    fun addObservableVariables(vararg variables: Pair<String, GetterExp>) = _observableVariables.putAll(variables)
+    fun addMutableVariables(vararg variables: Pair<String, SetterExp>) = _mutableVariables.putAll(variables)
 }
 
 //fun main() {
