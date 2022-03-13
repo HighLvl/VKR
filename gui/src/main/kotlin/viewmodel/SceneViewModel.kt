@@ -1,13 +1,13 @@
 package viewmodel
 
+import app.eventbus.gui.EventBus
+import app.eventbus.gui.UIEvent
 import app.services.scene.SceneService
 import com.fasterxml.jackson.databind.node.ObjectNode
 import core.utils.splitOnCapitalChars
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ticker
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import model.ComponentRepository
 
@@ -34,6 +34,22 @@ class SceneViewModel(
                 refreshScene()
             }
         }
+        launchWithAppContext {
+            EventBus.events.filterIsInstance<UIEvent.InspectAgent>().collectLatest { event ->
+                objectTree.value.children.asSequence()
+                    .filterIsInstance<AgentsFolder>()
+                    .map { it.children }
+                    .flatten()
+                    .filterIsInstance<Folder>()
+                    .map { it.children }
+                    .flatten()
+                    .filterIsInstance<Agent>()
+                    .firstOrNull { it.id == event.id }
+                    ?.let {
+                        _selectedEntity.value = it
+                    }
+            }
+        }
     }
 
     private fun refreshScene() {
@@ -53,6 +69,11 @@ class SceneViewModel(
 
     fun selectEntity(entity: Entity) {
         _selectedEntity.value = entity
+        if (entity is Agent) {
+            launchWithAppContext {
+                EventBus.publish(UIEvent.InspectAgent(entity.id))
+            }
+        }
     }
 
     private fun buildAgentList() = sceneService.scene.agents.entries
