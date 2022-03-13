@@ -2,22 +2,24 @@ package app.api
 
 import Model.APIGrpc
 import Model.Empty
-import com.google.flatbuffers.FlatBufferBuilder
 import app.api.base.AgentModelApi
 import app.api.dto.Behaviour
 import app.api.dto.GlobalArgs
 import app.api.dto.Snapshot
 import app.api.dto.State
+import com.google.flatbuffers.FlatBufferBuilder
 import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import java.io.Closeable
 
 class ApiImpl : AgentModelApi {
     private var apiClient: ApiClient? = null
 
-    override fun connect(ip: String, port: Int): State {
+    override suspend fun connect(ip: String, port: Int): State = withContext(Dispatchers.IO) {
         apiClient = ApiClient(ip, port)
-        return apiClient!!.getState()
+        apiClient!!.getState()
     }
 
     override fun disconnect() {
@@ -25,31 +27,31 @@ class ApiImpl : AgentModelApi {
         apiClient = null
     }
 
-    override fun run(globalArgs: GlobalArgs) {
+    override suspend fun run(globalArgs: GlobalArgs) = withContext(Dispatchers.IO) {
         apiClient!!.run(globalArgs)
     }
 
-    override fun runAndSubscribeOnUpdate(globalArgs: GlobalArgs): Flow<Unit> {
+    override suspend fun runAndSubscribeOnUpdate(globalArgs: GlobalArgs): Flow<Unit> = withContext(Dispatchers.IO) {
         TODO("Not yet implemented")
     }
 
-    override fun callBehaviourFunctions(behaviour: Behaviour) {
+    override suspend fun callBehaviourFunctions(behaviour: Behaviour) = withContext(Dispatchers.IO) {
         apiClient!!.callBehaviourFunctions(behaviour)
     }
 
-    override fun requestSnapshot(): Snapshot {
-        return apiClient!!.requestSnapshot()
+    override suspend fun requestSnapshot(): Snapshot = withContext(Dispatchers.IO) {
+        apiClient!!.requestSnapshot()
     }
 
-    override fun pause() {
+    override suspend fun pause() = withContext(Dispatchers.IO) {
         apiClient!!.pause()
     }
 
-    override fun resume() {
+    override suspend fun resume() = withContext(Dispatchers.IO) {
         apiClient!!.resume()
     }
 
-    override fun stop() {
+    override suspend fun stop() = withContext(Dispatchers.IO) {
         apiClient!!.stop()
     }
 

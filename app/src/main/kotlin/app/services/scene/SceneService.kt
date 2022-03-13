@@ -1,19 +1,20 @@
 package app.services.scene
 
+import app.api.dto.*
 import app.components.agent.AgentInterface
+import app.components.base.SystemComponent
+import app.components.configuration.AgentInterfaces
 import app.components.configuration.Configuration
-import core.components.configuration.MutableRequestSignature
 import app.components.experiment.Experiment
+import app.coroutines.Contexts
 import app.services.Service
+import core.components.base.Component
+import core.components.base.Script
+import core.components.configuration.GlobalArgsComponent
+import core.components.configuration.MutableRequestSignature
+import core.entities.*
 import core.services.scene.Scene
 import core.utils.runBlockCatching
-import app.api.dto.*
-import app.components.base.SystemComponent
-import core.components.base.Script
-import app.components.configuration.AgentInterfaces
-import core.components.base.Component
-import core.components.configuration.GlobalArgsComponent
-import core.entities.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -112,7 +113,9 @@ class SceneService : Service(), SceneApi {
     override fun onModelStop() = forEachScript(Script::onModelStop)
     override fun onModelPause() = forEachScript(Script::onModelPause)
     override fun onModelResume() = forEachScript(Script::onModelResume)
-    fun updateScriptsUI() = forEachScript(Script::updateUI)
+    fun updateScriptsUI() {
+        forEachScript(Script::updateUI)
+    }
 
     private fun forEachScript(block: Script.() -> Unit) {
         getScripts().forEach {

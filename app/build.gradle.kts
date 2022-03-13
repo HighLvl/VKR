@@ -32,7 +32,6 @@ dependencies {
     implementation("io.grpc:grpc-kotlin-stub:1.2.1")
     implementation("io.grpc:grpc-netty:1.44.1")
 
-    implementation("io.reactivex.rxjava3:rxjava:3.1.3")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     runtimeOnly("org.jetbrains.kotlin:kotlin-scripting-jsr223:1.6.0")

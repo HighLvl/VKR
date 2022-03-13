@@ -8,13 +8,13 @@ import app.api.dto.State
 
 
 interface AgentModelApi {
-    fun connect(ip: String, port: Int): State
+    suspend fun connect(ip: String, port: Int): State
     fun disconnect()
-    fun run(globalArgs: GlobalArgs)
-    fun runAndSubscribeOnUpdate(globalArgs: GlobalArgs): Flow<Unit>
-    fun callBehaviourFunctions(behaviour: Behaviour)
-    fun requestSnapshot(): Snapshot
-    fun pause()
-    fun resume()
-    fun stop()
+    suspend fun run(globalArgs: GlobalArgs)
+    suspend fun runAndSubscribeOnUpdate(globalArgs: GlobalArgs): Flow<Unit>
+    suspend fun callBehaviourFunctions(behaviour: Behaviour)
+    suspend fun requestSnapshot(): Snapshot
+    suspend fun pause()
+    suspend fun resume()
+    suspend fun stop()
 }

@@ -6,7 +6,7 @@ sealed class State {
     open fun resume(context: AgentModelControlContext) {}
     open fun stop(context: AgentModelControlContext) {}
     open fun connect(context: AgentModelControlContext, ip: String, port: Int) {}
-    fun disconnect(context: AgentModelControlContext) {
+    open fun disconnect(context: AgentModelControlContext) {
         context.periodTaskExecutor.stop()
         context.modelApi.disconnect()
         context.setState(DisconnectState)

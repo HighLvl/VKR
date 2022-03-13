@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AgentModelControlContext(val modelApi: AgentModelApi, private val sceneApi: SceneApi) {
     val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow(replay = 1)
@@ -21,7 +22,7 @@ class AgentModelControlContext(val modelApi: AgentModelApi, private val sceneApi
     private var periodSec: Float = 0.1f
     private lateinit var currentState: State
 
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+    val coroutineScope = CoroutineScope(Contexts.app)
 
     fun start() {
         setState(DisconnectState)
@@ -52,7 +53,7 @@ class AgentModelControlContext(val modelApi: AgentModelApi, private val sceneApi
     fun setState(state: State) {
         this.currentState = state
         coroutineScope.launch {
-            controlState.emit(getControlState())
+            withContext(Dispatchers.IO) {controlState.emit(getControlState())}
         }
     }
 

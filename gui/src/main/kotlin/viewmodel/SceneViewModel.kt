@@ -1,8 +1,8 @@
 package viewmodel
 
 import app.services.scene.SceneService
-import core.utils.splitOnCapitalChars
 import com.fasterxml.jackson.databind.node.ObjectNode
+import core.utils.splitOnCapitalChars
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,8 +12,10 @@ import kotlinx.coroutines.runBlocking
 import model.ComponentRepository
 
 @OptIn(ObsoleteCoroutinesApi::class)
-class SceneViewModel(private val sceneService: SceneService,
-                     private val componentRepository: ComponentRepository) :
+class SceneViewModel(
+    private val sceneService: SceneService,
+    private val componentRepository: ComponentRepository
+) :
     ViewModel() {
     private val _components = MutableStateFlow<List<ComponentDto>>(listOf())
     private val _selectedEntity = MutableStateFlow<Entity>(None)
