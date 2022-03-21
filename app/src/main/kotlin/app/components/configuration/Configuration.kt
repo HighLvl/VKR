@@ -5,13 +5,13 @@ import core.components.base.AddInSnapshot
 import core.components.base.Script
 import app.components.base.SystemComponent
 import core.components.configuration.AgentInterface
-import core.components.configuration.GlobalArgsComponent
+import core.components.configuration.InputArgsComponent
 import core.components.configuration.ModelConfiguration
 import core.components.configuration.MutableModelConfiguration
 import core.services.logger.Level
 import core.services.logger.Logger
 
-class Configuration : SystemComponent, GlobalArgsComponent, AgentInterfaces, Script {
+class Configuration : SystemComponent, InputArgsComponent, AgentInterfaces, Script {
     @AddInSnapshot(1)
     var modelConfiguration: String = ""
         set(value) {
@@ -19,7 +19,7 @@ class Configuration : SystemComponent, GlobalArgsComponent, AgentInterfaces, Scr
         }
 
     @AddInSnapshot(2)
-    override var globalArgs: Map<String, Any> = mapOf()
+    override var inputArgs: Map<String, Any> = mapOf()
 
     override val agentInterfaces: Map<String, AgentInterface>
         get() = _configuration.agentInterfaces
@@ -36,7 +36,7 @@ class Configuration : SystemComponent, GlobalArgsComponent, AgentInterfaces, Scr
         if (path.isEmpty()) return oldPath
         return try {
             _configuration = KtsScriptEngine.eval(path)
-            globalArgs = _configuration.globalArgs
+            inputArgs = _configuration.inputArgs
             path
         } catch (e: Exception) {
             Logger.log("Bad configuration file", Level.ERROR)

@@ -7,4 +7,9 @@ object PauseState : StoppableState() {
         context.sendControlRequest(RESUME)
         context.periodTaskExecutor.resume()
     }
+
+    override fun stop(context: AgentModelControlContext) {
+        super.stop(context)
+        context.periodTaskExecutor.resume()
+    }
 }

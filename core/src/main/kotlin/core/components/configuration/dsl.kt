@@ -14,12 +14,15 @@ class ModelConfigurationBuilder(private val modelConfiguration: MutableModelConf
         )
     }
 
-    fun inputArg(name: String, value: Any) {
-        modelConfiguration.putInputArg(name, value)
+    fun inputArgs(builder: InputArgsBuilder.() -> Unit) {
+        InputArgsBuilder(modelConfiguration).apply(builder)
     }
+}
 
-    fun inputArgs(vararg args: Pair<String, Any>) {
-        args.forEach { modelConfiguration.putInputArg(it.first, it.second) }
+@ConfigurationDslMarker
+class InputArgsBuilder(private val modelConfiguration: MutableModelConfiguration) {
+    fun arg(name: String, value: Any) {
+        modelConfiguration.putInputArg(name, value)
     }
 }
 
@@ -44,13 +47,6 @@ class AgentInterfaceBuilder(private val agentInterface: MutableAgentInterface) {
         agentInterface.addProperty(Property(name))
     }
 
-    fun structProp(name: String, builder: PropBuilder.() -> Unit) {
-        val strPropBuilder = StructPropertyBuilder(name)
-        val propBuilder = PropBuilder(strPropBuilder)
-        propBuilder.apply(builder)
-        agentInterface.addProperty(strPropBuilder.build())
-    }
-
     inline fun <reified T : Any> request(name: String, noinline builder: RequestSignatureBuilder.() -> Unit = {}) =
         request(T::class, name, builder)
 
@@ -61,32 +57,6 @@ class AgentInterfaceBuilder(private val agentInterface: MutableAgentInterface) {
 class RequestSignatureBuilder(private val requestSignature: MutableRequestSignature) {
     fun <T : Any> param(paramType: KClass<T>, name: String) = requestSignature.addParam(name, paramType)
     inline fun <reified T : Any> param(name: String) = param(T::class, name)
-}
-
-class StructPropertyBuilder(private val name: String) {
-    private val properties = mutableListOf<Prop>()
-
-    fun addProp(prop: Prop) {
-        properties.add(prop)
-    }
-
-    fun build() : StructProperty {
-        return StructProperty(name, properties)
-    }
-}
-
-@ConfigurationDslMarker
-class PropBuilder(private val structPropertyBuilder: StructPropertyBuilder) {
-    fun prop(name: String) {
-        structPropertyBuilder.addProp(Property(name))
-    }
-
-    fun structProp(name: String, builder: PropBuilder.() -> Unit) {
-        val strPropBuilder = StructPropertyBuilder(name)
-        val propBuilder = PropBuilder(strPropBuilder)
-        propBuilder.apply(builder)
-        structPropertyBuilder.addProp(strPropBuilder.build())
-    }
 }
 
 fun modelConfiguration(build: ModelConfigurationBuilder.() -> Unit): ModelConfiguration =

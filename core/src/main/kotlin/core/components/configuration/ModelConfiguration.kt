@@ -4,7 +4,7 @@ import kotlin.reflect.KClass
 
 interface ModelConfiguration {
     val agentInterfaces: Map<String, AgentInterface>
-    val globalArgs: Map<String, Any>
+    val inputArgs: Map<String, Any>
 }
 
 class MutableModelConfiguration : ModelConfiguration {
@@ -12,15 +12,15 @@ class MutableModelConfiguration : ModelConfiguration {
     override val agentInterfaces: Map<String, MutableAgentInterface> by lazy {
         _agentInterfaces.associateBy(MutableAgentInterface::agentType)
     }
-    private val _globalArgs = mutableMapOf<String, Any>()
-    override val globalArgs: Map<String, Any> = _globalArgs
+    private val _inputArgs = mutableMapOf<String, Any>()
+    override val inputArgs: Map<String, Any> = _inputArgs
 
     fun addAgentInterface(agentInterface: MutableAgentInterface) {
         _agentInterfaces.add(agentInterface)
     }
 
     fun putInputArg(name: String, value: Any) {
-        _globalArgs[name] = value
+        _inputArgs[name] = value
     }
 
     override fun toString(): String {
@@ -28,24 +28,21 @@ class MutableModelConfiguration : ModelConfiguration {
     }
 }
 
-sealed class Prop(open val name: String)
-data class Property(override val name: String): Prop(name)
-data class StructProperty(override val name: String, val props: List<Prop>): Prop(name)
+data class Property(val name: String)
 
 interface AgentInterface {
     val agentType: String
-    val properties: List<Prop>
+    val properties: List<Property>
     val otherRequests: Collection<MutableRequestSignature>
     val setters: Collection<MutableRequestSignature>
-
 }
 
 data class MutableAgentInterface(override val agentType: String) : AgentInterface {
-    private val _properties = mutableListOf<Prop>()
+    private val _properties = mutableListOf<Property>()
     private val _setters = mutableMapOf<String, MutableRequestSignature>()
     private val _requests = mutableMapOf<String, MutableRequestSignature>()
 
-    override val properties: List<Prop> = _properties
+    override val properties: List<Property> = _properties
     override val otherRequests: Collection<MutableRequestSignature> = _requests.values
     override val setters: Collection<MutableRequestSignature> = _setters.values
 
@@ -57,7 +54,7 @@ data class MutableAgentInterface(override val agentType: String) : AgentInterfac
         _setters[setter.name] = setter
     }
 
-    fun addProperty(prop: Prop) {
+    fun addProperty(prop: Property) {
         _properties += prop
     }
 }

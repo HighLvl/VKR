@@ -1,14 +1,16 @@
 import core.components.configuration.modelConfiguration
 
 modelConfiguration {
+    inputArgs {
+        arg("doodlebugs", 100)
+        arg("ants", 50)
+    }
+
     agentInterface("Array") {
         prop("array")
     }
     agentInterface("Board") {
-        structProp("size") {
-            prop("height")
-            prop("width")
-        }
+        prop("size")
         prop("a")
 
         setter<Int>("a")
@@ -19,7 +21,6 @@ modelConfiguration {
         prop("breedThreshold")
         prop("timeSinceBreed")
     }
-
     agentInterface("Doodlebug") {
         prop("colPosition")
         prop("rowPosition")
@@ -27,11 +28,4 @@ modelConfiguration {
         prop("timeSinceBreed")
         prop("timeSinceEat")
     }
-
-    inputArgs(
-        "doodlebugs" to 100,
-        "ants" to 50
-//        "observable" to listOf("x", "y", "z"),
-//        "mutable" to listOf("q", "w", "r")
-    )
 }

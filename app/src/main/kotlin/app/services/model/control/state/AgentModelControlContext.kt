@@ -3,10 +3,10 @@ package app.services.model.control.state
 import app.api.base.AgentModelApi
 import app.api.dto.InputData
 import app.api.dto.ModelInputArgs
-import app.api.dto.Request
 import app.api.dto.Snapshot
 import app.coroutines.Contexts
 import app.requests.RequestSender
+import app.requests.sendRequest
 import app.services.model.control.PeriodTaskExecutor
 import app.services.scene.SceneApi
 import core.services.control.ControlState
@@ -40,22 +40,22 @@ class AgentModelControlContext(
         when (controlRequest) {
             ControlRequest.RESUME -> {
                 requestSender.sendRequest<Unit>(0, "Resume", listOf()) {
-                    it.onSuccess { onResume() }
+                    it.onSuccess { onResume() }.onFailure { emitCurrentState() }
                 }
             }
             ControlRequest.PAUSE -> {
                 requestSender.sendRequest<Unit>(0, "Pause", listOf()) {
-                    it.onSuccess { onPause() }
+                    it.onSuccess { onPause() }.onFailure { emitCurrentState() }
                 }
             }
             ControlRequest.RUN -> {
                 requestSender.sendRequest<Unit>(0, "Run", inputArgs.args.values.toList()) {
-                    it.onSuccess { onRun() }
+                    it.onSuccess { onRun() }.onFailure { emitCurrentState() }
                 }
             }
             ControlRequest.STOP -> {
                 requestSender.sendRequest<Unit>(0, "Stop", listOf()) {
-                    it.onSuccess { onStop() }
+                    it.onSuccess { onStop() }.onFailure { emitCurrentState() }
                 }
             }
         }
@@ -69,6 +69,7 @@ class AgentModelControlContext(
         periodTaskExecutor.stop()
         modelApi.disconnect()
         setState(DisconnectState)
+        onStop()
     }
 
     private var startTime: Long = 0
@@ -92,6 +93,10 @@ class AgentModelControlContext(
 
     fun setState(state: State) {
         currentState = state
+        emitCurrentState()
+    }
+
+    private fun emitCurrentState() {
         coroutineScope.launch {
             withContext(Dispatchers.IO) { controlState.emit(getControlState()) }
         }
@@ -117,7 +122,7 @@ class AgentModelControlContext(
     fun onUpdate(snapshot: Snapshot) = sceneApi.updateWith(snapshot)
     fun getInputData(): InputData = InputData(sceneApi.getRequests())
     fun onConnect(state: app.api.dto.State) {
-        when(state) {
+        when (state) {
             app.api.dto.State.RUN -> onRun()
             app.api.dto.State.PAUSE -> onPause()
             app.api.dto.State.STOP -> onStop()

@@ -2,6 +2,7 @@ package core.services
 
 import core.components.agent.AgentInterface
 import core.components.agent.Props
+import core.components.agent.request
 import core.entities.Agent
 import core.entities.getComponent
 
@@ -23,15 +24,20 @@ inline fun <reified T : Any> getPropValue(agentId: Int, propName: String): T? {
     return getAgent(agentId)?.getPropValue(propName)
 }
 
-fun <T: Any> Agent.request(name: String, args: List<Any>) {
-    getComponent<AgentInterface>()!!.request<T>(name, args)
+inline fun <reified T : Any> Agent.request(name: String, args: List<Any>, noinline onResult: (Result<T>) -> Unit = {}) {
+    getComponent<AgentInterface>()!!.request(name, args, onResult)
 }
 
-fun <T: Any> request(agentId: Int, name: String, args: List<Any>) {
-    getAgent(agentId)?.getComponent<AgentInterface>()?.request<Any>(name, args)
+inline fun <reified T : Any> request(
+    agentId: Int,
+    name: String,
+    args: List<Any>,
+    noinline onResult: (Result<T>) -> Unit = {}
+) {
+    getAgent(agentId)?.getComponent<AgentInterface>()?.request(name, args, onResult)
 }
 
-fun requestSetValue(agentId: Int, varName: String, value: Any) {
-    getAgent(agentId)?.getComponent<AgentInterface>()?.requestSetValue(varName, value)
+fun requestSetValue(agentId: Int, varName: String, value: Any, onResult: (Result<Unit>) -> Unit = {}) {
+    getAgent(agentId)?.getComponent<AgentInterface>()?.requestSetValue(varName, value, onResult)
 }
 

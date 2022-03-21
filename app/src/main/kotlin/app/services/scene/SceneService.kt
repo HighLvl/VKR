@@ -1,6 +1,7 @@
 package app.services.scene
 
 import app.api.dto.AgentSnapshot
+import app.api.dto.Error
 import app.api.dto.ModelInputArgs
 import app.api.dto.Request
 import app.api.dto.Snapshot
@@ -15,9 +16,11 @@ import app.requests.Response
 import app.services.Service
 import core.components.base.Component
 import core.components.base.Script
-import core.components.configuration.GlobalArgsComponent
+import core.components.configuration.InputArgsComponent
 import core.components.configuration.MutableRequestSignature
 import core.entities.*
+import core.services.logger.Level
+import core.services.logger.Logger
 import core.services.scene.Scene
 import core.utils.runBlockCatching
 import kotlinx.coroutines.runBlocking
@@ -46,7 +49,7 @@ class SceneService(private val requestIO: RequestIO, private val requestSender: 
     }
 
     override fun getInputArgs(): ModelInputArgs {
-        return ModelInputArgs(scene.environment.getComponent<GlobalArgsComponent>()!!.globalArgs)
+        return ModelInputArgs(scene.environment.getComponent<InputArgsComponent>()!!.inputArgs)
     }
 
     override fun updateWith(snapshot: Snapshot) {
@@ -60,41 +63,74 @@ class SceneService(private val requestIO: RequestIO, private val requestSender: 
 
     private fun handleResponses(responses: List<app.api.dto.Response>) {
         requestIO.handleResponses(responses.map {
-            Response(it.ack, it.result)
+            val result = when (it.success) {
+                true -> Result.success(it.value)
+                false -> {
+                    val error = it.value as Error
+                    Logger.log(
+                        "An error occurred in the model\ncode: ${error.code}, message: \"${error.text}\"",
+                        Level.ERROR
+                    )
+                    Result.failure(kotlin.runCatching { throw error }.exceptionOrNull()!!)
+                }
+            }
+            Response(it.ack, result)
         })
     }
 
-    private fun updateAgents(agentSnapshots: List<AgentSnapshot>) {
+    private fun updateAgents(agentSnapshots: Map<String, List<AgentSnapshot>>) {
         val deadAgentIds = scene.agents.keys.toMutableSet()
-        for (agentSnapshot in agentSnapshots) {
-            runBlockCatching {
-                val agentInterfacesComponent = scene.environment.getComponent<AgentInterfaces>()!!
-                updateAgentWithSnapshot(agentSnapshot, agentInterfacesComponent)
+        for ((type, snap) in agentSnapshots) {
+            for (agentSnapshot in snap) {
+                runBlockCatching {
+                    val agentInterfacesComponent = scene.environment.getComponent<AgentInterfaces>()!!
+                    updateAgentWithSnapshot(type, agentSnapshot, agentInterfacesComponent)
+                }
+                deadAgentIds.remove(agentSnapshot.id)
             }
-            deadAgentIds.remove(agentSnapshot.id)
         }
+
         deadAgentIds.forEach { _scene.removeAgentById(it) }
     }
 
-    private fun updateAgentWithSnapshot(agentSnapshot: AgentSnapshot, agentInterfacesComponent: AgentInterfaces) {
+    private fun updateAgentWithSnapshot(
+        type: String,
+        agentSnapshot: AgentSnapshot,
+        agentInterfacesComponent: AgentInterfaces
+    ) {
         if (agentSnapshot.id in scene.agents.keys) {
             val oldAgent = scene.agents[agentSnapshot.id]!!
-            oldAgent.updateSnapshot(agentSnapshot)
+            oldAgent.updateSnapshot(type, agentSnapshot, agentInterfacesComponent)
         } else {
-            val agentInterface = agentInterfacesComponent.agentInterfaces[agentSnapshot.type]
+            val agentInterface = agentInterfacesComponent.agentInterfaces[type]
             val newAgent = EntityFactory.createAgent(
-                agentSnapshot.type,
+                type,
                 agentInterface?.setters?.toList() ?: listOf(),
                 agentInterface?.otherRequests?.toList() ?: listOf(),
                 requestSender
             )
-            newAgent.updateSnapshot(agentSnapshot)
+            newAgent.updateSnapshot(type, agentSnapshot, agentInterfacesComponent)
             _scene.addAgent(agentSnapshot.id, newAgent)
         }
     }
 
-    private fun Agent.updateSnapshot(snapshot: AgentSnapshot) {
-        getAgentInterfaceScript().snapshot = snapshot
+    private fun Agent.updateSnapshot(
+        type: String,
+        agentSnapshot: AgentSnapshot,
+        agentInterfacesComponent: AgentInterfaces
+    ) {
+        val properties = agentSnapshot.props
+        val configuredProperties = mutableMapOf<String, Any>()
+        val propertyConfiguration = agentInterfacesComponent.agentInterfaces[type]?.properties?.forEach {
+            if (it.name in properties.keys) {
+                configuredProperties[it.name] = properties[it.name]!!
+            }
+        }
+        val configuredSnapshot = when (propertyConfiguration) {
+            null -> agentSnapshot
+            else -> agentSnapshot.copy(props = configuredProperties)
+        }
+        getAgentInterfaceScript().snapshot = configuredSnapshot
     }
 
     private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterface>()!!
@@ -106,7 +142,11 @@ class SceneService(private val requestIO: RequestIO, private val requestSender: 
 
     private fun onAfterModelUpdate() = forEachScript(Script::onModelAfterUpdate)
     private fun updateScripts(modelTime: Double) = forEachScript { onModelUpdate(modelTime) }
-    override fun onModelRun() = forEachScript(Script::onModelRun)
+    override fun onModelRun() {
+        _scene.apply { agents.map { it.key }.forEach { removeAgentById(it) } }
+        forEachScript(Script::onModelRun)
+    }
+
     override fun onModelStop() = forEachScript(Script::onModelStop)
     override fun onModelPause() = forEachScript(Script::onModelPause)
     override fun onModelResume() = forEachScript(Script::onModelResume)

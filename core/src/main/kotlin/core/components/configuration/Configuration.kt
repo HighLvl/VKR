@@ -2,6 +2,6 @@ package core.components.configuration
 
 import core.components.base.Component
 
-interface GlobalArgsComponent : Component {
-    val globalArgs: Map<String, Any>
+interface InputArgsComponent : Component {
+    val inputArgs: Map<String, Any>
 }

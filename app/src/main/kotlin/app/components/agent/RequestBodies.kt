@@ -1,9 +1,10 @@
 package app.components.agent
 
-import core.components.configuration.RequestSignature
-import core.services.logger.Logger
 import com.google.common.base.Defaults
+import core.components.agent.request
+import core.components.configuration.RequestSignature
 import core.services.logger.Level
+import core.services.logger.Logger
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 

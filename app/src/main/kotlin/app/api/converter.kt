@@ -1,58 +1,50 @@
 package app.api
 
-import app.api.dto.*
-import app.components.configuration.AgentInterfaces
-import app.components.getSnapshot
+import app.api.dto.Error
+import app.api.dto.InputData
+import app.api.dto.Response
+import app.api.dto.Snapshot
+import app.components.agent.RequestBody
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import core.entities.getComponent
-import core.services.Services
 import org.msgpack.jackson.dataformat.MessagePackFactory
+import java.io.IOException
 
 private val objectMapper = ObjectMapper(MessagePackFactory())
 
 fun InputData.mapToBytes(): ByteArray {
-    val inputDataList = requests.map {
-        listOf(it.agentId, it.name, it.ack, it.args)
-    }.toList()
-    return objectMapper.writeValueAsBytes(inputDataList)
+    return objectMapper.writeValueAsBytes(this)
 }
 
 fun ByteArray.mapToSnapshot(): Snapshot {
-    val comp = Services.scene.environment.getComponent<AgentInterfaces>()!!
-    val agentInterfaces = comp.agentInterfaces
-    val snapshotList = objectMapper.readValue<List<Any>>(this)
-    val t = snapshotList[0] as Double
-    val agentSnapshots = (snapshotList[1] as List<*>).map {
-        it as List<*>
-        val type = it[0] as String
-        (it[1] as List<*>).map { snapshot ->
-            snapshot as List<*>
-            val id = snapshot[0] as Int
-            val propNames = agentInterfaces[type]!!.properties.map {prop -> prop.name }
-            val props = (snapshot[1] as List<Any>).mapIndexed { index, prop -> propNames[index] to prop }.toMap()
-            AgentSnapshot(type, id, props)
-        }
-    }.flatten()
-    val responses = (snapshotList[2] as List<*>).map {
-        it as List<*>
-        val ack = it[0] as Int
-        val isSuccess = it[1] as Boolean
-        val value = if (it.size == 2) Unit else it[2] as Any
-        val result: Result<Any> = when {
-            isSuccess -> Result.success(value)
-            else -> {
-                value as List<*>
-                Result.failure<Error>(Error(value[0] as Int, value[1] as String))
-            }
-        }
-        Response(ack, result)
-    }
-    val state = when (snapshotList[3] as Int) {
-        0 -> State.RUN
-        1 -> State.STOP
-        2 -> State.PAUSE
-        else -> throw IllegalStateException()
-    }
-    return Snapshot(t, agentSnapshots, responses, state)
+    return objectMapper.readValue(this)
 }
+
+class ResponseDeserializer @JvmOverloads constructor(vc: Class<*>? = null) :
+    StdDeserializer<Response>(vc) {
+
+    private val objectMapper = ObjectMapper(MessagePackFactory())
+    @Throws(IOException::class, JsonProcessingException::class)
+    override fun deserialize(jp: JsonParser, ctxt: DeserializationContext?): Response {
+        val node: ObjectNode = jp.codec.readTree(jp)
+        val ack = node["ack"].asInt()
+        val success = node["success"].asBoolean()
+        val valueNode = node["value"]
+        val value  = when(success) {
+            true -> objectMapper.convertValue(valueNode, Any::class.java)
+            false -> Error(valueNode["code"].asInt(), valueNode["text"].asText())
+        }
+        return Response(ack, success, value)
+    }
+}
+
+
+
