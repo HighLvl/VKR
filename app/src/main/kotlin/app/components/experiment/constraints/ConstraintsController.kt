@@ -34,7 +34,7 @@ class ConstraintsController {
         constraintsView.reset()
     }
 
-    fun onModelUpdate(modelTime: Float) {
+    fun onModelUpdate(modelTime: Double) {
         constraints.forEach {
             constraintValues[it.name] = it.predicateExp()
         }

@@ -1,21 +1,19 @@
 package app.components.agent
 
 import app.api.dto.AgentSnapshot
-import app.api.dto.Request
 import app.components.base.SystemComponent
+import app.requests.RequestSender
 import core.components.agent.AgentInterface
 import core.components.agent.Props
 import core.components.base.AddInSnapshot
 import core.components.base.Script
 import core.components.configuration.RequestSignature
-import core.services.logger.Level
-import core.services.logger.Logger
 import core.utils.uppercaseFirstChar
 
 class AgentInterface : AgentInterface, SystemComponent, Script {
     val requestBodies = RequestBodies(this)
     private var _props: Props = Props()
-    private val _requests: MutableList<Request> = mutableListOf()
+    private lateinit var requestSender: RequestSender
 
     override val id: Int
         get() = snapshot.id
@@ -24,7 +22,7 @@ class AgentInterface : AgentInterface, SystemComponent, Script {
     override val props: Props
         get() = _props
 
-    var snapshot: AgentSnapshot = AgentSnapshot("", 0, mapOf(), listOf())
+    var snapshot: AgentSnapshot = AgentSnapshot("", 0, mapOf())
         set(value) {
             field = value
             updateProps(value.props)
@@ -34,28 +32,20 @@ class AgentInterface : AgentInterface, SystemComponent, Script {
         requestBodies.setRequestSignatures(signatures)
     }
 
-    fun commitRequests(): List<Request> {
-        val committedRequests = _requests.toList()
-        _requests.clear()
-        return committedRequests
+    fun setRequestSender(requestSender: RequestSender) {
+        this.requestSender = requestSender
     }
 
     private fun updateProps(props: Map<String, Any>) {
         _props = Props(props)
     }
 
-    override fun requestSetValue(varName: String, value: Any) {
+    override fun requestSetValue(varName: String, value: Any, onResult: (Result<Unit>) -> Unit) {
         val requestName = "Set${varName.uppercaseFirstChar()}"
-        request(requestName, mapOf("value" to value))
+        request(requestName, listOf(value), onResult)
     }
 
-    override fun request(name: String, value: Map<String, Any>) {
-        val request = Request(null, name, value)
-        Logger.log("Request scheduled: $request", Level.INFO)
-        _requests.add(request)
-    }
-
-    override fun onModelRun() {
-        _requests.clear()
+    override fun <T : Any> request(name: String, args: List<Any>, onResult: (Result<T>) -> Unit) {
+        requestSender.sendRequest(id, name, args, onResult)
     }
 }

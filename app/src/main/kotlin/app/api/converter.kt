@@ -1,98 +1,58 @@
 package app.api
 
-import Model.AgentBehaviour
-import Model.ModelState
-import Model.Request
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.flatbuffers.FlatBufferBuilder
 import app.api.dto.*
-import java.nio.ByteBuffer
+import app.components.configuration.AgentInterfaces
+import app.components.getSnapshot
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import core.entities.getComponent
+import core.services.Services
+import org.msgpack.jackson.dataformat.MessagePackFactory
 
-private val objectMapper = jacksonObjectMapper()
-private val flatBufferBuilder = FlatBufferBuilder()
+private val objectMapper = ObjectMapper(MessagePackFactory())
 
-fun ModelState.mapToStateTable() = when (this.state()) {
-    Model.State.Run -> State.RUN
-    Model.State.Stop -> State.STOP
-    else -> State.PAUSE
+fun InputData.mapToBytes(): ByteArray {
+    val inputDataList = requests.map {
+        listOf(it.agentId, it.name, it.ack, it.args)
+    }.toList()
+    return objectMapper.writeValueAsBytes(inputDataList)
 }
 
-fun GlobalArgs.mapToGlobalArgsTable(): Model.GlobalArgs {
-    val jsonArgs = ByteBuffer.wrap(objectMapper.writeValueAsBytes(this.args))
-    return createGlobalArgs(jsonArgs)
-}
-
-private fun createGlobalArgs(jsonArgs: ByteBuffer): Model.GlobalArgs {
-    flatBufferBuilder.clear()
-    val offset = Model.GlobalArgs.createGlobalArgs(flatBufferBuilder, flatBufferBuilder.createString(jsonArgs))
-    flatBufferBuilder.finish(offset)
-    return Model.GlobalArgs.getRootAsGlobalArgs(flatBufferBuilder.dataBuffer())
-}
-
-
-fun Behaviour.mapToBehaviourTable(): Model.Behaviour {
-    flatBufferBuilder.clear()
-    val agentBehaviourOffsets = this.requests.map { agentBehaviour ->
-        val requestOffsets = agentBehaviour.requests.map { request ->
-            val argsJson = ByteBuffer.wrap(objectMapper.writeValueAsBytes(request.args))
-            createRequest(request.name, request.requestId, argsJson)
-        }.toIntArray()
-        createAgentBehaviour(agentBehaviour.id, requestOffsets)
-    }.toIntArray()
-    return createBehaviour(agentBehaviourOffsets)
-}
-
-private fun createRequest(requestName: String, requestId: Int?, argsJson: ByteBuffer): Int {
-    val requestNameFB = flatBufferBuilder.createString(requestName)
-    val argsFB = flatBufferBuilder.createString(argsJson)
-    Request.startRequest(flatBufferBuilder)
-    requestId?.let { Request.addId(flatBufferBuilder, it) }
-    Request.addName(flatBufferBuilder, requestNameFB)
-    Request.addArgs(flatBufferBuilder, argsFB)
-    return Request.endRequest(flatBufferBuilder)
-}
-
-private fun createAgentBehaviour(
-    id: Int,
-    requestOffsets: IntArray
-): Int {
-    val vectorOfRequests = flatBufferBuilder.createVectorOfTables(requestOffsets)
-    return AgentBehaviour.createAgentBehaviour(flatBufferBuilder, id, vectorOfRequests)
-}
-
-private fun createBehaviour(agentBehaviourOffsets: IntArray): Model.Behaviour {
-    val vectorOfAgentBehaviours = flatBufferBuilder.createVectorOfTables(agentBehaviourOffsets)
-    val offset = Model.Behaviour.createBehaviour(flatBufferBuilder, vectorOfAgentBehaviours)
-    flatBufferBuilder.finish(offset)
-    return Model.Behaviour.getRootAsBehaviour(flatBufferBuilder.dataBuffer())
-}
-
-fun Model.Snapshot.mapToSnapshot(): Snapshot {
-    val time = time()
-    val agentSnapshots = (0 until snapshotsLength()).asSequence()
-        .map {
-            snapshots(it)
-        }.map { agentSnapshot ->
-            agentSnapshot.mapToAgentSnapshot()
-        }.toList()
-    val errors = (0 until errorsLength()).asSequence()
-        .map {
-            errors(it)
-        }.map { error ->
-            Error(error.code(), error.text())
-        }.toList()
-    return Snapshot(time, agentSnapshots, errors)
-}
-
-private fun Model.AgentSnapshot.mapToAgentSnapshot(): AgentSnapshot {
-    val props = objectMapper.readValue<Map<String, Any>>(props())
-    val responses = (0 until responsesLength()).asSequence()
-        .map { responseIndex ->
-            responses(responseIndex)
-        }.map { response ->
-            val value = objectMapper.readValue<Any>(response.value())
-            Response(response.id(), value)
-        }.toList()
-    return AgentSnapshot(type(), id(), props, responses)
+fun ByteArray.mapToSnapshot(): Snapshot {
+    val comp = Services.scene.environment.getComponent<AgentInterfaces>()!!
+    val agentInterfaces = comp.agentInterfaces
+    val snapshotList = objectMapper.readValue<List<Any>>(this)
+    val t = snapshotList[0] as Double
+    val agentSnapshots = (snapshotList[1] as List<*>).map {
+        it as List<*>
+        val type = it[0] as String
+        (it[1] as List<*>).map { snapshot ->
+            snapshot as List<*>
+            val id = snapshot[0] as Int
+            val propNames = agentInterfaces[type]!!.properties.map {prop -> prop.name }
+            val props = (snapshot[1] as List<Any>).mapIndexed { index, prop -> propNames[index] to prop }.toMap()
+            AgentSnapshot(type, id, props)
+        }
+    }.flatten()
+    val responses = (snapshotList[2] as List<*>).map {
+        it as List<*>
+        val ack = it[0] as Int
+        val isSuccess = it[1] as Boolean
+        val value = if (it.size == 2) Unit else it[2] as Any
+        val result: Result<Any> = when {
+            isSuccess -> Result.success(value)
+            else -> {
+                value as List<*>
+                Result.failure<Error>(Error(value[0] as Int, value[1] as String))
+            }
+        }
+        Response(ack, result)
+    }
+    val state = when (snapshotList[3] as Int) {
+        0 -> State.RUN
+        1 -> State.STOP
+        2 -> State.PAUSE
+        else -> throw IllegalStateException()
+    }
+    return Snapshot(t, agentSnapshots, responses, state)
 }

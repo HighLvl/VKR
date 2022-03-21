@@ -126,12 +126,12 @@ class Experiment : Experiment, SystemComponent, Script {
         with(_mutableVars) {
             clear()
             taskModel.mutableVariables.keys.asSequence().map { varName ->
-                varName to { value: Float -> mutableVariablesController.onChangeMutableVarValue(varName, value) }
+                varName to { value: Double -> mutableVariablesController.onChangeMutableVarValue(varName, value) }
             }.also { putAll(it) }
         }
     }
 
-    override fun onModelUpdate(modelTime: Float) {
+    override fun onModelUpdate(modelTime: Double) {
         observableVariablesController.onModelUpdate(modelTime)
         mutableVariablesController.onModelUpdate(modelTime)
         constraintsController.onModelUpdate(modelTime)

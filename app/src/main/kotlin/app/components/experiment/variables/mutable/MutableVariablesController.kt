@@ -17,13 +17,13 @@ class MutableVariablesController {
             mutableVariablesSeries.entries.forEach { (_, series) -> series.capacity = value }
         }
 
-    private val mutableVariablesSeries = mutableMapOf<String, MutableSeries<Float>>()
+    private val mutableVariablesSeries = mutableMapOf<String, MutableSeries<Double>>()
     private val mutableVariablesView = MutableVariablesView(mutableVariablesSeries)
         .apply { onChangeValueListener = ::onChangeMutableVarValue }
-    private val mutableVarValues = mutableMapOf<String, Float>()
-    private lateinit var mutableVars: Map<String, (Float) -> Unit>
+    private val mutableVarValues = mutableMapOf<String, Double>()
+    private lateinit var mutableVars: Map<String, (Double) -> Unit>
 
-    fun reset(mutableVariables: Map<String, (Float) -> Unit>) {
+    fun reset(mutableVariables: Map<String, (Double) -> Unit>) {
         mutableVars = mutableVariables
         mutableVariablesSeries.clear()
         mutableVariablesSeries["t"] = mutableSeriesOf(trackedDataSize)
@@ -34,7 +34,7 @@ class MutableVariablesController {
         mutableVarValues.clear()
     }
 
-    fun onModelUpdate(modelTime: Float) {
+    fun onModelUpdate(modelTime: Double) {
         if (mutableVarValues.isEmpty()) return
         mutableVariablesSeries["t"]!!.append(modelTime)
         mutableVariablesSeries.asSequence().filterNot { it.key == "t" }.forEach { (varName, series) ->
@@ -51,7 +51,7 @@ class MutableVariablesController {
         mutableVariablesView.update()
     }
 
-    fun onChangeMutableVarValue(varName: String, value: Float) {
+    fun onChangeMutableVarValue(varName: String, value: Double) {
         Logger.log("Set $varName to $value", Level.DEBUG)
         mutableVarValues[varName] = value
     }

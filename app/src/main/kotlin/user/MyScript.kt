@@ -35,7 +35,7 @@ class MyScript : Component, Script {
         }
     }
 
-    override fun onModelUpdate(modelTime: Float) {
+    override fun onModelUpdate(modelTime: Double) {
         clearField()
         getAgentsToIdMap().filter { (id, agent) -> agent.agentType == "Doodlebug" || agent.agentType == "Ant" }
             .forEach { (id, agent) ->

@@ -1,6 +1,7 @@
 package app.services
 
 import app.api.ApiImpl
+import app.requests.RequestMediator
 import app.services.model.control.AgentModelControlService
 import app.services.scene.SceneService
 import core.services.Services
@@ -9,8 +10,9 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
 object ServiceManager {
-    val sceneService = SceneService()
-    val modelControlService = AgentModelControlService(ApiImpl(), sceneService)
+    private val requestMediator = RequestMediator()
+    val sceneService = SceneService(requestMediator, requestMediator)
+    val modelControlService = AgentModelControlService(ApiImpl(), sceneService, requestMediator)
 
     init {
         initServices()

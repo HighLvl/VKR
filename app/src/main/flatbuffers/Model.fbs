@@ -1,59 +1,15 @@
 namespace Model;
-table AgentBehaviour {
-    id:int;
-    requests:[Request];
-}
 
-table Request {
-    id:int;
-    name:string;
-    args:string;
-}
-
-table AgentSnapshot {
-    type:string;
-    id:int;
-    props:string;
-    responses:[Response];
-}
-
-table Response {
-    id:int;
-    value:string;
-}
-
-table Error {
-    code: int;
-    text: string;
+table InputData {
+    args:[byte];
 }
 
 table Snapshot {
-    time:float;
-    snapshots:[AgentSnapshot];
-    errors:[Error];
-}
-table Behaviour {
-    requests:[AgentBehaviour];
-}
-
-table GlobalArgs {
-    args:string;
-}
-
-enum State : byte { Run, Pause, Stop }
-table ModelState {
-    state: State;
+a:[ubyte] (flexbuffer);
 }
 
 table Empty {}
 
 rpc_service API {
-  GetState(Empty):ModelState;
-  Run(GlobalArgs):Empty;
-  RunAndSubscribeOnUpdate(GlobalArgs):Empty (streaming: "server");
-  CallBehaviourFunctions(Behaviour):Empty;
-  RequestSnapshot(Empty):Snapshot;
-  Pause(Empty):Empty;
-  Resume(Empty):Empty;
-  Stop(Empty):Empty;
+  GetSnapshot(InputData):Snapshot;
 }

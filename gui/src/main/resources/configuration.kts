@@ -1,15 +1,34 @@
 import core.components.configuration.modelConfiguration
 
 modelConfiguration {
-    agentInterface("Board") {
-        properties("a")
-        setter<Int>("a")
-        setter<String>("text")
-        request<Unit>("nextStep") {
-            param<Float>("dt")
-        }
+    agentInterface("Array") {
+        prop("array")
     }
-    globalArgs(
+    agentInterface("Board") {
+        structProp("size") {
+            prop("height")
+            prop("width")
+        }
+        prop("a")
+
+        setter<Int>("a")
+    }
+    agentInterface("Ant") {
+        prop("colPosition")
+        prop("rowPosition")
+        prop("breedThreshold")
+        prop("timeSinceBreed")
+    }
+
+    agentInterface("Doodlebug") {
+        prop("colPosition")
+        prop("rowPosition")
+        prop("breedThreshold")
+        prop("timeSinceBreed")
+        prop("timeSinceEat")
+    }
+
+    inputArgs(
         "doodlebugs" to 100,
         "ants" to 50
 //        "observable" to listOf("x", "y", "z"),

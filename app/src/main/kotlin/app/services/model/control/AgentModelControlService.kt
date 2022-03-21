@@ -5,12 +5,13 @@ import app.services.Service
 import app.services.model.control.state.AgentModelControlContext
 import app.services.scene.SceneApi
 import app.api.base.AgentModelApi
+import app.requests.RequestSender
 import core.services.control.AgentModelControl
 import core.services.control.ControlState
 import kotlinx.coroutines.flow.SharedFlow
 
-class AgentModelControlService(modelApi: AgentModelApi, sceneApi: SceneApi) : Service(), AgentModelControl {
-    private val context = AgentModelControlContext(modelApi, sceneApi)
+class AgentModelControlService(modelApi: AgentModelApi, sceneApi: SceneApi, requestSender: RequestSender) : Service(), AgentModelControl {
+    private val context = AgentModelControlContext(modelApi, sceneApi, requestSender)
     override val controlState: SharedFlow<ControlState> = context.controlState
 
     override fun start() {
@@ -24,7 +25,7 @@ class AgentModelControlService(modelApi: AgentModelApi, sceneApi: SceneApi) : Se
     }
 
     override fun changeRequestPeriod(periodSec: Float) = context.changeRequestPeriod(periodSec)
-    override fun connect(ip: String, port: Int) = context.connect(ip, port)
+    override suspend fun connect(ip: String, port: Int) = context.connect(ip, port)
     override fun runModel() = context.runModel()
     override fun pauseModel() = context.pauseModel()
     override fun resumeModel() = context.resumeModel()

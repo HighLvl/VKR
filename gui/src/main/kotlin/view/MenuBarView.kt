@@ -4,7 +4,6 @@ import imgui.flag.ImGuiCol
 import imgui.internal.ImGui
 import imgui.type.ImBoolean
 import viewmodel.SceneViewModel
-import widgets.FileOpenDialog
 import widgets.Widget
 
 class MenuBarView(private val sceneViewModel: SceneViewModel) : View(), Widget {

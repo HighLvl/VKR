@@ -5,6 +5,7 @@ import core.datatypes.base.Series
 import imgui.ImColor
 import imgui.flag.ImGuiTableBgTarget
 import imgui.internal.ImGui
+import java.util.*
 
 class GoalsView(dataSource: Map<String, Series<*>>) : TableView(TITLE_WINDOW, dataSource) {
 
@@ -12,8 +13,8 @@ class GoalsView(dataSource: Map<String, Series<*>>) : TableView(TITLE_WINDOW, da
     override fun drawCell(columnTitle: String, row: Int, value: Any?) {
         if (columnTitle == TITLE_TOTAL_SCORE) {
             val (totalScore, targetScore) = value as Pair<*, *>
-            targetScore as Int; totalScore as Int
-            super.drawCell(columnTitle, row, TOTAL_SCORE_TARGET_SCORE.format(totalScore, targetScore))
+            targetScore as Double; totalScore as Double
+            super.drawCell(columnTitle, row, TOTAL_SCORE_TARGET_SCORE.format(Locale.US, totalScore, targetScore))
             if (totalScore >= targetScore) {
                 ImGui.tableSetBgColor(ImGuiTableBgTarget.CellBg, ImColor.intToColor(100, 255, 100, 255))
             }
@@ -21,7 +22,7 @@ class GoalsView(dataSource: Map<String, Series<*>>) : TableView(TITLE_WINDOW, da
         }
         super.drawCell(columnTitle, row, value)
         if (columnTitle !in nonGoalNames) {
-            value as Int
+            value as Double
             if (value != 0)
                 ImGui.tableSetBgColor(ImGuiTableBgTarget.CellBg, ImColor.intToColor(100, 255, 100, 255))
         }
@@ -30,7 +31,7 @@ class GoalsView(dataSource: Map<String, Series<*>>) : TableView(TITLE_WINDOW, da
     private companion object {
         const val TITLE_WINDOW = "Goals"
         const val TITLE_TOTAL_SCORE = "Total Score"
-        const val TOTAL_SCORE_TARGET_SCORE = "%d/%d"
+        const val TOTAL_SCORE_TARGET_SCORE = "%.1f/%.1f"
         val nonGoalNames = setOf("t", TITLE_TOTAL_SCORE)
     }
 }

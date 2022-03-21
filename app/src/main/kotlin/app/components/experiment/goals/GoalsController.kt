@@ -1,6 +1,5 @@
 package app.components.experiment.goals
 
-import app.components.experiment.ExperimentTaskModel
 import core.components.experiment.Goal
 import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
@@ -20,12 +19,12 @@ class GoalsController {
 
     private val goalSeries = mutableMapOf<String, MutableSeries<Any>>()
     private val goalsView = GoalsView(goalSeries)
-    private val goalValues = mutableMapOf<String, Int>()
+    private val goalValues = mutableMapOf<String, Double>()
     private lateinit var goals: Map<String, Goal>
-    private var targetScore: Int = 0
+    private var targetScore: Double = 0.0
 
-    fun reset(goals: Set<Goal>, targetScore: Int) {
-        this.goals = goals.associateBy { it.predicate.name }
+    fun reset(goals: Set<Goal>, targetScore: Double) {
+        this.goals = goals.associateBy { it.name }
         this.targetScore = targetScore
         goalSeries.clear()
         goalValues.clear()
@@ -37,12 +36,9 @@ class GoalsController {
         goalsView.reset()
     }
 
-    fun onModelUpdate(modelTime: Float) {
+    fun onModelUpdate(modelTime: Double) {
         goals.values.forEach {
-            goalValues[it.predicate.name] = when (it.predicate.predicateExp()) {
-                true -> it.score
-                else -> 0
-            }
+            goalValues[it.name] = it.targetFunction()
         }
         val prevGoalValues = goalSeries.entries.asSequence()
             .filterNot { it.key == "t" || it.key == "Total Score" }.map {
@@ -57,7 +53,7 @@ class GoalsController {
         }
     }
 
-    private fun Map<String, MutableSeries<Any>>.appendModelTime(modelTime: Float) {
+    private fun Map<String, MutableSeries<Any>>.appendModelTime(modelTime: Double) {
         this["t"]!!.append(modelTime)
     }
 
@@ -67,7 +63,7 @@ class GoalsController {
         )
     }
 
-    private fun Map<String, MutableSeries<Any>>.appendGoalScore(it: Map.Entry<String, Int>) {
+    private fun Map<String, MutableSeries<Any>>.appendGoalScore(it: Map.Entry<String, Double>) {
         this[it.key]!!.append(it.value)
     }
 

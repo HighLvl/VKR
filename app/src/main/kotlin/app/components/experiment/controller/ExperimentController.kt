@@ -13,15 +13,15 @@ class ExperimentController {
         this.taskModel = taskModel
     }
 
-    fun onModelUpdate(modelTime: Float) {
+    fun onModelUpdate(modelTime: Double) {
         stopModelOnTrueStopConditions(modelTime)
     }
 
-    private fun stopModelOnTrueStopConditions(modelTime: Float) {
+    private fun stopModelOnTrueStopConditions(modelTime: Double) {
         val stopConditions =
             taskModel.stopConditions.associate { it.name.splitOnCapitalChars() to it.predicateExp() } +
                     ("Model Time >= ${taskModel.stopTime}" to (modelTime >= taskModel.stopTime)) +
-                    ("Total Score >= ${taskModel.targetScore} and all constraints are true" to isTotalScoreGreaterThanOrEqualTo() )
+                    ("Total Score >= ${taskModel.targetScore} and all constraints are true" to isTotalScoreGreaterThanOrEqualTo())
 
 
         stopConditions.entries.firstOrNull { it.value }?.let { (condName, _) ->
@@ -32,6 +32,6 @@ class ExperimentController {
 
     private fun isTotalScoreGreaterThanOrEqualTo() = taskModel.goals
         .asSequence()
-        .filter { it.predicate.predicateExp() }
-        .map { it.score }.sum() >= taskModel.targetScore && (taskModel.constraints.all { it.predicateExp() })
+        .map { it.targetFunction() }
+        .sum() >= taskModel.targetScore && (taskModel.constraints.all { it.predicateExp() })
 }

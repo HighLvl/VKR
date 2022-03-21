@@ -19,7 +19,7 @@ class MutableModelConfiguration : ModelConfiguration {
         _agentInterfaces.add(agentInterface)
     }
 
-    fun putGlobalArg(name: String, value: Any) {
+    fun putInputArg(name: String, value: Any) {
         _globalArgs[name] = value
     }
 
@@ -28,20 +28,24 @@ class MutableModelConfiguration : ModelConfiguration {
     }
 }
 
+sealed class Prop(open val name: String)
+data class Property(override val name: String): Prop(name)
+data class StructProperty(override val name: String, val props: List<Prop>): Prop(name)
+
 interface AgentInterface {
     val agentType: String
-    val properties: Set<String>
+    val properties: List<Prop>
     val otherRequests: Collection<MutableRequestSignature>
     val setters: Collection<MutableRequestSignature>
 
 }
 
 data class MutableAgentInterface(override val agentType: String) : AgentInterface {
-    private val _properties = mutableSetOf<String>()
+    private val _properties = mutableListOf<Prop>()
     private val _setters = mutableMapOf<String, MutableRequestSignature>()
     private val _requests = mutableMapOf<String, MutableRequestSignature>()
 
-    override val properties: Set<String> = _properties
+    override val properties: List<Prop> = _properties
     override val otherRequests: Collection<MutableRequestSignature> = _requests.values
     override val setters: Collection<MutableRequestSignature> = _setters.values
 
@@ -53,8 +57,8 @@ data class MutableAgentInterface(override val agentType: String) : AgentInterfac
         _setters[setter.name] = setter
     }
 
-    fun addProperty(name: String) {
-        _properties += name
+    fun addProperty(prop: Prop) {
+        _properties += prop
     }
 }
 

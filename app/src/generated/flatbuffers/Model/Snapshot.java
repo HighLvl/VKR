@@ -15,37 +15,25 @@ public final class Snapshot extends Table {
   public void __init(int _i, ByteBuffer _bb) { __reset(_i, _bb); }
   public Snapshot __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  public float time() { int o = __offset(4); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
-  public Model.AgentSnapshot snapshots(int j) { return snapshots(new Model.AgentSnapshot(), j); }
-  public Model.AgentSnapshot snapshots(Model.AgentSnapshot obj, int j) { int o = __offset(6); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int snapshotsLength() { int o = __offset(6); return o != 0 ? __vector_len(o) : 0; }
-  public Model.AgentSnapshot.Vector snapshotsVector() { return snapshotsVector(new Model.AgentSnapshot.Vector()); }
-  public Model.AgentSnapshot.Vector snapshotsVector(Model.AgentSnapshot.Vector obj) { int o = __offset(6); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
-  public Model.Error errors(int j) { return errors(new Model.Error(), j); }
-  public Model.Error errors(Model.Error obj, int j) { int o = __offset(8); return o != 0 ? obj.__assign(__indirect(__vector(o) + j * 4), bb) : null; }
-  public int errorsLength() { int o = __offset(8); return o != 0 ? __vector_len(o) : 0; }
-  public Model.Error.Vector errorsVector() { return errorsVector(new Model.Error.Vector()); }
-  public Model.Error.Vector errorsVector(Model.Error.Vector obj) { int o = __offset(8); return o != 0 ? obj.__assign(__vector(o), 4, bb) : null; }
+  public int a(int j) { int o = __offset(4); return o != 0 ? bb.get(__vector(o) + j * 1) & 0xFF : 0; }
+  public int aLength() { int o = __offset(4); return o != 0 ? __vector_len(o) : 0; }
+  public ByteVector aVector() { return aVector(new ByteVector()); }
+  public ByteVector aVector(ByteVector obj) { int o = __offset(4); return o != 0 ? obj.__assign(__vector(o), bb) : null; }
+  public ByteBuffer aAsByteBuffer() { return __vector_as_bytebuffer(4, 1); }
+  public ByteBuffer aInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 4, 1); }
 
   public static int createSnapshot(FlatBufferBuilder builder,
-      float time,
-      int snapshotsOffset,
-      int errorsOffset) {
-    builder.startTable(3);
-    Snapshot.addErrors(builder, errorsOffset);
-    Snapshot.addSnapshots(builder, snapshotsOffset);
-    Snapshot.addTime(builder, time);
+      int aOffset) {
+    builder.startTable(1);
+    Snapshot.addA(builder, aOffset);
     return Snapshot.endSnapshot(builder);
   }
 
-  public static void startSnapshot(FlatBufferBuilder builder) { builder.startTable(3); }
-  public static void addTime(FlatBufferBuilder builder, float time) { builder.addFloat(0, time, 0.0f); }
-  public static void addSnapshots(FlatBufferBuilder builder, int snapshotsOffset) { builder.addOffset(1, snapshotsOffset, 0); }
-  public static int createSnapshotsVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
-  public static void startSnapshotsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
-  public static void addErrors(FlatBufferBuilder builder, int errorsOffset) { builder.addOffset(2, errorsOffset, 0); }
-  public static int createErrorsVector(FlatBufferBuilder builder, int[] data) { builder.startVector(4, data.length, 4); for (int i = data.length - 1; i >= 0; i--) builder.addOffset(data[i]); return builder.endVector(); }
-  public static void startErrorsVector(FlatBufferBuilder builder, int numElems) { builder.startVector(4, numElems, 4); }
+  public static void startSnapshot(FlatBufferBuilder builder) { builder.startTable(1); }
+  public static void addA(FlatBufferBuilder builder, int aOffset) { builder.addOffset(0, aOffset, 0); }
+  public static int createAVector(FlatBufferBuilder builder, byte[] data) { return builder.createByteVector(data); }
+  public static int createAVector(FlatBufferBuilder builder, ByteBuffer data) { return builder.createByteVector(data); }
+  public static void startAVector(FlatBufferBuilder builder, int numElems) { builder.startVector(1, numElems, 1); }
   public static int endSnapshot(FlatBufferBuilder builder) {
     int o = builder.endTable();
     return o;

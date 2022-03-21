@@ -9,10 +9,11 @@ interface Experiment: Component {
     val constraints: Set<Predicate>
 }
 
-typealias GetterExp = () -> Float
-typealias SetterExp = (Float) -> Unit
+typealias GetterExp = () -> Double
+typealias SetterExp = (Double) -> Unit
 typealias PredicateExp = () -> Boolean
-data class Goal(val score: Int, val predicate: Predicate)
+typealias TargetFunction = () -> Double
+data class Goal(val name: String, val targetFunction: TargetFunction)
 data class Predicate(val name: String, val predicateExp: PredicateExp) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

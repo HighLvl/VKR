@@ -4,17 +4,17 @@ import app.components.experiment.view.TableView
 import core.datatypes.base.Series
 import imgui.flag.ImGuiInputTextFlags
 import imgui.internal.ImGui
-import imgui.type.ImFloat
+import imgui.type.ImDouble
 
-class MutableVariablesView(private val dataSource: Map<String, Series<Float>>) :
+class MutableVariablesView(private val dataSource: Map<String, Series<Double>>) :
     TableView(TITLE_MUTABLE_VARIABLES_WINDOW, dataSource) {
-    var onChangeValueListener: (String, Float) -> Unit = { _, _ -> }
-    private val varValueImFloats = mutableMapOf<String, ImFloat>()
+    var onChangeValueListener: (String, Double) -> Unit = { _, _ -> }
+    private val varValueImDoubles = mutableMapOf<String, ImDouble>()
 
     override fun reset() {
         super.reset()
         dataSource.keys.forEach { varName ->
-            varValueImFloats[varName] = ImFloat()
+            varValueImDoubles[varName] = ImDouble()
         }
     }
 
@@ -28,10 +28,10 @@ class MutableVariablesView(private val dataSource: Map<String, Series<Float>>) :
         nameIndexMap.entries.forEach { (varName, index) ->
             ImGui.tableSetColumnIndex(index)
             if (varName != "t") {
-                val valueImFloat = varValueImFloats[varName]!!
+                val valueImDouble = varValueImDoubles[varName]!!
                 ImGui.pushID(index)
-                if (ImGui.inputFloat("", valueImFloat, 0f, 0f, "%g", ImGuiInputTextFlags.EnterReturnsTrue)) {
-                    onChangeValueListener(varName, valueImFloat.get())
+                if (ImGui.inputDouble("", valueImDouble, 0.0, 0.0, "%g", ImGuiInputTextFlags.EnterReturnsTrue)) {
+                    onChangeValueListener(varName, valueImDouble.get())
                 }
                 ImGui.popID()
             }

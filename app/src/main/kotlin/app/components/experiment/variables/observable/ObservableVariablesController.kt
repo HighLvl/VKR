@@ -15,11 +15,11 @@ class ObservableVariablesController {
             observableVariablesView.enabled = value
         }
         get() = observableVariablesView.enabled
-    private val observableVariablesSeries = mutableMapOf<String, MutableSeries<Float>>()
+    private val observableVariablesSeries = mutableMapOf<String, MutableSeries<Double>>()
     private val observableVariablesView = ObservableVariablesView(observableVariablesSeries)
-    private lateinit var observableVars: Map<String, () -> Float>
+    private lateinit var observableVars: Map<String, () -> Double>
 
-    fun reset(observableVariables: Map<String, () -> Float>) {
+    fun reset(observableVariables: Map<String, () -> Double>) {
         observableVars = observableVariables
         observableVariablesSeries.clear()
         observableVariablesSeries["t"] = mutableSeriesOf(trackedDataSize)
@@ -29,7 +29,7 @@ class ObservableVariablesController {
         observableVariablesView.reset()
     }
 
-    fun onModelUpdate(modelTime: Float) {
+    fun onModelUpdate(modelTime: Double) {
         observableVars.forEach { (varName, getValue) ->
             observableVariablesSeries[varName]!!.append(getValue())
         }

@@ -4,8 +4,8 @@ import app.components.experiment.ExperimentTaskModel
 import app.components.experiment.MutableExperimentTaskModel
 
 class ExperimentTaskBuilder(private val model: MutableExperimentTaskModel) {
-    fun goal(score: Int, name: String, predicate: PredicateExp) = model.addGoal(score, name, predicate)
-    fun setTargetScore(value: Int) = model.setTargetScore(value)
+    fun goal(name: String, targetFunc: TargetFunction) = model.addGoal(name, targetFunc)
+    fun setTargetScore(value: Double) = model.setTargetScore(value)
     fun stopOn(stopOnConditionBuilder: StopOnConditionBuilder.() -> Unit) = stopOnConditionBuilder(StopOnConditionBuilder(model))
     fun constraint(name: String, predicate: PredicateExp) = model.addConstraint(name, predicate)
     fun observableVariables(vararg variables: Pair<String, GetterExp>) = model.addObservableVariables(*variables)
@@ -16,7 +16,7 @@ class ExperimentTaskBuilder(private val model: MutableExperimentTaskModel) {
 
 class StopOnConditionBuilder(private val model: MutableExperimentTaskModel) {
     fun condition(name: String = "", predicate: PredicateExp) = model.addStopOnCondition(name, predicate)
-    fun timeGreaterOrEqualsTo(value: Float) = model.setConditionStopOnTimeMoreThan(value)
+    fun timeGreaterOrEqualsTo(value: Double) = model.setConditionStopOnTimeMoreThan(value)
 }
 
 fun experimentTask(buildTask: ExperimentTaskBuilder.() -> Unit): ExperimentTaskModel {

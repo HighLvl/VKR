@@ -2,7 +2,7 @@ package core.components.base
 
 interface Script {
     fun onModelRun() {}
-    fun onModelUpdate(modelTime: Float) {}
+    fun onModelUpdate(modelTime: Double) {}
     fun onModelAfterUpdate() {}
     fun onModelStop() {}
     fun updateUI() {}

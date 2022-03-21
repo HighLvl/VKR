@@ -1,13 +1,12 @@
 import com.google.protobuf.gradle.*
-import io.netifi.flatbuffers.plugin.tasks.FlatBuffers
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 
 plugins {
     kotlin("jvm") version "1.6.0"
     application
-    id("com.google.protobuf") version "0.8.17"
-    id("io.netifi.flatbuffers") version "1.0.7"
+    id("com.google.protobuf") version "0.8.18"
+    id("idea")
 }
 
 group = "me.cherepanov"
@@ -18,6 +17,9 @@ repositories {
 }
 
 val imguiVersion = "1.86.2"
+val grpcVersion = "1.45.0"
+val protobufVersion = "3.19.4"
+val grpcKotlinVersion = "1.2.1"
 
 dependencies {
     implementation(project(":core"))
@@ -27,10 +29,13 @@ dependencies {
     runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.6.0")
     implementation(kotlin("reflect"))
 // https://mvnrepository.com/artifact/com.google.flatbuffers/flatbuffers-java
-    implementation("com.google.flatbuffers:flatbuffers-java:2.0.3")
-    implementation("com.google.flatbuffers:flatbuffers-java-grpc:2.0.3")
-    implementation("io.grpc:grpc-kotlin-stub:1.2.1")
-    implementation("io.grpc:grpc-netty:1.44.1")
+    api("io.grpc:grpc-stub:$grpcVersion")
+    api("io.grpc:grpc-protobuf:$grpcVersion")
+    api("com.google.protobuf:protobuf-java-util:$protobufVersion")
+    api("com.google.protobuf:protobuf-kotlin:$protobufVersion")
+    api("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
+    implementation("io.grpc:grpc-netty:1.45.0")
+
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
@@ -40,6 +45,15 @@ dependencies {
     implementation("io.github.spair:imgui-java-binding:$imguiVersion")
 
     implementation("org.reflections:reflections:0.10.2")
+
+    //for model api
+    implementation("org.msgpack:jackson-dataformat-msgpack:0.9.1")
+    implementation("io.ktor:ktor-client-cio:1.6.7")
+    implementation("io.rsocket.kotlin:rsocket-core:0.14.3")
+    implementation("io.rsocket.kotlin:rsocket-transport-ktor:0.14.3")
+    implementation("io.rsocket.kotlin:rsocket-transport-ktor-client:0.14.3")
+
+    implementation("com.google.guava:guava:31.0.1-jre")
 }
 
 tasks.test {
@@ -54,21 +68,35 @@ application {
     mainClass.set("MainKt")
 }
 
-flatbuffers {
-    flatcPath = "C:\\flatbuffers\\flatc.exe"
-    language = "java"
-}
-
-tasks {
-    register<FlatBuffers>("createFlatBuffersKotlin") {
-        outputDir = file("src/generated/flatbuffers")
-        language = "java"
-        extraArgs = "--grpc"
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
+    }
+    plugins {
+        id("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+        }
+        id("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk7@jar"
+        }
+    }
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                id("grpc")
+                id("grpckt")
+            }
+            it.builtins {
+                id("kotlin")
+            }
+        }
     }
 }
 
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.19.1"
+sourceSets{
+    create("Model"){
+        proto {
+            srcDir("src/main/proto")
+        }
     }
 }

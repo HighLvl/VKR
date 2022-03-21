@@ -2,10 +2,7 @@ package app.services.model.control
 
 import core.services.logger.Level
 import core.services.logger.Logger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
+import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
 class PeriodTaskExecutor(context: CoroutineContext) {
@@ -15,8 +12,7 @@ class PeriodTaskExecutor(context: CoroutineContext) {
     private var isPause = false
     private var task: suspend () -> Unit = {}
     private val coroutineScope = CoroutineScope(context)
-    private var updateLoopJob: Job? = null
-    private var isStopped = false
+    private var isStopped = true
 
     private var nextUpdateTime: Long = 0L
         get() {
@@ -30,14 +26,16 @@ class PeriodTaskExecutor(context: CoroutineContext) {
         nextUpdateTime = 0
         remainingTimeToNextUpdate = 0
         isPause = false
-        updateLoopJob = null
+        isStopped = false
         task = {}
     }
 
-    fun scheduleTask(task: suspend () -> Unit) {
-        if (updateLoopJob != null) return
+    fun scheduleTask(pause: Boolean = false, task: suspend () -> Unit) {
+        if (!isStopped) return
+        initVars()
+        if (pause) pause()
         this.task = task
-        this.updateLoopJob = coroutineScope.launch { updateLoop() }
+        coroutineScope.launch { updateLoop() }
     }
 
     fun changePeriod(periodSec: Float) {
@@ -81,10 +79,12 @@ class PeriodTaskExecutor(context: CoroutineContext) {
         isPause = false
     }
 
+    fun start() {
+        scheduleTask(isPause, task)
+    }
+
     fun stop() {
-        isStopped = false
-        updateLoopJob?.cancel()
-        initVars()
+        isStopped = true
     }
 
     companion object {

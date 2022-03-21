@@ -12,7 +12,7 @@ import imgui.internal.ImGui
 import imgui.type.ImBoolean
 
 class ObservableVariablesView(
-    private val dataSource: Map<String, Series<Float>>
+    private val dataSource: Map<String, Series<Double>>
 ) : TableView(TITLE_OBSERVABLE_VARIABLES_WINDOW, dataSource) {
     private val showChartImBooleans = mutableMapOf<String, ImBoolean>()
     private val chartWindowSizeInitialized = mutableMapOf<String, Boolean>()
@@ -51,10 +51,31 @@ class ObservableVariablesView(
                     ImPlotAxisFlags.AutoFit,
                     ImPlotAxisFlags.AutoFit
                 )
+                val plotListX = mutableListOf<Double?>()
+                val plotListY = mutableListOf<Double?>()
+                val dataSize = dataSource["t"]!!.size
+                val inc = dataSize / MAX_POINTS_IN_LINE.toDouble()
+
+                val dataSourceX = dataSource["t"]!!.toList()
+                val dataSourceY = dataSource[varName]!!.toList()
+
+                if (inc > 1) {
+                    var nextIndex = 0.0
+                    repeat(MAX_POINTS_IN_LINE) {
+                        val index = nextIndex.toInt()
+                        plotListX.add(dataSourceX[index])
+                        plotListY.add(dataSourceY[index])
+                        nextIndex += inc
+                    }
+                } else {
+                    plotListX.addAll(dataSourceX)
+                    plotListY.addAll(dataSourceY)
+                }
+
                 ImPlot.plotLine(
                     varName,
-                    dataSource["t"]!!.toList().toTypedArray(),
-                    dataSource[varName]!!.toList().toTypedArray()
+                    plotListX.toTypedArray(),
+                    plotListY.toTypedArray()
                 )
                 ImPlot.endPlot()
             }
@@ -91,5 +112,7 @@ class ObservableVariablesView(
         const val DY_PLOT = 50f
         const val WIDTH_CHART_WINDOW = 1000f
         const val HEIGHT_CHART_WINDOW = 500f
+
+        const val MAX_POINTS_IN_LINE = 1000
     }
 }

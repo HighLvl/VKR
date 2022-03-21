@@ -1,59 +1,99 @@
 package app.services.model.control.state
 
-import core.services.control.ControlState
-import app.services.scene.SceneApi
 import app.api.base.AgentModelApi
-import app.api.dto.Behaviour
-import app.api.dto.GlobalArgs
+import app.api.dto.InputData
+import app.api.dto.ModelInputArgs
+import app.api.dto.Request
 import app.api.dto.Snapshot
 import app.coroutines.Contexts
+import app.requests.RequestSender
 import app.services.model.control.PeriodTaskExecutor
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import app.services.scene.SceneApi
+import core.services.control.ControlState
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-class AgentModelControlContext(val modelApi: AgentModelApi, private val sceneApi: SceneApi) {
+class AgentModelControlContext(
+    val modelApi: AgentModelApi,
+    private val sceneApi: SceneApi,
+    private val requestSender: RequestSender
+) {
     val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow(replay = 1)
     val periodTaskExecutor = PeriodTaskExecutor(Contexts.app)
-    val globalArgs: GlobalArgs
-        get() = sceneApi.getGlobalArgs()
+    private val inputArgs: ModelInputArgs
+        get() = sceneApi.getInputArgs()
+
     private var periodSec: Float = 0.1f
     private lateinit var currentState: State
-
-    val coroutineScope = CoroutineScope(Contexts.app)
+    private val coroutineScope = CoroutineScope(Contexts.app)
 
     fun start() {
         setState(DisconnectState)
     }
 
-    fun onPause() = sceneApi.onModelPause()
-    fun onStart() = sceneApi.onModelRun()
-    fun onResume() = sceneApi.onModelResume()
-    fun onStop() = sceneApi.onModelStop()
-    fun onUpdate(snapshot: Snapshot) = sceneApi.updateWith(snapshot)
-    fun getBehaviour(): Behaviour = sceneApi.getBehaviour()
+    fun stop() {
+        disconnect()
+        coroutineScope.coroutineContext.cancelChildren()
+    }
 
-    fun connect(ip: String, port: Int) = currentState.connect(this, ip, port)
-    fun disconnect() = currentState.disconnect(this)
+    fun sendControlRequest(controlRequest: ControlRequest) {
+        when (controlRequest) {
+            ControlRequest.RESUME -> {
+                requestSender.sendRequest<Unit>(0, "Resume", listOf()) {
+                    it.onSuccess { onResume() }
+                }
+            }
+            ControlRequest.PAUSE -> {
+                requestSender.sendRequest<Unit>(0, "Pause", listOf()) {
+                    it.onSuccess { onPause() }
+                }
+            }
+            ControlRequest.RUN -> {
+                requestSender.sendRequest<Unit>(0, "Run", inputArgs.args.values.toList()) {
+                    it.onSuccess { onRun() }
+                }
+            }
+            ControlRequest.STOP -> {
+                requestSender.sendRequest<Unit>(0, "Stop", listOf()) {
+                    it.onSuccess { onStop() }
+                }
+            }
+        }
+    }
+
+    suspend fun connect(ip: String, port: Int) {
+        currentState.connect(this, ip, port)
+    }
+
+    fun disconnect() {
+        periodTaskExecutor.stop()
+        modelApi.disconnect()
+        setState(DisconnectState)
+    }
+
     private var startTime: Long = 0
     fun runModel() {
         startTime = System.currentTimeMillis()
-        currentState.run(this, periodSec)
+        currentState.run(this)
     }
 
-    fun pauseModel() = currentState.pause(this)
-    fun resumeModel() = currentState.resume(this)
+    fun pauseModel() {
+        currentState.pause(this)
+    }
+
+    fun resumeModel() {
+        currentState.resume(this)
+    }
+
     fun stopModel() {
         currentState.stop(this)
         println(System.currentTimeMillis() - startTime)
     }
 
     fun setState(state: State) {
-        this.currentState = state
+        currentState = state
         coroutineScope.launch {
-            withContext(Dispatchers.IO) {controlState.emit(getControlState())}
+            withContext(Dispatchers.IO) { controlState.emit(getControlState()) }
         }
     }
 
@@ -70,7 +110,21 @@ class AgentModelControlContext(val modelApi: AgentModelApi, private val sceneApi
         periodTaskExecutor.changePeriod(periodSec)
     }
 
-    fun stop() {
-        periodTaskExecutor.stop()
+    private fun onPause() = sceneApi.onModelPause()
+    private fun onRun() = sceneApi.onModelRun()
+    private fun onResume() = sceneApi.onModelResume()
+    private fun onStop() = sceneApi.onModelStop()
+    fun onUpdate(snapshot: Snapshot) = sceneApi.updateWith(snapshot)
+    fun getInputData(): InputData = InputData(sceneApi.getRequests())
+    fun onConnect(state: app.api.dto.State) {
+        when(state) {
+            app.api.dto.State.RUN -> onRun()
+            app.api.dto.State.PAUSE -> onPause()
+            app.api.dto.State.STOP -> onStop()
+        }
+    }
+
+    enum class ControlRequest {
+        RUN, PAUSE, STOP, RESUME
     }
 }

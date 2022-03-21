@@ -37,7 +37,7 @@ class RequestBodies(
     fun commit(name: String) {
         val body = bodies.firstOrNull { it.name == name } ?: return
         Logger.log("Commit $body", Level.DEBUG)
-        agentInterface.request(body.name, body.args.map { it.key to it.value.first }.toMap())
+        agentInterface.request<Any>(body.name, body.args.map { it.value.first })
     }
 
     fun changeRequestBody(newBody: RequestBody) {

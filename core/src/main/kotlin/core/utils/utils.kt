@@ -18,6 +18,7 @@ fun runBlockCatching(block: () -> Unit) {
     try {
         block()
     } catch (e: Exception) {
+        e.printStackTrace()
         Logger.log(e.stackTraceToString(), Level.ERROR)
     }
 }

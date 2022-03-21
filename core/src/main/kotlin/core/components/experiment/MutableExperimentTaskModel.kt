@@ -10,9 +10,9 @@ abstract class ExperimentTaskModel {
     abstract val mutableVariables: Map<String, SetterExp>
 
     @set:JvmName("setTargetScore1")
-    var targetScore = Int.MAX_VALUE
+    var targetScore = Double.MAX_VALUE
         protected set
-    var stopTime = Float.MAX_VALUE
+    var stopTime = Double.MAX_VALUE
         protected set
 }
 
@@ -34,19 +34,19 @@ class MutableExperimentTaskModel: ExperimentTaskModel() {
     private val _stopConditions = mutableSetOf<Predicate>()
     private val _constraints = mutableSetOf<Predicate>()
 
-    fun addGoal(score: Int, name: String = "", predicate: PredicateExp) {
-        _goals += Goal(score, Predicate(name, predicate))
+    fun addGoal(name: String, targetFunc: TargetFunction) {
+        _goals += Goal(name, targetFunc)
     }
 
     fun addStopOnCondition(name: String = "", predicate: PredicateExp) {
         _stopConditions += Predicate(name, predicate)
     }
 
-    fun setTargetScore(score: Int) {
+    fun setTargetScore(score: Double) {
         targetScore = score
     }
 
-    fun setConditionStopOnTimeMoreThan(stopTime: Float) {
+    fun setConditionStopOnTimeMoreThan(stopTime: Double) {
         this.stopTime = stopTime
     }
 
