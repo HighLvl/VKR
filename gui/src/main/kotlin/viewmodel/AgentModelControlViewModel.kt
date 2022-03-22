@@ -73,11 +73,6 @@ class AgentModelControlViewModel(private val controlService: AgentModelControl) 
         _connectButtonState.value = ButtonState(enabled = true, pressed = true, this::disconnect)
         launchWithAppContext {
             controlService.connect(_ipText.value, _port.value)
-            _connectButtonState.value = ButtonState(
-                enabled = true,
-                pressed = false,
-                this@AgentModelControlViewModel::connect
-            )
         }
     }
 

@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-message InputData {
+message Requests {
   bytes data = 1;
 }
 
-message Snapshot {
+message Responses {
   bytes data = 1;
 }
 
 service API {
-  rpc GetSnapshot (InputData) returns (Snapshot) {}
+  rpc HandleRequests (Requests) returns (Responses) {}
 }

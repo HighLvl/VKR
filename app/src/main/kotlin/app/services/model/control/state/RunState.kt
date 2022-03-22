@@ -6,4 +6,8 @@ object RunState : StoppableState() {
     override fun pause(context: AgentModelControlContext) {
         context.sendControlRequest(PAUSE)
     }
+
+    override fun update(context: AgentModelControlContext) {
+        context.sendControlRequest(AgentModelControlContext.ControlRequest.GET_SNAPSHOT)
+    }
 }

@@ -1,21 +1,26 @@
 package app.services.model.control.state
 
 import app.api.base.AgentModelApi
-import app.api.dto.InputData
+import app.api.dto.Error
+import app.api.dto.Requests
 import app.api.dto.ModelInputArgs
+import app.api.dto.Responses
 import app.api.dto.Snapshot
 import app.coroutines.Contexts
+import app.requests.RequestDispatcher
 import app.requests.RequestSender
 import app.requests.sendRequest
 import app.services.model.control.PeriodTaskExecutor
 import app.services.scene.SceneApi
 import core.services.control.ControlState
+
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 class AgentModelControlContext(
     val modelApi: AgentModelApi,
     private val sceneApi: SceneApi,
+    private val requestDispatcher: RequestDispatcher,
     private val requestSender: RequestSender
 ) {
     val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow(replay = 1)
@@ -23,7 +28,6 @@ class AgentModelControlContext(
     private val inputArgs: ModelInputArgs
         get() = sceneApi.getInputArgs()
 
-    private var periodSec: Float = 0.1f
     private lateinit var currentState: State
     private val coroutineScope = CoroutineScope(Contexts.app)
 
@@ -58,8 +62,25 @@ class AgentModelControlContext(
                     it.onSuccess { onStop() }.onFailure { emitCurrentState() }
                 }
             }
+            ControlRequest.GET_STATE -> {
+                requestSender.sendRequest<app.api.dto.State>(0, "GetState", listOf()) { result ->
+                    result.onSuccess { onConnect(it) }.onFailure { emitCurrentState() }
+                }
+            }
+            ControlRequest.GET_SNAPSHOT -> {
+                requestSender.sendRequest<Snapshot>(0, "GetSnapshot", listOf()) { result ->
+                    result.onSuccess { onUpdate(it) }
+                }
+            }
         }
     }
+
+    fun handleResponses(responses: Responses) {
+        requestDispatcher.handleResponses(responses)
+    }
+
+    fun commitRequests(): Requests = requestDispatcher.commitRequests()
+
 
     suspend fun connect(ip: String, port: Int) {
         currentState.connect(this, ip, port)
@@ -68,8 +89,9 @@ class AgentModelControlContext(
     fun disconnect() {
         periodTaskExecutor.stop()
         modelApi.disconnect()
+        requestDispatcher.clear()
         setState(DisconnectState)
-        onStop()
+        sceneApi.onModelStop()
     }
 
     private var startTime: Long = 0
@@ -115,13 +137,32 @@ class AgentModelControlContext(
         periodTaskExecutor.changePeriod(periodSec)
     }
 
-    private fun onPause() = sceneApi.onModelPause()
-    private fun onRun() = sceneApi.onModelRun()
-    private fun onResume() = sceneApi.onModelResume()
-    private fun onStop() = sceneApi.onModelStop()
-    fun onUpdate(snapshot: Snapshot) = sceneApi.updateWith(snapshot)
-    fun getInputData(): InputData = InputData(sceneApi.getRequests())
-    fun onConnect(state: app.api.dto.State) {
+    private fun onPause() {
+        periodTaskExecutor.pause()
+        setState(PauseState)
+        sceneApi.onModelPause()
+    }
+
+    private fun onRun() {
+        setState(RunState)
+        sceneApi.onModelRun()
+    }
+
+    private fun onResume() {
+        setState(RunState)
+        sceneApi.onModelResume()
+    }
+
+    private fun onStop() {
+        periodTaskExecutor.stop()
+        setState(StopState)
+        sceneApi.onModelStop()
+    }
+    private fun onUpdate(snapshot: Snapshot) {
+        sceneApi.updateWith(snapshot)
+    }
+
+    private fun onConnect(state: app.api.dto.State) {
         when (state) {
             app.api.dto.State.RUN -> onRun()
             app.api.dto.State.PAUSE -> onPause()
@@ -129,7 +170,11 @@ class AgentModelControlContext(
         }
     }
 
+    fun update() {
+        currentState.update(this)
+    }
+
     enum class ControlRequest {
-        RUN, PAUSE, STOP, RESUME
+        RUN, PAUSE, STOP, RESUME, GET_STATE, GET_SNAPSHOT
     }
 }

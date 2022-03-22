@@ -5,13 +5,14 @@ import app.services.Service
 import app.services.model.control.state.AgentModelControlContext
 import app.services.scene.SceneApi
 import app.api.base.AgentModelApi
+import app.requests.RequestDispatcher
 import app.requests.RequestSender
 import core.services.control.AgentModelControl
 import core.services.control.ControlState
 import kotlinx.coroutines.flow.SharedFlow
 
-class AgentModelControlService(modelApi: AgentModelApi, sceneApi: SceneApi, requestSender: RequestSender) : Service(), AgentModelControl {
-    private val context = AgentModelControlContext(modelApi, sceneApi, requestSender)
+class AgentModelControlService(modelApi: AgentModelApi, sceneApi: SceneApi, requestDispatcher: RequestDispatcher, requestSender: RequestSender) : Service(), AgentModelControl {
+    private val context = AgentModelControlContext(modelApi, sceneApi, requestDispatcher, requestSender)
     override val controlState: SharedFlow<ControlState> = context.controlState
 
     override fun start() {

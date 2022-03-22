@@ -1,11 +1,11 @@
 package app.api.base
 
 
-import app.api.dto.InputData
-import app.api.dto.Snapshot
+import app.api.dto.Requests
+import app.api.dto.Responses
 
 interface AgentModelApi {
     suspend fun connect(ip: String, port: Int)
     fun disconnect()
-    suspend fun getSnapshot(inputData: InputData) : Snapshot
+    suspend fun handleRequests(requests: Requests) : Responses
 }

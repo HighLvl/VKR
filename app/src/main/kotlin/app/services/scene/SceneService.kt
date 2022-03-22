@@ -1,26 +1,19 @@
 package app.services.scene
 
-import app.api.dto.AgentSnapshot
-import app.api.dto.Error
-import app.api.dto.ModelInputArgs
-import app.api.dto.Request
-import app.api.dto.Snapshot
+import app.api.dto.*
 import app.components.agent.AgentInterface
 import app.components.base.SystemComponent
 import app.components.configuration.AgentInterfaces
 import app.components.configuration.Configuration
 import app.components.experiment.Experiment
-import app.requests.RequestIO
+import app.requests.RequestDispatcher
 import app.requests.RequestSender
-import app.requests.Response
 import app.services.Service
 import core.components.base.Component
 import core.components.base.Script
 import core.components.configuration.InputArgsComponent
 import core.components.configuration.MutableRequestSignature
 import core.entities.*
-import core.services.logger.Level
-import core.services.logger.Logger
 import core.services.scene.Scene
 import core.utils.runBlockCatching
 import kotlinx.coroutines.runBlocking
@@ -30,52 +23,30 @@ import kotlin.reflect.full.isSubclassOf
 interface SceneApi {
     fun getInputArgs(): ModelInputArgs
     fun updateWith(snapshot: Snapshot)
-    fun getRequests(): List<Request>
     fun onModelRun()
     fun onModelStop()
     fun onModelPause()
     fun onModelResume()
 }
 
-class SceneService(private val requestIO: RequestIO, private val requestSender: RequestSender) : Service(), SceneApi {
+class SceneService(private val requestSender: RequestSender) : Service(), SceneApi {
     val scene: Scene
         get() = _scene
 
     private val _scene: SceneImpl = SceneFactory.createScene()
-    private var prevTime: Double? = null
 
-    override fun getRequests(): List<Request> {
-        return requestIO.commitRequests().map { Request(it.agentId, it.name, it.ack, it.args) }
-    }
+    private var prevTime = Double.MIN_VALUE
 
     override fun getInputArgs(): ModelInputArgs {
         return ModelInputArgs(scene.environment.getComponent<InputArgsComponent>()!!.inputArgs)
     }
 
     override fun updateWith(snapshot: Snapshot) {
-        handleResponses(snapshot.responses)
-        if (snapshot.t == prevTime) return
+        if (prevTime == snapshot.t) return
         prevTime = snapshot.t
         updateAgents(snapshot.agentSnapshots)
         updateScripts(snapshot.t)
         onAfterModelUpdate()
-    }
-
-    private fun handleResponses(responses: List<app.api.dto.Response>) {
-        requestIO.handleResponses(responses.map {
-            val result = when (it.success) {
-                true -> Result.success(it.value)
-                false -> {
-                    val error = it.value as Error
-                    Logger.log(
-                        "An error occurred in the model\ncode: ${error.code}, message: \"${error.text}\"",
-                        Level.ERROR
-                    )
-                    Result.failure(kotlin.runCatching { throw error }.exceptionOrNull()!!)
-                }
-            }
-            Response(it.ack, result)
-        })
     }
 
     private fun updateAgents(agentSnapshots: Map<String, List<AgentSnapshot>>) {
@@ -143,6 +114,7 @@ class SceneService(private val requestIO: RequestIO, private val requestSender: 
     private fun onAfterModelUpdate() = forEachScript(Script::onModelAfterUpdate)
     private fun updateScripts(modelTime: Double) = forEachScript { onModelUpdate(modelTime) }
     override fun onModelRun() {
+        prevTime = Double.MIN_VALUE
         _scene.apply { agents.map { it.key }.forEach { removeAgentById(it) } }
         forEachScript(Script::onModelRun)
     }

@@ -10,9 +10,9 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
 object ServiceManager {
-    private val requestMediator = RequestMediator()
-    val sceneService = SceneService(requestMediator, requestMediator)
-    val modelControlService = AgentModelControlService(ApiImpl(), sceneService, requestMediator)
+    private val requestMediator = RequestMediator
+    val sceneService = SceneService(requestMediator)
+    val modelControlService = AgentModelControlService(ApiImpl(), sceneService, requestMediator, requestMediator)
 
     init {
         initServices()

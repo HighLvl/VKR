@@ -3,8 +3,8 @@ package app.api
 import APIGrpcKt
 import Model
 import app.api.base.AgentModelApi
-import app.api.dto.InputData
-import app.api.dto.Snapshot
+import app.api.dto.Requests
+import app.api.dto.Responses
 import com.google.protobuf.kotlin.toByteString
 import io.grpc.ManagedChannelBuilder
 import io.ktor.utils.io.core.*
@@ -21,8 +21,8 @@ class ApiImpl : AgentModelApi {
         apiClient = null
     }
 
-    override suspend fun getSnapshot(inputData: InputData): Snapshot {
-        return apiClient!!.getSnapshot(inputData)
+    override suspend fun handleRequests(requests: Requests): Responses {
+        return apiClient!!.getSnapshot(requests)
     }
 
     private class ApiClient(
@@ -34,10 +34,10 @@ class ApiImpl : AgentModelApi {
                 .build()
         private val stub = APIGrpcKt.APICoroutineStub(channel)
 
-        suspend fun getSnapshot(inputData: InputData): Snapshot {
-            val bytes = inputData.mapToBytes()
-            val protoInputData = Model.InputData.newBuilder().setData(bytes.toByteString()).build()
-            return stub.getSnapshot(protoInputData).data.toByteArray().mapToSnapshot()
+        suspend fun getSnapshot(requests: Requests): Responses {
+            val bytes = requests.mapToBytes()
+            val protoInputData = Model.Requests.newBuilder().setData(bytes.toByteString()).build()
+            return stub.handleRequests(protoInputData).data.toByteArray().mapToSnapshot()
         }
 
         override fun close() {
