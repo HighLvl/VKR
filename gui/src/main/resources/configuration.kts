@@ -6,9 +6,6 @@ modelConfiguration {
         arg("ants", 50)
     }
 
-    agentInterface("Array") {
-        prop("array")
-    }
     agentInterface("Board") {
         prop("size")
         prop("a")

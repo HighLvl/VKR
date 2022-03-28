@@ -45,6 +45,9 @@ class ComponentInspectorView(private val viewModel: SceneViewModel) : View(), Wi
             is Agent -> {
                 TITLE_COMPONENT_INSPECTOR.format(TITLE_AGENT_OBJECT.format(entity.type, entity.id))
             }
+            is AgentPrototype -> {
+                TITLE_COMPONENT_INSPECTOR.format(TITLE_AGENT_PROTOTYPE_OBJECT.format(entity.type))
+            }
             is None -> {
                 TITLE_OBJECT_NOT_SELECTED
             }
@@ -76,6 +79,7 @@ class ComponentInspectorView(private val viewModel: SceneViewModel) : View(), Wi
         const val TITLE_COMPONENT_INSPECTOR = "Inspected object: %s"
         const val TITLE_OBJECT_NOT_SELECTED = "The object is not selected"
         const val TITLE_AGENT_OBJECT = "%s (%d)"
+        const val TITLE_AGENT_PROTOTYPE_OBJECT = "%s (prototype)"
     }
 }
 

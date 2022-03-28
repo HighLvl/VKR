@@ -63,7 +63,7 @@ class SceneViewModel(
                     _components.value = componentManager.getComponentDtoList(selectedEntity.getComponents())
                 }
             }
-            _objectTree.value = Folder("root", listOf(Environment, Experimenter, AgentsFolder(buildAgentList())))
+            _objectTree.value = Folder("root", listOf(Environment, Experimenter, AgentsFolder(buildAgentTree())))
         }
     }
 
@@ -76,17 +76,22 @@ class SceneViewModel(
         }
     }
 
-    private fun buildAgentList() = sceneService.scene.agents.entries
-        .groupBy { it.value.agentType }
-        .toSortedMap()
-        .map { (agentType, idAgentMap) ->
-            val sortedIdAgentMap = idAgentMap.asSequence()
-                .map { it.key to it.value }
-                .toMap()
-                .toSortedMap()
-            val type = agentType.splitOnCapitalChars()
-            Folder(type, sortedIdAgentMap.map { Agent(it.key, type) })
+    private fun buildAgentTree(): List<AgentPrototype> {
+        val agentTypeAgentMap = sceneService.scene.agents.entries
+            .groupBy { it.value.agentType }
+            .toSortedMap()
+            .map { (agentType, idAgentMap) ->
+                val sortedIdAgentMap = idAgentMap.asSequence()
+                    .map { it.key to it.value }
+                    .toMap()
+                    .toSortedMap()
+                val type = agentType.splitOnCapitalChars()
+                agentType to sortedIdAgentMap.map { Agent(type, it.key) }
+            }.toMap()
+        return sceneService.scene.agentPrototypes.keys.map {
+            AgentPrototype(it, agentTypeAgentMap.getOrDefault(it, listOf()))
         }
+    }
 
     private fun getSelectedEntity(): core.entities.Entity? {
         val scene = sceneService.scene
@@ -94,6 +99,7 @@ class SceneViewModel(
             is Experimenter -> scene.experimenter
             is Environment -> scene.environment
             is Agent -> scene.agents[entity.id]
+            is AgentPrototype -> scene.agentPrototypes[entity.type]
             is None -> {
                 _components.value = emptyList()
                 null
@@ -154,11 +160,13 @@ sealed class Node
 sealed class FolderNode(open val title: String, open val children: List<Node>) : Node()
 data class Folder(override val title: String, override val children: List<Node>) : FolderNode(title, children)
 data class AgentsFolder(override val children: List<Node>) : FolderNode("Agents", children)
+
 sealed class Entity : Node()
 object None : Entity()
 object Experimenter : Entity()
 object Environment : Entity()
-data class Agent(val id: Int, val type: String) : Entity()
+data class Agent(val type: String, val id: Int) : Entity()
+data class AgentPrototype(val type: String, val agents: List<Agent>) : Entity()
 
 sealed class ComponentDto(
     open val id: Int,

@@ -3,8 +3,11 @@ package user
 import app.coroutines.Contexts
 import app.eventbus.gui.EventBus
 import app.eventbus.gui.UIEvent
+import core.components.agent.AgentInterface
 import core.components.base.Component
 import core.components.base.Script
+import core.entities.getComponent
+import core.services.Services
 import core.services.getAgentsToIdMap
 import core.services.getPropValue
 import imgui.ImColor
@@ -37,15 +40,21 @@ class MyScript : Component, Script {
 
     override fun onModelUpdate(modelTime: Double) {
         clearField()
+        val agents = Services.scene.findAgentsThatHaving(Position::class)
+        agents.forEach {agent ->
+            val id = agent.getComponent<AgentInterface>()!!.id
+            val position = agent.getComponent<Position>()!!
+            val x = position.column
+            val y = position.row
+            field[y][x] = when (agent.agentType) {
+                "Doodlebug" -> CellType.Bug(id)
+                "Ant" -> CellType.Ant(id)
+                else -> CellType.Empty
+            }
+        }
         getAgentsToIdMap().filter { (id, agent) -> agent.agentType == "Doodlebug" || agent.agentType == "Ant" }
             .forEach { (id, agent) ->
-                val x = agent.getPropValue<Int>("colPosition")!!
-                val y = agent.getPropValue<Int>("rowPosition")!!
-                field[y][x] = when (agent.agentType) {
-                    "Doodlebug" -> CellType.Bug(id)
-                    "Ant" -> CellType.Ant(id)
-                    else -> CellType.Empty
-                }
+
             }
     }
 

@@ -13,7 +13,7 @@ experimentTask {
         getAgents().count { it.agentType == "Doodlebug" } < 5
     }
     stopOn {
-        condition {
+        condition("") {
             val agents = getAgents()
             agents.none { it.agentType == "Ant" } || agents.none { it.agentType == "Doodlebug" }
         }

@@ -24,25 +24,49 @@ class ObjectNode(name: String, private val onClickListener: () -> Unit = {}) : T
     override fun draw() {
         val flags = ImGuiTreeNodeFlags.Leaf or ImGuiTreeNodeFlags.Bullet or ImGuiTreeNodeFlags.NoTreePushOnOpen
         ImGui.treeNodeEx(name, flags, name)
-        if(ImGui.isItemClicked()) {
+        if (ImGui.isItemClicked()) {
             onClickListener()
         }
     }
 }
 
-class FolderNode(name: String) : TreeNode(name) {
+class FolderNode(name: String, private val onClickListener: (() -> Unit)? = null) : TreeNode(name) {
     private val nodes = mutableListOf<TreeNode>()
     fun addNode(node: TreeNode) {
         nodes.add(node)
     }
 
     override fun draw() {
+        if (onClickListener == null) {
+            drawTreeNode()
+        } else {
+            drawClickableTreeNode(onClickListener)
+        }
+    }
+
+    private fun drawTreeNode() {
         ImGui.pushID(name)
         if (ImGui.treeNode(name, name)) {
             nodes.forEach { it.draw() }
             ImGui.treePop()
         }
         ImGui.popID()
+    }
+
+    private fun drawClickableTreeNode(onClickListener: () -> Unit) {
+        ImGui.pushID(name)
+        val opened = ImGui.treeNode("")
+        ImGui.sameLine()
+        ImGui.selectable(name)
+        if (ImGui.isItemClicked()) {
+            onClickListener()
+        }
+        if (opened) {
+            nodes.forEach { it.draw() }
+            ImGui.treePop()
+        }
+        ImGui.popID()
+
     }
 
 }

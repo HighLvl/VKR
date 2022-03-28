@@ -38,17 +38,18 @@ class ObjectTreeView(private val viewModel: SceneViewModel) : View(), Widget {
 
     private fun buildAgentsFolderNode(node: AgentsFolder): FolderNode {
         return FolderNode(TITLE_AGENT_FOLDER).apply {
-            node.children.forEach { agentTypeFolder ->
-                agentTypeFolder as Folder
-                addNode(buildAgentsTypeFolderNode(agentTypeFolder))
+            node.children.forEach { agentPrototype ->
+                agentPrototype as AgentPrototype
+                addNode(buildAgentPrototypeFolderNode(agentPrototype))
             }
         }
     }
 
-    private fun buildAgentsTypeFolderNode(agentTypeFolder: Folder): FolderNode {
-        return FolderNode(agentTypeFolder.title).apply {
-            agentTypeFolder.children.forEach { agent ->
-                agent as Agent
+    private fun buildAgentPrototypeFolderNode(agentPrototype: AgentPrototype): FolderNode {
+        return FolderNode(agentPrototype.type) {
+            viewModel.selectEntity(agentPrototype)
+        }.apply {
+            agentPrototype.agents.forEach { agent ->
                 addNode(ObjectNode(agent.id.toString()) {
                     viewModel.selectEntity(agent)
                 })

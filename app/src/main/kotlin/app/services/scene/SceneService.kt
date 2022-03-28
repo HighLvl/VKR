@@ -1,12 +1,16 @@
 package app.services.scene
 
-import app.api.dto.*
+import app.api.dto.AgentSnapshot
+import app.api.dto.ModelInputArgs
+import app.api.dto.Snapshot
 import app.components.agent.AgentInterface
 import app.components.base.SystemComponent
 import app.components.configuration.AgentInterfaces
 import app.components.configuration.Configuration
 import app.components.experiment.Experiment
-import app.requests.RequestDispatcher
+import app.components.getSnapshot
+import app.components.loadSnapshot
+import app.coroutines.Contexts
 import app.requests.RequestSender
 import app.services.Service
 import core.components.base.Component
@@ -16,6 +20,8 @@ import core.components.configuration.MutableRequestSignature
 import core.entities.*
 import core.services.scene.Scene
 import core.utils.runBlockCatching
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -36,6 +42,25 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
     private val _scene: SceneImpl = SceneFactory.createScene()
 
     private var prevTime = Double.MIN_VALUE
+    private val coroutineScope = CoroutineScope(Contexts.app)
+
+    init {
+        coroutineScope.launch {
+            _scene.environment.getComponent<AgentInterfaces>()!!.agentInterfaces.collect {
+                val oldAgentPrototypeTypes = _scene.agentPrototypes.keys.toSet()
+                oldAgentPrototypeTypes.forEach { agentType ->
+                    if (agentType !in it) {
+                        _scene.removeAgentPrototype(agentType)
+                    }
+                }
+                it.keys.forEach { agentType ->
+                    if (agentType !in oldAgentPrototypeTypes) {
+                        _scene.putAgentPrototype(agentType, EntityFactory.createAgentPrototype())
+                    }
+                }
+            }
+        }
+    }
 
     override fun getInputArgs(): ModelInputArgs {
         return ModelInputArgs(scene.environment.getComponent<InputArgsComponent>()!!.inputArgs)
@@ -53,10 +78,8 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
         val deadAgentIds = scene.agents.keys.toMutableSet()
         for ((type, snap) in agentSnapshots) {
             for (agentSnapshot in snap) {
-                runBlockCatching {
-                    val agentInterfacesComponent = scene.environment.getComponent<AgentInterfaces>()!!
-                    updateAgentWithSnapshot(type, agentSnapshot, agentInterfacesComponent)
-                }
+                val agentInterfacesComponent = scene.environment.getComponent<AgentInterfaces>()!!
+                updateAgentWithSnapshot(type, agentSnapshot, agentInterfacesComponent)
                 deadAgentIds.remove(agentSnapshot.id)
             }
         }
@@ -73,8 +96,11 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
             val oldAgent = scene.agents[agentSnapshot.id]!!
             oldAgent.updateSnapshot(type, agentSnapshot, agentInterfacesComponent)
         } else {
-            val agentInterface = agentInterfacesComponent.agentInterfaces[type]
+            val agentPrototype = _scene.getAgentPrototype(type) ?: return
+            val agentInterface = agentInterfacesComponent.agentInterfaces.value[type]
+
             val newAgent = EntityFactory.createAgent(
+                agentPrototype,
                 type,
                 agentInterface?.setters?.toList() ?: listOf(),
                 agentInterface?.otherRequests?.toList() ?: listOf(),
@@ -92,7 +118,7 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
     ) {
         val properties = agentSnapshot.props
         val configuredProperties = mutableMapOf<String, Any>()
-        val propertyConfiguration = agentInterfacesComponent.agentInterfaces[type]?.properties?.forEach {
+        val propertyConfiguration = agentInterfacesComponent.agentInterfaces.value[type]?.properties?.forEach {
             if (it.name in properties.keys) {
                 configuredProperties[it.name] = properties[it.name]!!
             }
@@ -171,6 +197,7 @@ object EntityFactory {
     }
 
     fun createAgent(
+        agentPrototype: AgentPrototype,
         agentType: String,
         setterSignatures: List<MutableRequestSignature>,
         otherRequestSignatures: List<MutableRequestSignature>,
@@ -181,7 +208,14 @@ object EntityFactory {
                 setRequestSignatures(setterSignatures + otherRequestSignatures)
                 setRequestSender(requestSender)
             }
+            agentPrototype.getComponents().forEach {
+                setComponent(it::class).loadSnapshot(it.getSnapshot())
+            }
         }
+    }
+
+    fun createAgentPrototype(): AgentPrototype {
+        return AgentPrototype(SystemComponentHolder())
     }
 
     private class SystemComponentHolder(private val componentHolder: ComponentHolder = MapComponentHolder()) :

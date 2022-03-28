@@ -25,7 +25,7 @@ class VariablesBuilder(private val model: MutableExperimentTaskModel) {
 
 @ExperimentDslMarker
 class StopOnConditionBuilder(private val model: MutableExperimentTaskModel) {
-    fun condition(name: String = "", predicate: PredicateExp) = model.addStopOnCondition(name, predicate)
+    fun condition(name: String, predicate: PredicateExp) = model.addStopOnCondition(name, predicate)
     fun timeGreaterOrEqualsTo(value: Double) = model.setConditionStopOnTimeMoreThan(value)
 }
 
