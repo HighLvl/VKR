@@ -39,4 +39,13 @@ class ListSeries<T : Any>(initCapacity: Int = Int.MAX_VALUE,
     override fun iterator(): Iterator<T?> {
         return list.asReversed().iterator()
     }
+
+    override fun set(index: Int, element: T): T {
+        list[list.size - 1 - index] = element
+        return element
+    }
+
+    override fun clear() {
+        list.clear()
+    }
 }

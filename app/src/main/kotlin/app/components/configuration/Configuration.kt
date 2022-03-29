@@ -20,13 +20,15 @@ class Configuration : SystemComponent, InputArgsComponent, AgentInterfaces, Scri
         }
 
     @AddInSnapshot(2)
-    override var inputArgs: Map<String, Any> = mapOf()
+    override val inputArgs: Map<String, Any>
+        get() = _inputArgs
 
     override val agentInterfaces: StateFlow<Map<String, AgentInterface>>
         get() = _agentInterfaces
 
     private val _agentInterfaces = MutableStateFlow<Map<String, AgentInterface>>(mapOf())
     private var isRunning = false
+    private val _inputArgs = mutableMapOf<String, Any>()
 
     private fun tryToLoadConfiguration(path: String, oldPath: String): String {
         if (isRunning) {
@@ -36,7 +38,10 @@ class Configuration : SystemComponent, InputArgsComponent, AgentInterfaces, Scri
         if (path.isEmpty()) return oldPath
         return try {
             val configuration = KtsScriptEngine.eval<ModelConfiguration>(path)
-            inputArgs = configuration.inputArgs
+            with(_inputArgs) {
+                clear()
+                putAll(configuration.inputArgs)
+            }
             _agentInterfaces.value = configuration.agentInterfaces
             path
         } catch (e: Exception) {
@@ -51,5 +56,15 @@ class Configuration : SystemComponent, InputArgsComponent, AgentInterfaces, Scri
 
     override fun onModelStop() {
         isRunning = false
+    }
+
+    override fun put(name: String, value: Any) {
+        if (name !in _inputArgs || _inputArgs[name]!!::class != value::class) return
+        _inputArgs[name] = value
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : Any> get(name: String): T {
+        return _inputArgs[name]!! as T
     }
 }

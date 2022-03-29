@@ -1,6 +1,4 @@
-package app.components.experiment
-
-import core.components.experiment.*
+package core.components.experiment
 
 abstract class ExperimentTaskModel {
     abstract val goals: Set<Goal>
@@ -8,6 +6,7 @@ abstract class ExperimentTaskModel {
     abstract val constraints: Set<Predicate>
     abstract val observableVariables: Map<String, GetterExp>
     abstract val mutableVariables: Map<String, SetterExp>
+    abstract val inputParams: Set<InputParam>
 
     @set:JvmName("setTargetScore1")
     var targetScore = Double.MAX_VALUE
@@ -27,15 +26,18 @@ class MutableExperimentTaskModel: ExperimentTaskModel() {
         get() = _observableVariables
     override val mutableVariables: Map<String, SetterExp>
         get() = _mutableVariables
+    override val inputParams: Set<InputParam>
+        get() = _inputParams
 
     private val _observableVariables = mutableMapOf<String, GetterExp>()
     private val _mutableVariables = mutableMapOf<String, SetterExp>()
     private val _goals = mutableSetOf<Goal>()
     private val _stopConditions = mutableSetOf<Predicate>()
     private val _constraints = mutableSetOf<Predicate>()
+    private val _inputParams = mutableSetOf<InputParam>()
 
-    fun addGoal(name: String, targetFunc: TargetFunction) {
-        _goals += Goal(name, targetFunc)
+    fun addGoal(name: String, rating: Double, targetFunc: TargetFunction) {
+        _goals += Goal(name, rating, targetFunc)
     }
 
     fun addStopOnCondition(name: String = "", predicate: PredicateExp) {
@@ -56,4 +58,8 @@ class MutableExperimentTaskModel: ExperimentTaskModel() {
 
     fun addObservableVariables(vararg variables: Pair<String, GetterExp>) = _observableVariables.putAll(variables)
     fun addMutableVariables(vararg variables: Pair<String, SetterExp>) = _mutableVariables.putAll(variables)
+
+    fun addInputParam(inputParam: InputParam) {
+        _inputParams.add(inputParam)
+    }
 }

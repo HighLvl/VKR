@@ -91,7 +91,7 @@ class ObservableVariablesView(
 
     private fun showObservableVarPopup() {
         var hoveredColumn = -1
-        nameIndexMap.entries.forEach { (varName, columnIndex) ->
+        indexNameMap.entries.forEach { (columnIndex, varName) ->
             ImGui.pushID(columnIndex)
             if (ImGui.tableGetColumnFlags(columnIndex) and ImGuiTableColumnFlags.IsHovered != 0) {
                 hoveredColumn = columnIndex

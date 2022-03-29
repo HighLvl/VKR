@@ -1,20 +1,35 @@
 package app.components.experiment
 
+import app.components.base.SystemComponent
 import app.components.experiment.constraints.ConstraintsController
 import app.components.experiment.controller.ExperimentController
 import app.components.experiment.goals.GoalsController
+import app.components.experiment.input.InputArgsController
 import app.components.experiment.variables.mutable.MutableVariablesController
 import app.components.experiment.variables.observable.ObservableVariablesController
 import app.utils.KtsScriptEngine
 import core.components.base.AddInSnapshot
 import core.components.base.Script
-import app.components.base.SystemComponent
 import core.components.experiment.*
 import core.components.experiment.Experiment
 import core.services.logger.Level
 import core.services.logger.Logger
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlin.properties.Delegates
 
 class Experiment : Experiment, SystemComponent, Script {
+    private val experimentController = ExperimentController()
+    private val _modelRunResultFlow = experimentController.modelRunResultFlow
+    private val observableVariablesController = ObservableVariablesController()
+    private val mutableVariablesController = MutableVariablesController()
+    private val constraintsController = ConstraintsController(_modelRunResultFlow)
+    private val goalsController = GoalsController(_modelRunResultFlow)
+    private val inputArgsController = InputArgsController()
+    private var isRunning = false
+    private var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
+    private val _inputParams = mutableMapOf<String, DoubleParam>()
+
     @AddInSnapshot(1)
     var task: String = ""
         set(value) {
@@ -35,54 +50,32 @@ class Experiment : Experiment, SystemComponent, Script {
         }
 
     @AddInSnapshot(3)
-    var showObservableVariables
-        set(value) {
-            observableVariablesController.enabled = value
-        }
-        get() = observableVariablesController.enabled
+    var showObservableVariables by observableVariablesController::enabled
 
     @AddInSnapshot(4)
-    var showMutableVariables
-        set(value) {
-            mutableVariablesController.enabled = value
-        }
-        get() = mutableVariablesController.enabled
+    var showMutableVariables by mutableVariablesController::enabled
 
     @AddInSnapshot(5)
-    var showConstraints
-        set(value) {
-            constraintsController.enabled = value
-        }
-        get() = constraintsController.enabled
+    var showConstraints by constraintsController::enabled
 
     @AddInSnapshot(6)
-    var showGoals
-        set(value) {
-            goalsController.enabled = value
-        }
-        get() = goalsController.enabled
+    var showGoals by goalsController::enabled
 
     @AddInSnapshot(7)
+    var showInputArgs by inputArgsController::enabled
+
+    @AddInSnapshot(8)
     var clearTrackedDataOnRun = true
 
-    override val goals: Set<Goal>
-        get() = taskModel.goals
-    override val observableVars: Map<String, GetterExp>
-        get() = taskModel.observableVariables
-    override val mutableVars: Map<String, SetterExp>
-        get() = _mutableVars
-    override val constraints: Set<Predicate>
-        get() = taskModel.constraints
-
-    private val observableVariablesController = ObservableVariablesController()
-    private val mutableVariablesController = MutableVariablesController()
-    private val constraintsController = ConstraintsController()
-    private val goalsController = GoalsController()
-    private val experimentController = ExperimentController()
-    private var isRunning = false
-    private val _mutableVars = mutableMapOf<String, SetterExp>()
-    private var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
-
+    override val inputParams: List<DoubleParam>
+        get() = _inputParams.values.toList()
+    override val modelRunResultFlow: Flow<ModelRunResult>
+        get() = _modelRunResultFlow.map {
+            ModelRunResult(
+                it.goalExpectedValues.values + it.constraintExpectedValues.values,
+                it.isTargetScoreAchieved
+            )
+        }
 
     init {
         importTaskModel()
@@ -90,7 +83,9 @@ class Experiment : Experiment, SystemComponent, Script {
 
     override fun onModelRun() {
         isRunning = true
-        if (clearTrackedDataOnRun) importTaskModel()
+        if (clearTrackedDataOnRun) reset()
+        inputArgsController.onModelRun()
+        experimentController.onModelRun()
     }
 
     private fun tryLoadExperimentTaskModel(path: String, oldPath: String): String {
@@ -114,20 +109,30 @@ class Experiment : Experiment, SystemComponent, Script {
     }
 
     private fun importTaskModel() {
-        subscribeControllerOnMutableVarsChange()
+        reset()
+        experimentController.setTaskModel(taskModel)
+        importInputParams()
+    }
+
+    private fun reset() {
         observableVariablesController.reset(taskModel.observableVariables)
         mutableVariablesController.reset(taskModel.mutableVariables)
         constraintsController.reset(taskModel.constraints)
         goalsController.reset(taskModel.goals, taskModel.targetScore)
-        experimentController.setTaskModel(taskModel)
+        inputArgsController.reset(_inputParams)
     }
 
-    private fun subscribeControllerOnMutableVarsChange() {
-        with(_mutableVars) {
-            clear()
-            taskModel.mutableVariables.keys.asSequence().map { varName ->
-                varName to { value: Double -> mutableVariablesController.onChangeMutableVarValue(varName, value) }
-            }.also { putAll(it) }
+    private fun importInputParams() {
+        _inputParams.clear()
+        taskModel.inputParams.forEach {
+            val inputParam = InputParam(it.setter) { newValue ->
+                inputArgsController.onChangeInputParamValue(it.name, newValue)
+            }
+            _inputParams[it.name] = inputParam
+        }
+        inputArgsController.reset(_inputParams)
+        taskModel.inputParams.forEach {
+            _inputParams[it.name]!!.value = it.initialValue
         }
     }
 
@@ -144,9 +149,19 @@ class Experiment : Experiment, SystemComponent, Script {
         mutableVariablesController.update()
         constraintsController.update()
         goalsController.update()
+        inputArgsController.update()
     }
 
     override fun onModelStop() {
+        experimentController.onModelStop()
         isRunning = false
+    }
+}
+
+private class InputParam(val setterExp: SetterExp, onValueChanged: (Double) -> Unit) :
+    DoubleParam {
+    override var value: Double by Delegates.observable(0.0) { _, _, newValue ->
+        setterExp(newValue)
+        onValueChanged(newValue)
     }
 }

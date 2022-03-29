@@ -13,4 +13,6 @@ interface Series<T : Any> : Iterable<T?> {
 
 interface MutableSeries<T : Any> : Series<T> {
     fun append(value: T?)
+    operator fun set(index: Int, element: T): T
+    fun clear()
 }

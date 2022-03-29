@@ -18,7 +18,7 @@ class MutableVariablesController {
         }
 
     private val mutableVariablesSeries = mutableMapOf<String, MutableSeries<Double>>()
-    private val mutableVariablesView = MutableVariablesView(mutableVariablesSeries)
+    private val mutableVariablesView = MutableVariablesTableView(mutableVariablesSeries)
         .apply { onChangeValueListener = ::onChangeMutableVarValue }
     private val mutableVarValues = mutableMapOf<String, Double>()
     private lateinit var mutableVars: Map<String, (Double) -> Unit>
@@ -51,7 +51,7 @@ class MutableVariablesController {
         mutableVariablesView.update()
     }
 
-    fun onChangeMutableVarValue(varName: String, value: Double) {
+    private fun onChangeMutableVarValue(varName: String, value: Double) {
         Logger.log("Set $varName to $value", Level.DEBUG)
         mutableVarValues[varName] = value
     }

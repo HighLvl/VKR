@@ -3,6 +3,7 @@ package core.services
 import core.components.agent.AgentInterface
 import core.components.agent.Props
 import core.components.agent.request
+import core.components.configuration.InputArgsComponent
 import core.entities.Agent
 import core.entities.getComponent
 
@@ -39,5 +40,15 @@ inline fun <reified T : Any> request(
 
 fun requestSetValue(agentId: Int, varName: String, value: Any, onResult: (Result<Unit>) -> Unit = {}) {
     getAgent(agentId)?.getComponent<AgentInterface>()?.requestSetValue(varName, value, onResult)
+}
+
+fun putInputArg(name: String, value: Any) {
+    val inputArgs = Services.scene.environment.getComponent<InputArgsComponent>()!!
+    inputArgs.put(name, value)
+}
+
+fun <T: Any> getInputArg(name: String): T {
+    val inputArgs = Services.scene.environment.getComponent<InputArgsComponent>()!!
+    return inputArgs.get(name)
 }
 

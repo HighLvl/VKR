@@ -1,6 +1,7 @@
 package app.components.experiment.view
 
 import core.datatypes.base.Series
+import core.datatypes.seriesOf
 import imgui.ImGuiListClipper
 import imgui.callback.ImListClipperCallback
 import imgui.flag.ImGuiTableColumnFlags
@@ -8,9 +9,13 @@ import imgui.flag.ImGuiTableFlags
 import imgui.internal.ImGui
 import imgui.type.ImBoolean
 
-open class TableView(private val windowTitle: String, private val dataSource: Map<String, Series<*>>) {
+open class TableView(
+    private val windowTitle: String,
+    private val dataSource: Map<String, Series<*>>,
+    private val rowTypes: Series<Int> = seriesOf()
+) {
     private var docked = false
-    protected val nameIndexMap = mutableMapOf<String, Int>()
+    protected val indexNameMap = mutableMapOf<Int, String>()
     var enabled
         set(value) {
             showImBoolean.set(value)
@@ -18,10 +23,13 @@ open class TableView(private val windowTitle: String, private val dataSource: Ma
         get() = showImBoolean.get()
     private val showImBoolean = ImBoolean(false)
 
+    protected val columnNumber
+        get() = dataSource.keys.size
+
     open fun reset() {
-        nameIndexMap.clear()
+        indexNameMap.clear()
         dataSource.entries.forEachIndexed { index, (varName, _) ->
-            nameIndexMap[varName] = index
+            indexNameMap[index] = varName
         }
     }
 
@@ -37,9 +45,8 @@ open class TableView(private val windowTitle: String, private val dataSource: Ma
 
     private fun show() {
         if (ImGui.begin(windowTitle, showImBoolean)) {
-            val columnsNumber = dataSource.keys.size
-            if (columnsNumber > 0) {
-                ImGui.beginTable(ID_TABLE, columnsNumber, ImGuiTableFlags.Borders or ImGuiTableFlags.Resizable)
+            if (columnNumber > 0) {
+                ImGui.beginTable(ID_TABLE, columnNumber, ImGuiTableFlags.Borders or ImGuiTableFlags.Resizable)
                 setupHeader()
                 fillInTableWithData()
                 ImGui.endTable()
@@ -48,10 +55,14 @@ open class TableView(private val windowTitle: String, private val dataSource: Ma
         ImGui.end()
     }
 
+    open fun formatTitle(title: String, columnIndex: Int): String {
+        return title
+    }
+
     private fun setupHeader() {
-        nameIndexMap.entries.forEach { (varName, index) ->
+        indexNameMap.entries.forEach { (index, varName) ->
             ImGui.tableSetupColumn(
-                varName,
+                formatTitle(varName, index),
                 ImGuiTableColumnFlags.None,
                 0f,
                 index
@@ -65,16 +76,20 @@ open class TableView(private val windowTitle: String, private val dataSource: Ma
         ImGuiListClipper.forEach(rowsNumber, object : ImListClipperCallback() {
             override fun accept(rowIndex: Int) {
                 ImGui.tableNextRow()
-                dataSource.entries.forEach { (varName, values) ->
-                    val columnIndex = nameIndexMap[varName]!!
-                    ImGui.tableSetColumnIndex(columnIndex)
-                    drawCell(varName, rowIndex, values[rowIndex])
+                dataSource.entries.forEachIndexed { index, (_, values) ->
+                    ImGui.tableSetColumnIndex(index)
+                    drawCell(
+                        index,
+                        rowIndex,
+                        values[rowIndex],
+                        if (rowTypes.size == 0) 0 else rowTypes[rowIndex] ?: 0
+                    )
                 }
             }
         })
     }
 
-    protected open fun drawCell(columnTitle: String, row: Int, value: Any?) {
+    protected open fun drawCell(column: Int, row: Int, value: Any?, rowType: Int) {
         ImGui.text(
             value?.toString() ?: ""
         )
