@@ -17,9 +17,9 @@ class ConstraintsView(dataSource: Map<String, Series<*>>, rowTypes: MutableSerie
         }
         val color = when (rowType) {
             1 -> {
-                value as Double
-                super.drawCell(column, row, PERCENT_OF_COMPLETED_CONSTRAINTS.format(Locale.US, value), rowType)
-                if (value < 100.0) COLOR_EV_BAD
+                value as Boolean
+                super.drawCell(column, row, "", rowType)
+                if (!value) COLOR_EV_BAD
                 else COLOR_EV_GOOD
             }
             else -> {
@@ -32,6 +32,5 @@ class ConstraintsView(dataSource: Map<String, Series<*>>, rowTypes: MutableSerie
 
     private companion object {
         const val TITLE_CONSTRAINTS_WINDOW = "Constraints"
-        const val PERCENT_OF_COMPLETED_CONSTRAINTS = "%.2f%%"
     }
 }

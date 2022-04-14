@@ -48,10 +48,10 @@ object ComponentConverter {
         val type = value?.let { it::class } ?: property.returnClass
         val v = Property(property.name, type.java, value!!)
 
-        if (property.setter.visibility == KVisibility.PRIVATE)
-            immutableProps.add(v)
-        else {
-            mutableProps.add(v)
+        when (property.setter.visibility) {
+            KVisibility.PRIVATE, KVisibility.INTERNAL -> immutableProps.add(v)
+            KVisibility.PUBLIC -> mutableProps.add(v)
+            else -> {}
         }
     }
 

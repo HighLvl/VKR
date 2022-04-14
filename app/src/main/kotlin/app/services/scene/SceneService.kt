@@ -10,6 +10,7 @@ import app.components.configuration.Configuration
 import app.components.experiment.Experiment
 import app.components.getSnapshot
 import app.components.loadSnapshot
+import app.components.model.SnapshotInfo
 import app.coroutines.Contexts
 import app.requests.RequestSender
 import app.services.Service
@@ -69,9 +70,17 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
     override fun updateWith(snapshot: Snapshot) {
         if (prevTime == snapshot.t) return
         prevTime = snapshot.t
+        updateSnapshotInfo(snapshot.t)
         updateAgents(snapshot.agentSnapshots)
         updateScripts(snapshot.t)
         onAfterModelUpdate()
+    }
+
+    private fun updateSnapshotInfo(t: Double) {
+        with(scene.environment.getComponent<SnapshotInfo>()!!) {
+            dt = t - modelTime
+            modelTime = t
+        }
     }
 
     private fun updateAgents(agentSnapshots: Map<String, List<AgentSnapshot>>) {
@@ -141,8 +150,16 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
     private fun updateScripts(modelTime: Double) = forEachScript { onModelUpdate(modelTime) }
     override fun onModelRun() {
         prevTime = Double.MIN_VALUE
+        resetSnapshotInfo()
         _scene.apply { agents.map { it.key }.forEach { removeAgentById(it) } }
         forEachScript(Script::onModelRun)
+    }
+
+    private fun resetSnapshotInfo() {
+        with(scene.environment.getComponent<SnapshotInfo>()!!) {
+            dt = 0.0
+            modelTime = 0.0
+        }
     }
 
     override fun onModelStop() = forEachScript(Script::onModelStop)
@@ -191,8 +208,27 @@ object EntityFactory {
     }
 
     fun createEnvironment(): Environment {
-        return Environment(SystemComponentHolder()).apply {
-            setComponent<Configuration>()
+        return object : Environment(SystemComponentHolder()) {
+            val snapshotInfo by lazy {
+                super.getComponent(SnapshotInfo::class)!!
+            }
+            val configuration by lazy {
+                super.getComponent(Configuration::class)!!
+            }
+
+            init {
+                setComponent<SnapshotInfo>()
+                setComponent<Configuration>()
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            override fun <C : Component> getComponent(type: KClass<C>): C? {
+                return when(type) {
+                    SnapshotInfo::class -> snapshotInfo as C
+                    Configuration::class -> configuration as C
+                    else -> super.getComponent(type)
+                }
+            }
         }
     }
 

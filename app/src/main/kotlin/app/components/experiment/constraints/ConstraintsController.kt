@@ -1,6 +1,6 @@
 package app.components.experiment.constraints
 
-import app.components.experiment.controller.ModelRunResult
+import app.components.experiment.controller.MakeDecisionCondition
 import app.coroutines.Contexts
 import core.components.experiment.Predicate
 import core.datatypes.base.MutableSeries
@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
-class ConstraintsController(modelRunResultFlow: SharedFlow<ModelRunResult>) {
+class ConstraintsController(makeDecisionConditionFlow: SharedFlow<MakeDecisionCondition>) {
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             field = value
@@ -31,16 +31,16 @@ class ConstraintsController(modelRunResultFlow: SharedFlow<ModelRunResult>) {
 
     init {
         coroutineScope.launch {
-            modelRunResultFlow.collect {
-                appendExpectedValues(it)
+            makeDecisionConditionFlow.collect {
+                appendFinalValues(it)
             }
         }
     }
 
-    private fun appendExpectedValues(modelRunResult: ModelRunResult) = with(constraintSeries){
-        get("t")!!.append("EV")
-        modelRunResult.constraintExpectedValues.forEach { entry ->
-            get(entry.key)!!.append(entry.value * 100)
+    private fun appendFinalValues(makeDecisionCondition: MakeDecisionCondition) = with(constraintSeries){
+        get("t")!!.append("FV")
+        makeDecisionCondition.constraintValues.forEach { entry ->
+            get(entry.key)!!.append(entry.value)
         }
         rowTypes.append(1)
     }
@@ -61,7 +61,7 @@ class ConstraintsController(modelRunResultFlow: SharedFlow<ModelRunResult>) {
 
     fun onModelUpdate(modelTime: Double) {
         constraints.forEach {
-            constraintValues[it.name] = it.predicateExp()
+            constraintValues[it.name] = it.valueHolder.instantValue
         }
         val prevConstraintValues = constraintSeries.entries.asSequence()
             .filterNot { it.key == "t" }.map {

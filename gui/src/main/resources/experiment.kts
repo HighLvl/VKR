@@ -1,37 +1,72 @@
 import core.components.experiment.experimentTask
-import core.services.getAgents
-import core.services.putInputArg
-import core.services.requestSetValue
+import core.services.*
 
 experimentTask {
+    //modelLifecycle может быть использован для подсчета значений разделяемых переменных и вывода данных в файл
+    var numberOfDoodleBugs = 0.0
+    modelLifecycle {
+        onRun { }
+        onUpdate {
+            numberOfDoodleBugs = getAgents().count { it.agentType == "Doodlebug" }.toDouble()
+        }
+        onStop { }
+    }
+
     optimization(targetScore = 6.0) {
         inputParams {
-            param("Doodlebugs Number", 100.0) {
-                putInputArg("doodlebugs", it.toInt())
+            param("a", 100.0) {
+                requestSetValue(1, "a", it.toInt())
             }
             param("Ants Number", 50.0) {
                 putInputArg("ants", it.toInt())
             }
         }
         goals {
-            goal("Number of Doodlebugs > 8", 10.0) {
-                getAgents().count { it.agentType == "Doodlebug" }.toDouble()
+            expectedValue("EV: Number of Doodlebugs >= 8", 8.0) {
+                numberOfDoodleBugs
+            }
+
+            lastInstant("last: Number of Doodlebugs >= 8", 8.0) {
+                numberOfDoodleBugs
+            }
+
+            custom("custom", 5.0) {
+                var count = 0
+                begin {
+                    count = 0
+                }
+                update {
+                    if (numberOfDoodleBugs > 5) count++
+                    instantValue = count.toDouble()
+                }
+                end {
+                    value = count.toDouble()
+                }
             }
         }
         constraints {
-            constraint("Number of Doodlebugs > 5") {
-                getAgents().count { it.agentType == "Doodlebug" } > 5
+            lastInstant("last: Number of Doodlebugs > 5") {
+                numberOfDoodleBugs > 5
             }
+
+            allInstant("all: Number of Doodlebugs > 5") {
+                numberOfDoodleBugs > 5
+            }
+
+            //custom("") {}
+        }
+        makeDecisionOn {
+            timeSinceLastDecision(20.0)
         }
         stopOn {
             condition("Number of Doodlebugs < 5") {
-                getAgents().count { it.agentType == "Doodlebug" } < 5
+                numberOfDoodleBugs < 5
             }
             condition("some condition") {
                 val agents = getAgents()
                 agents.none { it.agentType == "Ant" } || agents.none { it.agentType == "Doodlebug" }
             }
-            timeGreaterOrEqualsTo(2000.0)
+            modelTime(2000.0)
         }
     }
 

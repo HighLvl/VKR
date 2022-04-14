@@ -4,11 +4,11 @@ import core.components.agent.AgentInterface
 import core.components.agent.Props
 import core.components.agent.request
 import core.components.configuration.InputArgsComponent
+import core.components.model.SnapshotInfo
 import core.entities.Agent
 import core.entities.getComponent
 
 fun getAgent(agentId: Int) = Services.scene.agents[agentId]
-
 fun getAgents(): Collection<Agent> = Services.scene.agents.values
 fun getAgentsToIdMap() = Services.scene.agents
 
@@ -51,4 +51,7 @@ fun <T: Any> getInputArg(name: String): T {
     val inputArgs = Services.scene.environment.getComponent<InputArgsComponent>()!!
     return inputArgs.get(name)
 }
+
+val modelTime: Double by Services.scene.environment.getComponent<SnapshotInfo>()!!::modelTime
+val dt: Double by Services.scene.environment.getComponent<SnapshotInfo>()!!::dt
 

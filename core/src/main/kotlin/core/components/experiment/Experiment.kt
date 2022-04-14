@@ -3,16 +3,21 @@ package core.components.experiment
 import core.components.base.Component
 import kotlinx.coroutines.flow.Flow
 
+
+
+interface OptimizationExperiment : Component {
+    val inputParams: List<DoubleParam>
+    val makeDecisionConditionFlow: Flow<MakeDecisionCondition>
+    val stopOptimizationFlow: Flow<String>
+
+    fun makeDecision()
+}
+
 interface DoubleParam {
     var value: Double
 }
 
-interface Experiment : Component {
-    val inputParams: List<DoubleParam>
-    val modelRunResultFlow: Flow<ModelRunResult>
-}
-
-data class ModelRunResult(val targetFunctionValues: List<Double>, val isGoalAchieved: Boolean)
+data class MakeDecisionCondition(val targetFunctionValues: List<Double>, val isGoalAchieved: Boolean)
 
 
 typealias GetterExp = () -> Double
@@ -20,8 +25,22 @@ typealias SetterExp = (Double) -> Unit
 typealias PredicateExp = () -> Boolean
 typealias TargetFunction = () -> Double
 
-data class Goal(val name: String, val rating: Double, val targetFunction: TargetFunction)
-data class Predicate(val name: String, val predicateExp: PredicateExp) {
+
+interface ValueHolder<T> {
+    /**
+     *  @return итоговое значение, в зависиммости от которого принимается оптимизационное решение.
+     *  Может зависеть от набора значений instantValue
+     */
+    val value: T
+    /**
+     *  @return мгновенное значение, зависит от снимка состояния модели. Мгновенное значение протоколируется в таблице,
+     *  доступной экспериментатору для наблюдения
+     */
+    val instantValue: T
+}
+
+data class Goal(val name: String, val rating: Double, val targetFunctionVH: ValueHolder<Double>)
+data class Predicate(val name: String, val valueHolder: ValueHolder<Boolean>) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

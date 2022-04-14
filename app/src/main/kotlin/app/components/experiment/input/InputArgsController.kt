@@ -45,6 +45,10 @@ class InputArgsController {
     }
 
     fun onModelRun() {
+        commitInputArgs()
+    }
+
+    fun commitInputArgs() {
         inputParams.forEach { (varName, param) ->
             inputParamsSeries[varName]!!.append(newInputParams[varName] ?: param.value)
         }

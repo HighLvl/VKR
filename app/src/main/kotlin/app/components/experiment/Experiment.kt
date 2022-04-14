@@ -2,7 +2,7 @@ package app.components.experiment
 
 import app.components.base.SystemComponent
 import app.components.experiment.constraints.ConstraintsController
-import app.components.experiment.controller.ExperimentController
+import app.components.experiment.controller.OptimizationExperimentController
 import app.components.experiment.goals.GoalsController
 import app.components.experiment.input.InputArgsController
 import app.components.experiment.variables.mutable.MutableVariablesController
@@ -11,16 +11,16 @@ import app.utils.KtsScriptEngine
 import core.components.base.AddInSnapshot
 import core.components.base.Script
 import core.components.experiment.*
-import core.components.experiment.Experiment
+import core.components.experiment.OptimizationExperiment
 import core.services.logger.Level
 import core.services.logger.Logger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.properties.Delegates
 
-class Experiment : Experiment, SystemComponent, Script {
-    private val experimentController = ExperimentController()
-    private val _modelRunResultFlow = experimentController.modelRunResultFlow
+class Experiment : OptimizationExperiment, SystemComponent, Script {
+    private val optimizationExperimentController = OptimizationExperimentController()
+    private val _modelRunResultFlow = optimizationExperimentController.makeDecisionConditionFlow
     private val observableVariablesController = ObservableVariablesController()
     private val mutableVariablesController = MutableVariablesController()
     private val constraintsController = ConstraintsController(_modelRunResultFlow)
@@ -47,6 +47,8 @@ class Experiment : Experiment, SystemComponent, Script {
             observableVariablesController.trackedDataSize = value
             mutableVariablesController.trackedDataSize = value
             constraintsController.trackedDataSize = value
+            goalsController.trackedDataSize = value
+            inputArgsController.trackedDataSize = value
         }
 
     @AddInSnapshot(3)
@@ -69,13 +71,14 @@ class Experiment : Experiment, SystemComponent, Script {
 
     override val inputParams: List<DoubleParam>
         get() = _inputParams.values.toList()
-    override val modelRunResultFlow: Flow<ModelRunResult>
+    override val makeDecisionConditionFlow: Flow<MakeDecisionCondition>
         get() = _modelRunResultFlow.map {
-            ModelRunResult(
-                it.goalExpectedValues.values + it.constraintExpectedValues.values,
+            MakeDecisionCondition(
+                it.goalValues.values.toList(),
                 it.isTargetScoreAchieved
             )
         }
+    override val stopOptimizationFlow: Flow<String> by optimizationExperimentController::stopOptimizationFlow
 
     init {
         importTaskModel()
@@ -85,7 +88,7 @@ class Experiment : Experiment, SystemComponent, Script {
         isRunning = true
         if (clearTrackedDataOnRun) reset()
         inputArgsController.onModelRun()
-        experimentController.onModelRun()
+        optimizationExperimentController.onModelRun()
     }
 
     private fun tryLoadExperimentTaskModel(path: String, oldPath: String): String {
@@ -110,7 +113,7 @@ class Experiment : Experiment, SystemComponent, Script {
 
     private fun importTaskModel() {
         reset()
-        experimentController.setTaskModel(taskModel)
+        optimizationExperimentController.setTaskModel(taskModel)
         importInputParams()
     }
 
@@ -137,11 +140,11 @@ class Experiment : Experiment, SystemComponent, Script {
     }
 
     override fun onModelUpdate(modelTime: Double) {
+        optimizationExperimentController.onModelUpdate(modelTime)
         observableVariablesController.onModelUpdate(modelTime)
         mutableVariablesController.onModelUpdate(modelTime)
         constraintsController.onModelUpdate(modelTime)
         goalsController.onModelUpdate(modelTime)
-        experimentController.onModelUpdate(modelTime)
     }
 
     override fun updateUI() {
@@ -153,8 +156,17 @@ class Experiment : Experiment, SystemComponent, Script {
     }
 
     override fun onModelStop() {
-        experimentController.onModelStop()
+        optimizationExperimentController.onModelStop()
         isRunning = false
+    }
+
+    override fun onModelPause() {
+        optimizationExperimentController.onModelPause()
+    }
+
+    override fun makeDecision() {
+        inputArgsController.commitInputArgs()
+        optimizationExperimentController.makeDecision()
     }
 }
 

@@ -1,3 +1,3 @@
 package core.entities
 
-class Environment(componentHolder: ComponentHolder) : Entity(componentHolder)
+open class Environment(componentHolder: ComponentHolder) : Entity(componentHolder)

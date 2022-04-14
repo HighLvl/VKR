@@ -1,6 +1,6 @@
 package app.components.experiment.goals
 
-import app.components.experiment.controller.ModelRunResult
+import app.components.experiment.controller.MakeDecisionCondition
 import app.coroutines.Contexts
 import core.components.experiment.Goal
 import core.datatypes.base.MutableSeries
@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
-class GoalsController(modelRunResultFlow: SharedFlow<ModelRunResult>) {
+class GoalsController(makeDecisionConditionFlow: SharedFlow<MakeDecisionCondition>) {
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             field = value
@@ -33,18 +33,18 @@ class GoalsController(modelRunResultFlow: SharedFlow<ModelRunResult>) {
 
     init {
         coroutineScope.launch {
-            modelRunResultFlow.collect {
+            makeDecisionConditionFlow.collect {
                 appendExpectedValues(it)
             }
         }
     }
 
-    private fun appendExpectedValues(modelRunResult: ModelRunResult) {
-        goalSeries["t"]!!.append("EV")
-        modelRunResult.goalExpectedValues.forEach { entry ->
+    private fun appendExpectedValues(makeDecisionCondition: MakeDecisionCondition) {
+        goalSeries["t"]!!.append("FV")
+        makeDecisionCondition.goalValues.forEach { entry ->
             goalSeries.appendGoalScore(entry)
         }
-        goalSeries[TITLE_TOTAL_SCORE]!!.append(modelRunResult.totalScore)
+        goalSeries[TITLE_TOTAL_SCORE]!!.append(makeDecisionCondition.totalScore)
         rowTypes.append(1)
     }
 
@@ -72,7 +72,7 @@ class GoalsController(modelRunResultFlow: SharedFlow<ModelRunResult>) {
 
     fun onModelUpdate(modelTime: Double) {
         goals.values.forEach {
-            goalValues[it.name] = it.targetFunction()
+            goalValues[it.name] = it.targetFunctionVH.value
         }
         val prevGoalValues = goalSeries.entries.asSequence()
             .filterNot { it.key == "t" || it.key == TITLE_TOTAL_SCORE }.map {
