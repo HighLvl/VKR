@@ -2,7 +2,6 @@ import core.components.experiment.experimentTask
 import core.services.*
 
 experimentTask {
-    //modelLifecycle может быть использован для подсчета значений разделяемых переменных и вывода данных в файл
     var numberOfDoodleBugs = 0.0
     modelLifecycle {
         onRun { }
@@ -17,9 +16,9 @@ experimentTask {
             param("a", 100.0) {
                 requestSetValue(1, "a", it.toInt())
             }
-            param("Ants Number", 50.0) {
-                putInputArg("ants", it.toInt())
-            }
+//            param("Ants Number", 50.0) {
+//                requestSetValue(1, "a", it.toInt())
+//            }
         }
         goals {
             expectedValue("EV: Number of Doodlebugs >= 8", 8.0) {
