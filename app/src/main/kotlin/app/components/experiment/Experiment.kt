@@ -78,7 +78,7 @@ class Experiment : OptimizationExperiment, SystemComponent, Script {
                 it.isTargetScoreAchieved
             )
         }
-    override val stopOptimizationFlow: Flow<String> by optimizationExperimentController::stopOptimizationFlow
+    override val stopOptimizationFlow: Flow<Unit> by optimizationExperimentController::stopOptimizationFlow
 
     init {
         importTaskModel()

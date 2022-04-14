@@ -16,11 +16,11 @@ class OptimizationExperimentController {
     private val _makeDecisionConditionFlow = MutableSharedFlow<MakeDecisionCondition>()
     private val coroutineScope = CoroutineScope(Contexts.app)
     private var needMakeDecision = false
-    private val _stopOptimizationFlow = MutableSharedFlow<String>()
+    private val _stopOptimizationFlow = MutableSharedFlow<Unit>()
     private var stopConditionName: String? = null
 
     val makeDecisionConditionFlow: SharedFlow<MakeDecisionCondition> = _makeDecisionConditionFlow
-    val stopOptimizationFlow: SharedFlow<String> = _stopOptimizationFlow
+    val stopOptimizationFlow: SharedFlow<Unit> = _stopOptimizationFlow
 
     fun setTaskModel(taskModel: ExperimentTaskModel) {
         this.taskModel = taskModel
@@ -81,7 +81,7 @@ class OptimizationExperimentController {
             emitMakeDecisionCondition(buildMakeDecisionCondition())
         }
         stopConditionName?.let {
-            coroutineScope.launch { _stopOptimizationFlow.emit(it) }
+            coroutineScope.launch { _stopOptimizationFlow.emit(Unit) }
             stopConditionName = null
         }
     }

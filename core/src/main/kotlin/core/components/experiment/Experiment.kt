@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface OptimizationExperiment : Component {
     val inputParams: List<DoubleParam>
     val makeDecisionConditionFlow: Flow<MakeDecisionCondition>
-    val stopOptimizationFlow: Flow<String>
+    val stopOptimizationFlow: Flow<Unit>
 
     fun makeDecision()
 }
