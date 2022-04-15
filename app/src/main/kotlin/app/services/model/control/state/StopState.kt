@@ -4,8 +4,8 @@ import app.services.model.control.state.AgentModelControlContext.ControlRequest.
 
 object StopState : ConnectState() {
 
-    override fun run(context: AgentModelControlContext) {
-        context.sendControlRequest(RUN)
+    override fun run(context: AgentModelControlContext, onResult: (Result<Unit>) -> Unit) {
+        context.sendControlRequest(RUN, onResult)
         context.periodTaskExecutor.start()
     }
 }

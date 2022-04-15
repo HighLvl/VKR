@@ -1,34 +1,27 @@
 package app.components.experiment
 
 import app.components.base.SystemComponent
-import app.components.experiment.constraints.ConstraintsController
-import app.components.experiment.controller.OptimizationExperimentController
-import app.components.experiment.goals.GoalsController
-import app.components.experiment.input.InputArgsController
 import app.components.experiment.variables.mutable.MutableVariablesController
 import app.components.experiment.variables.observable.ObservableVariablesController
 import app.utils.KtsScriptEngine
 import core.components.base.AddInSnapshot
 import core.components.base.Script
-import core.components.experiment.*
-import core.components.experiment.OptimizationExperiment
+import core.components.experiment.Experiment
+import core.components.experiment.ExperimentTaskModel
+import core.components.experiment.MutableExperimentTaskModel
 import core.services.logger.Level
 import core.services.logger.Logger
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlin.properties.Delegates
 
-class Experiment : OptimizationExperiment, SystemComponent, Script {
-    private val optimizationExperimentController = OptimizationExperimentController()
-    private val _modelRunResultFlow = optimizationExperimentController.makeDecisionConditionFlow
+class Experiment : Experiment, SystemComponent, Script {
     private val observableVariablesController = ObservableVariablesController()
     private val mutableVariablesController = MutableVariablesController()
-    private val constraintsController = ConstraintsController(_modelRunResultFlow)
-    private val goalsController = GoalsController(_modelRunResultFlow)
-    private val inputArgsController = InputArgsController()
+
     private var isRunning = false
-    private var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
-    private val _inputParams = mutableMapOf<String, DoubleParam>()
+    override var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
+        private set
+
+    val importTaskModelObservers = mutableListOf<() -> Unit>()
+    val clearTrackedDataObservers = mutableListOf<() -> Unit>()
 
     @AddInSnapshot(1)
     var task: String = ""
@@ -46,9 +39,6 @@ class Experiment : OptimizationExperiment, SystemComponent, Script {
             field = value
             observableVariablesController.trackedDataSize = value
             mutableVariablesController.trackedDataSize = value
-            constraintsController.trackedDataSize = value
-            goalsController.trackedDataSize = value
-            inputArgsController.trackedDataSize = value
         }
 
     @AddInSnapshot(3)
@@ -57,28 +47,8 @@ class Experiment : OptimizationExperiment, SystemComponent, Script {
     @AddInSnapshot(4)
     var showMutableVariables by mutableVariablesController::enabled
 
-    @AddInSnapshot(5)
-    var showConstraints by constraintsController::enabled
-
-    @AddInSnapshot(6)
-    var showGoals by goalsController::enabled
-
-    @AddInSnapshot(7)
-    var showInputArgs by inputArgsController::enabled
-
     @AddInSnapshot(8)
     var clearTrackedDataOnRun = true
-
-    override val inputParams: List<DoubleParam>
-        get() = _inputParams.values.toList()
-    override val makeDecisionConditionFlow: Flow<MakeDecisionCondition>
-        get() = _modelRunResultFlow.map {
-            MakeDecisionCondition(
-                it.goalValues.values.toList(),
-                it.isTargetScoreAchieved
-            )
-        }
-    override val stopOptimizationFlow: Flow<Unit> by optimizationExperimentController::stopOptimizationFlow
 
     init {
         importTaskModel()
@@ -86,9 +56,11 @@ class Experiment : OptimizationExperiment, SystemComponent, Script {
 
     override fun onModelRun() {
         isRunning = true
-        if (clearTrackedDataOnRun) reset()
-        inputArgsController.onModelRun()
-        optimizationExperimentController.onModelRun()
+        if (clearTrackedDataOnRun) {
+            reset()
+            clearTrackedDataObservers.forEach { it() }
+        }
+        taskModel.onModelRunListener()
     }
 
     private fun tryLoadExperimentTaskModel(path: String, oldPath: String): String {
@@ -112,68 +84,29 @@ class Experiment : OptimizationExperiment, SystemComponent, Script {
     }
 
     private fun importTaskModel() {
+        importTaskModelObservers.forEach { it() }
         reset()
-        optimizationExperimentController.setTaskModel(taskModel)
-        importInputParams()
     }
 
     private fun reset() {
         observableVariablesController.reset(taskModel.observableVariables)
         mutableVariablesController.reset(taskModel.mutableVariables)
-        constraintsController.reset(taskModel.constraints)
-        goalsController.reset(taskModel.goals, taskModel.targetScore)
-        inputArgsController.reset(_inputParams)
-    }
-
-    private fun importInputParams() {
-        _inputParams.clear()
-        taskModel.inputParams.forEach {
-            val inputParam = InputParam(it.setter) { newValue ->
-                inputArgsController.onChangeInputParamValue(it.name, newValue)
-            }
-            _inputParams[it.name] = inputParam
-        }
-        inputArgsController.reset(_inputParams)
-        taskModel.inputParams.forEach {
-            _inputParams[it.name]!!.value = it.initialValue
-        }
     }
 
     override fun onModelUpdate(modelTime: Double) {
-        optimizationExperimentController.onModelUpdate(modelTime)
+        taskModel.onModelUpdateListener()
         observableVariablesController.onModelUpdate(modelTime)
         mutableVariablesController.onModelUpdate(modelTime)
-        constraintsController.onModelUpdate(modelTime)
-        goalsController.onModelUpdate(modelTime)
     }
 
     override fun updateUI() {
         observableVariablesController.update()
         mutableVariablesController.update()
-        constraintsController.update()
-        goalsController.update()
-        inputArgsController.update()
+
     }
 
     override fun onModelStop() {
-        optimizationExperimentController.onModelStop()
         isRunning = false
-    }
-
-    override fun onModelPause() {
-        optimizationExperimentController.onModelPause()
-    }
-
-    override fun makeDecision() {
-        inputArgsController.commitInputArgs()
-        optimizationExperimentController.makeDecision()
-    }
-}
-
-private class InputParam(val setterExp: SetterExp, onValueChanged: (Double) -> Unit) :
-    DoubleParam {
-    override var value: Double by Delegates.observable(0.0) { _, _, newValue ->
-        setterExp(newValue)
-        onValueChanged(newValue)
+        taskModel.onModelStopListener()
     }
 }

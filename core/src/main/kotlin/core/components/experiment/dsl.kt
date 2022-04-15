@@ -11,21 +11,22 @@ class ExperimentTaskBuilder(private val model: MutableExperimentTaskModel) {
     /** Подписка на события жизненного цикла модели.
      * Может быть использована для вычисления значений разделяемых переменных и вывода данных в файл
      */
-    fun modelLifecycle(builder: ModelLifecycleListenerBuilder.() -> Unit) = builder(ModelLifecycleListenerBuilder(model))
+    fun modelLifecycle(builder: ModelLifecycleListenerBuilder.() -> Unit) =
+        builder(ModelLifecycleListenerBuilder(model))
 
     /** Конфигурация задания на оптимизационный эксперимент.
-     * Процесс принятия оптимизационных решений начинается с запуска модели и проходит в рамках одного запуска.
+     * Оптимизация проходит в рамках одного запуска. Можно начать и остановить оптимизацию в любое время.
      * В результате принятия оптимизационного решения изменяются входные параметры модели.
      * Оптимизационный эксперимент заканчивается, в случае достижения его цели или выполнения условий останова
      * процесса оптимизации.
-     * @param targetScore целевая сумма рейтингов достигнутых целей
+     * @param targetScore целевая сумма баллов достигнутых целей
      * @see OptimizationBuilder.makeDecisionOn
      * @see OptimizationBuilder.inputParams
+     * @see OptimizationBuilder.targetFunction
      * @see OptimizationBuilder.goals
-     * @see OptimizationBuilder.constraints
      * @see OptimizationBuilder.stopOn
      */
-    fun optimization(targetScore: Double, builder: OptimizationBuilder.() -> Unit) {
+    fun optimization(targetScore: Int, builder: OptimizationBuilder.() -> Unit) {
         model.setTargetScore(targetScore)
         builder(OptimizationBuilder(model))
     }
@@ -61,24 +62,44 @@ class OptimizationBuilder(private val model: MutableExperimentTaskModel) {
      */
     fun inputParams(inputParamsBuilder: InputParamsBuilder.() -> Unit) = inputParamsBuilder(InputParamsBuilder(model))
 
-    /** Цели оптимизации. Цель описывается с помощью 3-х элементов: имя, рейтинг, целевая функция.
-     *  Если значение функции >= рейтинга, то цель считается достигнутой и вносит свой рейтинг в общую сумму.
-     *  Для достижения цели оптимизационного эксперимента, сумма рейтингов должна быть >= целевой суммы
-     *  и все ограничения должны быть соблюдены
+    /** Целевая функция.
+     * Для построения функции можно воспользоваться каркасами lastInstant и expectedValue
+     * или создать пользовательскую целевую функцию, вернув valueHolder<Double> в лямбде targetFunctionBuilder:.
+     * @see TargetFunctionBuilder.expectedValue
+     * @see TargetFunctionBuilder.lastInstant
+     */
+    /*  targetFunction {
+            MutableValueHolder(0.0, 0.0).apply {
+                var count = 0
+                begin {
+                    count = 0
+                }
+                update {
+                    if (numberOfDoodleBugs > 5) count++
+                    instantValue = count.toDouble()
+                }
+                end {
+                    value = count.toDouble()
+                }
+            }
+        }*/
+    fun targetFunction(targetFunctionBuilder: TargetFunctionBuilder.() -> ValueHolder<Double>) {
+        model.targetFunctionVH = targetFunctionBuilder(TargetFunctionBuilder(model))
+    }
+
+    /** Цели
      */
     fun goals(goalsBuilder: GoalsBuilder.() -> Unit) = goalsBuilder(GoalsBuilder(model))
 
-    /** Ограничения
-     */
-    fun constraints(constraintsBuilder: ConstraintsBuilder.() -> Unit) = constraintsBuilder(ConstraintsBuilder(model))
     /** Условия необходимости принятия решения. Решение должно быть принято в случае, если выполнено как минимум одно из условий.
      * Для принятия решения используются итоговые значения целевых функций и ограничений
      * @see ValueHolder.value
      * @see ValueHolder.instantValue
      *  приостановка модели -> планировка запросов к модели -> возобновление модели
-    */
+     */
     fun makeDecisionOn(makeDecisionOnConditionBuilder: MakeDecisionOnConditionBuilder.() -> Unit) =
         makeDecisionOnConditionBuilder(MakeDecisionOnConditionBuilder(model))
+
     /** Иные условия завершения оптимизационного эксперимента */
     fun stopOn(stopOnConditionBuilder: StopOnConditionBuilder.() -> Unit) =
         stopOnConditionBuilder(StopOnConditionBuilder(model))
@@ -86,72 +107,62 @@ class OptimizationBuilder(private val model: MutableExperimentTaskModel) {
 
 @ExperimentDslMarker
 class InputParamsBuilder(private val model: MutableExperimentTaskModel) {
-    fun param(name: String, initialValue: Double, setter: SetterExp) =
-        model.addInputParam(InputParam(name, initialValue, setter))
+    fun param(name: String, initialValue: Double, minValue: Double, maxValue: Double, step: Double, setter: SetterExp) =
+        model.addInputParam(InputParam(name, initialValue, minValue, maxValue, step, setter))
 }
 
 @ExperimentDslMarker
-class GoalsBuilder(private val model: MutableExperimentTaskModel) : OptimizerLifecycleEventsListener(model) {
+class TargetFunctionBuilder(model: MutableExperimentTaskModel) : OptimizerLifecycleEventsListener(model) {
+
     /** Итоговое значение эквивалентно последнему мгновенному значению целевой функции
      * @see ValueHolder
      */
-    fun lastInstant(name: String, rating: Double, getInstantValue: TargetFunction) {
-        model.addGoal(name, rating, MutableValueHolder(0.0, 0.0).apply {
-            begin {
-                instantValue = 0.0
-                value = 0.0
-            }
+    fun lastInstant(getInstantValue: GetterExp): MutableValueHolder<Double> = MutableValueHolder(0.0, 0.0).apply {
+        begin {
+            instantValue = 0.0
+            value = 0.0
+        }
 
-            update {
-                instantValue = getInstantValue()
-            }
+        update {
+            instantValue = getInstantValue()
+        }
 
-            end {
-                value = instantValue
-            }
-        })
+        end {
+            value = instantValue
+        }
     }
 
     /** Итоговое значение эквивалентно математическому ожиданию мгновенных значений целевой функции
      * @param getInstantValue геттер мгновенного значения целевой функции
      */
-    fun expectedValue(name: String, rating: Double, getInstantValue: TargetFunction) {
-        model.addGoal(name, rating, MutableValueHolder(0.0, 0.0).apply {
-            var sum = 0.0
-            var startTime = 0.0
-            //init
-            begin {
-                sum = 0.0
-                startTime = modelTime
-            }
-            //calculate instant value and sum
-            update {
-                instantValue = getInstantValue()
-                sum += instantValue * dt
-            }
-            //calculate ev
-            end {
-                value = sum / (modelTime - startTime)
-            }
-        })
-
-    }
-
-    /** Построение цели с пользовательским вычислением мгновенного и итогового значений
-     */
-    fun custom(name: String, rating: Double, targetFuncBuilder: MutableValueHolder<Double>.() -> Unit) {
-        model.addGoal(name, rating, MutableValueHolder(0.0, 0.0).apply(targetFuncBuilder))
+    fun expectedValue(getInstantValue: GetterExp): MutableValueHolder<Double> = MutableValueHolder(0.0, 0.0).apply {
+        var sum = 0.0
+        var startTime = 0.0
+        //init
+        begin {
+            sum = 0.0
+            startTime = modelTime
+        }
+        //calculate instant value and sum
+        update {
+            instantValue = getInstantValue()
+            sum += instantValue * dt
+        }
+        //calculate ev
+        end {
+            value = sum / (modelTime - startTime)
+        }
     }
 }
 
 @ExperimentDslMarker
-class ConstraintsBuilder(private val model: MutableExperimentTaskModel) : OptimizerLifecycleEventsListener(model) {
-    /** Ограничение соблюдено, если последнее мгновенное значение предиката истинно. (value == instantValue)
+class GoalsBuilder(private val model: MutableExperimentTaskModel) : OptimizerLifecycleEventsListener(model) {
+    /** Цель достигнута, если последнее мгновенное значение предиката истинно. (value == instantValue)
      * @see ValueHolder.instantValue
      * @see ValueHolder.value
      */
-    fun lastInstant(name: String, getInstantValue: PredicateExp) {
-        model.addConstraint(name, MutableValueHolder(value = false, instantValue = false).apply {
+    fun lastInstant(name: String, score: Int, getInstantValue: PredicateExp) {
+        model.addGoal(name, score, MutableValueHolder(value = false, instantValue = false).apply {
             begin {
                 instantValue = false
                 value = false
@@ -165,10 +176,10 @@ class ConstraintsBuilder(private val model: MutableExperimentTaskModel) : Optimi
         })
     }
 
-    /** Ограничение соблюдено, если все мгновенные значения предиката истинны
+    /** Цель достигнута, если все мгновенные значения предиката истинны
      */
-    fun allInstant(name: String, getInstantValue: PredicateExp) {
-        model.addConstraint(name, MutableValueHolder(value = false, instantValue = false).apply {
+    fun allInstant(name: String, score: Int, getInstantValue: PredicateExp) {
+        model.addGoal(name, score, MutableValueHolder(value = false, instantValue = false).apply {
             begin {
                 instantValue = true
                 value = true
@@ -180,10 +191,10 @@ class ConstraintsBuilder(private val model: MutableExperimentTaskModel) : Optimi
         })
     }
 
-    /** Построение ограничения с пользовательским вычислением мгновенного и итогового значений
+    /** Построение цели с пользовательским вычислением мгновенного и итогового значений
      */
-    fun custom(name: String, predicateBuilder: MutableValueHolder<Boolean>.() -> Unit) {
-        model.addConstraint(name, MutableValueHolder(value = false, instantValue = false).apply(predicateBuilder))
+    fun custom(name: String, score: Int, predicateBuilder: MutableValueHolder<Boolean>.() -> Unit) {
+        model.addGoal(name, score, MutableValueHolder(value = false, instantValue = false).apply(predicateBuilder))
     }
 }
 
@@ -203,6 +214,18 @@ class StopOnConditionBuilder(private val model: MutableExperimentTaskModel) : Op
     /** modelTime >= t
      */
     fun modelTime(t: Double) = model.addStopOnCondition("Model Time >= $t") { modelTime >= t }
+
+    /** Останавливает оптимизацию через время t в секундах после старта
+     */
+    fun timeSinceStart(timeMillis: Long) {
+        var startTime = 0L
+        start {
+            startTime = System.currentTimeMillis()
+        }
+        model.addStopOnCondition("Time Since Start >= $timeMillis (millis)") {
+            System.currentTimeMillis() - startTime >= timeMillis
+        }
+    }
 }
 
 @ExperimentDslMarker
@@ -213,6 +236,18 @@ fun experimentTask(buildTask: ExperimentTaskBuilder.() -> Unit): ExperimentTaskM
 }
 
 abstract class OptimizerLifecycleEventsListener(private val model: MutableExperimentTaskModel) {
+    /** Вызывается перед запуском оптимизационного эксперимента
+     */
+    fun start(listener: () -> Unit) {
+        model.addOnStartOptimizationListener(listener)
+    }
+
+    /** Вызывается после остановки оптимизационного эксперимента
+     */
+    fun stop(listener: () -> Unit) {
+        model.addOnStartOptimizationListener(listener)
+    }
+
     /** Вызывается в начале процесса вычисления данных, используемых для принятия оптимизационного решения.
      * Используется для инициализации переменных
      */
@@ -243,9 +278,9 @@ class MakeDecisionOnConditionBuilder(private val model: MutableExperimentTaskMod
      */
     fun condition(name: String, predicate: PredicateExp) = model.addMakeDecisionOnCondition(name, predicate)
 
-    /** Используется для принятий решений через фиксированные промежутки времени t
+    /** Используется для принятий решений через фиксированные промежутки модельного времени t
      */
-    fun timeSinceLastDecision(t: Double) {
+    fun modelTimeSinceLastDecision(t: Double) {
         var startTime = 0.0
         begin {
             startTime = modelTime

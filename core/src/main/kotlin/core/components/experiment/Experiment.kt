@@ -1,23 +1,28 @@
 package core.components.experiment
 
 import core.components.base.Component
-import kotlinx.coroutines.flow.Flow
 
-
+interface Experiment : Component {
+    val taskModel: ExperimentTaskModel
+}
 
 interface OptimizationExperiment : Component {
-    val inputParams: List<DoubleParam>
-    val makeDecisionConditionFlow: Flow<MakeDecisionCondition>
-    val stopOptimizationFlow: Flow<Unit>
-
-    fun makeDecision()
+    sealed interface State {
+        object Stop: State
+        object Run: State
+        interface WaitDecision: State {
+            val inputParams: List<DoubleParam>
+            val targetFunctionValue: Double
+            fun makeDecision()
+        }
+    }
+    val state: State
 }
 
 interface DoubleParam {
     var value: Double
+    val inputParam: InputParam
 }
-
-data class MakeDecisionCondition(val targetFunctionValues: List<Double>, val isGoalAchieved: Boolean)
 
 
 typealias GetterExp = () -> Double
@@ -32,6 +37,7 @@ interface ValueHolder<T> {
      *  Может зависеть от набора значений instantValue
      */
     val value: T
+
     /**
      *  @return мгновенное значение, зависит от снимка состояния модели. Мгновенное значение протоколируется в таблице,
      *  доступной экспериментатору для наблюдения
@@ -39,13 +45,12 @@ interface ValueHolder<T> {
     val instantValue: T
 }
 
-data class Goal(val name: String, val rating: Double, val targetFunctionVH: ValueHolder<Double>)
-data class Predicate(val name: String, val valueHolder: ValueHolder<Boolean>) {
+data class Goal(val name: String, val score: Int, val valueHolder: ValueHolder<Boolean>) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Predicate
+        other as Goal
 
         if (name != other.name) return false
 
@@ -56,4 +61,12 @@ data class Predicate(val name: String, val valueHolder: ValueHolder<Boolean>) {
         return name.hashCode()
     }
 }
-data class InputParam(val name: String, val initialValue: Double, val setter: SetterExp)
+
+data class InputParam(
+    val name: String,
+    val initialValue: Double,
+    val minValue: Double,
+    val maxValue: Double,
+    val step: Double,
+    val setter: SetterExp
+)

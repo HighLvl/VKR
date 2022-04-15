@@ -39,17 +39,14 @@ class InputArgsController {
     }
 
     fun onChangeInputParamValue(varName: String, value: Double) {
-        Logger.log("Set input param $varName to $value", Level.DEBUG)
+        Logger.log("\"$varName\"=$value", Level.DEBUG)
         newInputParams[varName] = value
         mutableVariablesView.setInputValues(newInputParams.toMap())
     }
 
-    fun onModelRun() {
-        commitInputArgs()
-    }
-
     fun commitInputArgs() {
         inputParams.forEach { (varName, param) ->
+            param.inputParam.setter(param.value)
             inputParamsSeries[varName]!!.append(newInputParams[varName] ?: param.value)
         }
         newInputParams.clear()

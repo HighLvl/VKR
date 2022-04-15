@@ -40,26 +40,30 @@ class AgentModelControlContext(
         coroutineScope.coroutineContext.cancelChildren()
     }
 
-    fun sendControlRequest(controlRequest: ControlRequest) {
+    fun sendControlRequest(controlRequest: ControlRequest, onResult: (Result<Unit>) -> Unit = {}) {
         when (controlRequest) {
             ControlRequest.RESUME -> {
                 requestSender.sendRequest<Unit>(0, "Resume", listOf()) {
                     it.onSuccess { onResume() }.onFailure { emitCurrentState() }
+                    onResult(it)
                 }
             }
             ControlRequest.PAUSE -> {
                 requestSender.sendRequest<Unit>(0, "Pause", listOf()) {
                     it.onSuccess { onPause() }.onFailure { emitCurrentState() }
+                    onResult(it)
                 }
             }
             ControlRequest.RUN -> {
                 requestSender.sendRequest<Unit>(0, "Run", inputArgs.args.values.toList()) {
                     it.onSuccess { onRun() }.onFailure { emitCurrentState() }
+                    onResult(it)
                 }
             }
             ControlRequest.STOP -> {
                 requestSender.sendRequest<Unit>(0, "Stop", listOf()) {
                     it.onSuccess { onStop() }.onFailure { emitCurrentState() }
+                    onResult(it)
                 }
             }
             ControlRequest.GET_STATE -> {
@@ -95,21 +99,21 @@ class AgentModelControlContext(
     }
 
     private var startTime: Long = 0
-    fun runModel() {
+    fun runModel(onResult: (Result<Unit>) -> Unit) {
         startTime = System.currentTimeMillis()
-        currentState.run(this)
+        currentState.run(this, onResult)
     }
 
-    fun pauseModel() {
-        currentState.pause(this)
+    fun pauseModel(onResult: (Result<Unit>) -> Unit) {
+        currentState.pause(this, onResult)
     }
 
-    fun resumeModel() {
-        currentState.resume(this)
+    fun resumeModel(onResult: (Result<Unit>) -> Unit) {
+        currentState.resume(this, onResult)
     }
 
-    fun stopModel() {
-        currentState.stop(this)
+    fun stopModel(onResult: (Result<Unit>) -> Unit) {
+        currentState.stop(this, onResult)
         println(System.currentTimeMillis() - startTime)
     }
 

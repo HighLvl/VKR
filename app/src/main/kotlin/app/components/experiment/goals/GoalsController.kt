@@ -1,6 +1,6 @@
 package app.components.experiment.goals
 
-import app.components.experiment.controller.MakeDecisionCondition
+import app.components.experiment.controller.CtrlMakeDecisionData
 import app.coroutines.Contexts
 import core.components.experiment.Goal
 import core.datatypes.base.MutableSeries
@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
-class GoalsController(makeDecisionConditionFlow: SharedFlow<MakeDecisionCondition>) {
+class GoalsController(makeDecisionDataFlow: SharedFlow<CtrlMakeDecisionData>) {
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             field = value
@@ -25,30 +25,30 @@ class GoalsController(makeDecisionConditionFlow: SharedFlow<MakeDecisionConditio
     private val goalSeries = mutableMapOf<String, MutableSeries<Any>>()
     private val rowTypes = mutableSeriesOf<Int>()
     private val goalsView = GoalsView(goalSeries, rowTypes)
-    private val goalValues = mutableMapOf<String, Double>()
+    private val goalValues = mutableMapOf<String, Pair<Boolean, Int>>()
     private lateinit var goals: Map<String, Goal>
-    private var targetScore: Double = 0.0
+    private var targetScore: Int = 0
 
     private val coroutineScope = CoroutineScope(Contexts.app)
 
     init {
         coroutineScope.launch {
-            makeDecisionConditionFlow.collect {
-                appendExpectedValues(it)
+            makeDecisionDataFlow.collect {
+                appendFinalValues(it)
             }
         }
     }
 
-    private fun appendExpectedValues(makeDecisionCondition: MakeDecisionCondition) {
+    private fun appendFinalValues(makeDecisionData: CtrlMakeDecisionData) {
         goalSeries["t"]!!.append("FV")
-        makeDecisionCondition.goalValues.forEach { entry ->
-            goalSeries.appendGoalScore(entry)
+        makeDecisionData.goalValues.forEach { entry ->
+            goalSeries.appendGoalScore(entry.key to entry.value)
         }
-        goalSeries[TITLE_TOTAL_SCORE]!!.append(makeDecisionCondition.totalScore)
+        goalSeries[TITLE_TOTAL_SCORE]!!.append(makeDecisionData.totalScore)
         rowTypes.append(1)
     }
 
-    fun reset(goals: Set<Goal>, targetScore: Double) {
+    fun reset(goals: Set<Goal>, targetScore: Int) {
         this.goals = goals.associateBy { it.name }
         this.targetScore = targetScore
         goalValues.clear()
@@ -66,13 +66,14 @@ class GoalsController(makeDecisionConditionFlow: SharedFlow<MakeDecisionConditio
         with(goalsView) {
             reset()
             this.targetScore = targetScore
-            goalNameToRatingMap = goals.associate { it.name to it.rating }
+            goalNameToScoreMap = goals.associate { it.name to it.score }
         }
     }
 
     fun onModelUpdate(modelTime: Double) {
         goals.values.forEach {
-            goalValues[it.name] = it.targetFunctionVH.value
+            val score = if (it.valueHolder.instantValue) it.score else 0
+            goalValues[it.name] = it.valueHolder.instantValue to score
         }
         val prevGoalValues = goalSeries.entries.asSequence()
             .filterNot { it.key == "t" || it.key == TITLE_TOTAL_SCORE }.map {
@@ -81,7 +82,7 @@ class GoalsController(makeDecisionConditionFlow: SharedFlow<MakeDecisionConditio
         if (prevGoalValues != goalValues) {
             goalSeries.appendModelTime(modelTime)
             goalValues.forEach {
-                goalSeries.appendGoalScore(it)
+                goalSeries.appendGoalScore(it.key to it.value)
             }
             goalSeries.appendTotalScore()
             rowTypes.append(0)
@@ -94,12 +95,12 @@ class GoalsController(makeDecisionConditionFlow: SharedFlow<MakeDecisionConditio
 
     private fun Map<String, MutableSeries<Any>>.appendTotalScore() {
         this[TITLE_TOTAL_SCORE]!!.append(
-            goalValues.values.sum()
+            goalValues.values.sumOf { it.second }
         )
     }
 
-    private fun Map<String, MutableSeries<Any>>.appendGoalScore(it: Map.Entry<String, Double>) {
-        this[it.key]!!.append(it.value)
+    private fun Map<String, MutableSeries<Any>>.appendGoalScore(it: Pair<String, Pair<Boolean, Int>>) {
+        this[it.first]!!.append(it.second)
     }
 
     fun update() {

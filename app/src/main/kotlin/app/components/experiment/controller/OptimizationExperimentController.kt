@@ -1,7 +1,7 @@
 package app.components.experiment.controller
 
-import core.components.experiment.ExperimentTaskModel
 import app.coroutines.Contexts
+import core.components.experiment.ExperimentTaskModel
 import core.services.Services
 import core.services.logger.Level
 import core.services.logger.Logger
@@ -10,98 +10,122 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
-class OptimizationExperimentController {
-    private lateinit var taskModel: ExperimentTaskModel
+class OptimizationExperimentController  {
 
-    private val _makeDecisionConditionFlow = MutableSharedFlow<MakeDecisionCondition>()
+    enum class State {
+        STOP, RUN, WAIT_DECISION
+    }
+    var state = State.STOP
+    private set
+
+    lateinit var taskModel: ExperimentTaskModel
+    var makeDecisionData: CtrlMakeDecisionData? = null
+    private set
+
+    private val _ctrlMakeDecisionDataFlow = MutableSharedFlow<CtrlMakeDecisionData>()
     private val coroutineScope = CoroutineScope(Contexts.app)
-    private var needMakeDecision = false
-    private val _stopOptimizationFlow = MutableSharedFlow<Unit>()
-    private var stopConditionName: String? = null
 
-    val makeDecisionConditionFlow: SharedFlow<MakeDecisionCondition> = _makeDecisionConditionFlow
-    val stopOptimizationFlow: SharedFlow<Unit> = _stopOptimizationFlow
+    val ctrlMakeDecisionDataFlow: SharedFlow<CtrlMakeDecisionData> = _ctrlMakeDecisionDataFlow
 
-    fun setTaskModel(taskModel: ExperimentTaskModel) {
-        this.taskModel = taskModel
+    fun start() {
+        taskModel.onStartOptimizationListeners.forEach { it() }
+        taskModel.onBeginListeners.forEach { it() }
+        state = State.RUN
+        makeDecisionData = null
+        Logger.log("Optimization experiment started", Level.INFO)
     }
 
-    fun onModelRun() {
-        taskModel.onModelRunListener()
-        taskModel.onBeginListeners.forEach { it() }
+    fun stop() {
+        if (state == State.STOP) return
+        taskModel.onStopOptimizationListeners.forEach { it() }
+        state = State.STOP
+        Services.agentModelControl.pauseModel()
+        Logger.log("Optimization experiment stopped", Level.INFO)
     }
 
     fun onModelUpdate(modelTime: Double) {
-        taskModel.onModelUpdateListener()
-        taskModel.onUpdateListeners.forEach { it() }
-        makeDecisionOnTrueConditions()
-        stopOptimizationOnTrueConditions()
-    }
-    
-    private fun makeDecisionOnTrueConditions() {
-        taskModel.makeDecisionConditions.entries.firstOrNull {it.value()}?.let {(condName, _) ->
-            Logger.log("Make decision on \"$condName\"", Level.INFO)
-            Services.agentModelControl.pauseModel()
-            needMakeDecision = true
+        when(state) {
+            State.RUN -> processRunState()
+            State.WAIT_DECISION -> processWaitDecisionState()
+            else -> {}
         }
     }
 
-    private fun stopOptimizationOnTrueConditions() {
+    private fun processRunState() {
+        taskModel.onUpdateListeners.forEach { it() }
+        if (needMakeDecision()) {
+            taskModel.onEndListeners.forEach { it() }
+            newMakeDecisionData()
+            waitDecision()
+            coroutineScope.launch { _ctrlMakeDecisionDataFlow.emit(makeDecisionData!!)}
+        }
+        if (needStopOptimization()) {
+            stop()
+        }
+    }
+
+    private fun waitDecision() {
+        state = State.WAIT_DECISION
+    }
+
+    private fun needMakeDecision(): Boolean {
+        taskModel.makeDecisionConditions.entries.firstOrNull {it.value()}?.let {(condName, _) ->
+            Logger.log("Make decision on \"$condName\"", Level.INFO)
+            return true
+        }
+        return false
+    }
+
+    private fun needStopOptimization(): Boolean {
+        var result = false
         taskModel.stopConditions.entries.firstOrNull { it.value() }?.let { (condName, _) ->
-            Logger.log("Stop optimization on $condName", Level.INFO)
-            Services.agentModelControl.pauseModel()
-            stopConditionName = condName
+            Logger.log("Stop on \"$condName\"", Level.INFO)
+            result = true
+        }
+        makeDecisionData?.isTargetScoreAchieved?.let {
+            if (it) {
+                Logger.log("Target score achieved", Level.INFO)
+                result = true
+            }
+        }
+        return result
+    }
+
+    private fun processWaitDecisionState() {
+        if (needStopOptimization()) {
+            stop()
         }
     }
 
     fun onModelStop() {
-        taskModel.onModelStopListener()
-        needMakeDecision = false
+        stop()
     }
 
-    private fun buildMakeDecisionCondition(): MakeDecisionCondition {
-        val totalScore = taskModel.goals.sumOf { (_, rating, vh) ->
-            if (vh.value >= rating) rating else 0.0
-        }
-        val isTargetScoreAchieved =
-            totalScore >= taskModel.targetScore && taskModel.constraints.all {it.valueHolder.value}
-        val goalValues = taskModel.goals.asSequence().map { it.name to it.targetFunctionVH.value }.toMap()
-        val constraintValues = taskModel.constraints.asSequence().map { it.name to it.valueHolder.value }.toMap()
-        return MakeDecisionCondition(
+    private fun newMakeDecisionData() {
+        val totalScore = taskModel.goals.sumOf { if(it.valueHolder.value) it.score else 0 }
+        val isTargetScoreAchieved = totalScore >= taskModel.targetScore
+        val goalValues = taskModel.goals.asSequence().map {
+            val score = if (it.valueHolder.value) it.score else 0
+            it.name to (it.valueHolder.value to score)
+        }.toMap()
+        makeDecisionData =  CtrlMakeDecisionData(
+            taskModel.targetFunctionVH.value,
             goalValues,
-            constraintValues,
             totalScore,
             isTargetScoreAchieved
         )
-    }
-
-    fun onModelPause() {
-        if (needMakeDecision) {
-            taskModel.onEndListeners.forEach { it() }
-            emitMakeDecisionCondition(buildMakeDecisionCondition())
-        }
-        stopConditionName?.let {
-            coroutineScope.launch { _stopOptimizationFlow.emit(Unit) }
-            stopConditionName = null
-        }
-    }
-
-    private fun emitMakeDecisionCondition(result: MakeDecisionCondition) {
-        coroutineScope.launch {
-            _makeDecisionConditionFlow.emit(result)
-        }
+        coroutineScope.launch { makeDecisionData }
     }
 
     fun makeDecision() {
-        Services.agentModelControl.resumeModel()
-        needMakeDecision = false
         taskModel.onBeginListeners.forEach { it() }
+        state = State.RUN
     }
 }
 
-data class MakeDecisionCondition(
-    val goalValues: Map<String, Double>,
-    val constraintValues: Map<String, Boolean>,
-    val totalScore: Double,
+data class CtrlMakeDecisionData(
+    val targetFunctionValue: Double,
+    val goalValues: Map<String, Pair<Boolean, Int>>,
+    val totalScore: Int,
     val isTargetScoreAchieved: Boolean
 )

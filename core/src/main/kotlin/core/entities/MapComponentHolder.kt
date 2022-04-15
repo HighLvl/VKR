@@ -1,6 +1,7 @@
 package core.entities
 
 import core.components.base.Component
+import core.utils.runBlockCatching
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.isSubclassOf
@@ -8,8 +9,13 @@ import kotlin.reflect.full.isSubclassOf
 class MapComponentHolder : ComponentHolder {
     private val components = mutableMapOf<KClass<out Component>, Component>()
 
-    override fun <C: Component> setComponent(type: KClass<out C>): C {
-        return type.createInstance().also { components[type] = it }
+    override fun <C : Component> setComponent(type: KClass<out C>): C {
+        return type.createInstance().also {
+            components[type] = it
+            runBlockCatching {
+                it.onAttach()
+            }
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -19,7 +25,7 @@ class MapComponentHolder : ComponentHolder {
 
     @Suppress("UNCHECKED_CAST")
     override fun <C : Component> removeComponent(type: KClass<C>): C? {
-        return components.remove(type) as C?
+        return (components.remove(type) as C?)?.also { runBlockCatching { it.onDetach() } }
     }
 
     override fun getComponents(): List<Component> {

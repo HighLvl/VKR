@@ -19,11 +19,17 @@ class ComponentProvider {
             .asSequence()
             .filter { !it.kotlin.isAbstract && kotlin.runCatching { it.kotlin.createInstance() }.isSuccess }
             .map { it.kotlin }.filterNot { it in listOf(AgentInterface::class, Experiment::class) }.toList()
-        val userComponents = components.filter { it.qualifiedName.toString().startsWith("user.") }
-        val appComponents = components.filter { it.qualifiedName.toString().startsWith("app.") }
+        val userComponents = components.asSequence()
+            .filter { it.qualifiedName.toString().startsWith("user.") }
+            .sortedBy { it.qualifiedName }.toList()
+        val appComponents = components.asSequence()
+            .filter { it.qualifiedName.toString().startsWith("app.") }
+            .sortedBy { it.qualifiedName }.toList()
         return Components(userComponents, appComponents)
     }
 }
 
-data class Components(val user: List<KClass<out Component>>,
-                      val app: List<KClass<out Component>>)
+data class Components(
+    val user: List<KClass<out Component>>,
+    val app: List<KClass<out Component>>
+)

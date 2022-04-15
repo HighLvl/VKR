@@ -5,7 +5,6 @@ import core.datatypes.base.MutableSeries
 import core.datatypes.base.Series
 import imgui.flag.ImGuiTableBgTarget
 import imgui.internal.ImGui
-import java.util.*
 
 class ConstraintsView(dataSource: Map<String, Series<*>>, rowTypes: MutableSeries<Int>) :
     TableView(TITLE_CONSTRAINTS_WINDOW, dataSource, rowTypes) {
@@ -20,7 +19,7 @@ class ConstraintsView(dataSource: Map<String, Series<*>>, rowTypes: MutableSerie
                 value as Boolean
                 super.drawCell(column, row, "", rowType)
                 if (!value) COLOR_EV_BAD
-                else COLOR_EV_GOOD
+                else COLOR_FV_GOOD
             }
             else -> {
                 if (!(value as Boolean)) COLOR_IV_BAD
