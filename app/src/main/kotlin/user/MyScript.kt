@@ -9,7 +9,6 @@ import core.components.base.Script
 import core.entities.getComponent
 import core.services.Services
 import core.services.getAgentsToIdMap
-import core.services.getPropValue
 import imgui.ImColor
 import imgui.flag.ImGuiMouseButton
 import imgui.internal.ImGui
@@ -38,7 +37,7 @@ class MyScript : Component, Script {
         }
     }
 
-    override fun onModelUpdate(modelTime: Double) {
+    override fun onModelUpdate() {
         clearField()
         val agents = Services.scene.findAgentsThatHaving(Position::class)
         agents.forEach {agent ->

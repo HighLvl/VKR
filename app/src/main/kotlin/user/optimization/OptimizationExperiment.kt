@@ -1,8 +1,6 @@
 package user.optimization
 
 import app.components.experiment.Experiment
-import app.components.experiment.constraints.ConstraintsController
-import app.components.experiment.controller.CtrlMakeDecisionData
 import app.components.experiment.controller.OptimizationExperimentController
 import app.components.experiment.goals.GoalsController
 import app.components.experiment.input.InputArgsController
@@ -14,16 +12,13 @@ import core.entities.getComponent
 import core.services.Services
 import core.services.logger.Level
 import core.services.logger.Logger
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.map
+import core.services.modelTime
 import kotlin.properties.Delegates
 
-class OptimizationExperiment: OptimizationExperiment, Script {
+class OptimizationExperiment : OptimizationExperiment, Script {
     private val _inputParams = mutableMapOf<String, DoubleParam>()
     private val optimizationExperimentController = OptimizationExperimentController()
     private val _makeDecisionDataFlow = optimizationExperimentController.ctrlMakeDecisionDataFlow
-    private val constraintsController = ConstraintsController(_makeDecisionDataFlow)
     private val goalsController = GoalsController(_makeDecisionDataFlow)
     private val inputArgsController = InputArgsController()
     private val experiment = Services.scene.experimenter.getComponent<Experiment>()!!
@@ -37,13 +32,12 @@ class OptimizationExperiment: OptimizationExperiment, Script {
                 return
             }
             field = value
-            constraintsController.trackedDataSize = value
             goalsController.trackedDataSize = value
             inputArgsController.trackedDataSize = value
         }
 
     override var state: OptimizationExperiment.State = OptimizationExperiment.State.Stop
-    private set
+        private set
 
     @AddInSnapshot(6)
     var showGoals by goalsController::enabled
@@ -78,7 +72,6 @@ class OptimizationExperiment: OptimizationExperiment, Script {
     }
 
     private fun reset() {
-        constraintsController.reset(taskModel.goals)
         goalsController.reset(taskModel.goals, taskModel.targetScore)
         inputArgsController.reset(_inputParams)
     }
@@ -97,10 +90,8 @@ class OptimizationExperiment: OptimizationExperiment, Script {
         }
     }
 
-    override fun onModelUpdate(modelTime: Double) {
-        optimizationExperimentController.onModelUpdate(modelTime)
-        constraintsController.onModelUpdate(modelTime)
-        goalsController.onModelUpdate(modelTime)
+    override fun onModelUpdate() {
+        optimizationExperimentController.onModelUpdate()
         updateState()
     }
 
@@ -129,7 +120,6 @@ class OptimizationExperiment: OptimizationExperiment, Script {
     }
 
     override fun updateUI() {
-        constraintsController.update()
         goalsController.update()
         inputArgsController.update()
     }

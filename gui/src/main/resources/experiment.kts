@@ -1,10 +1,12 @@
+import core.components.experiment.MutableValueHolder
 import core.components.experiment.experimentTask
-import core.services.*
-import core.services.logger.Level
-import core.services.logger.Logger
+import core.services.getAgents
+import core.services.requestSetValue
 
 experimentTask {
     var numberOfDoodleBugs = 0.0
+    var targetFunctionVH = MutableValueHolder(0.0)
+
     modelLifecycle {
         onRun {
         }
@@ -21,10 +23,13 @@ experimentTask {
             }
         }
         targetFunction {
-            expectedValue {
+            start {
+                targetFunctionVH.value = 0.0
+            }
+            targetFunctionVH = expectedValue {
                 numberOfDoodleBugs
             }
-
+            targetFunctionVH
 //            lastInstant {
 //                numberOfDoodleBugs
 //            }
@@ -57,7 +62,8 @@ experimentTask {
             //custom("") {}
         }
         makeDecisionOn {
-            modelTimeSinceLastDecision(20.0)
+            modelTimeSinceLastDecision(3.0)
+
         }
         stopOn {
             condition("Number of Doodlebugs < 5") {
@@ -68,7 +74,7 @@ experimentTask {
                 agents.none { it.agentType == "Ant" } || agents.none { it.agentType == "Doodlebug" }
             }
             modelTime(2000.0)
-            ///timeSinceStart(timeMillis = 10000)
+            timeSinceStart(timeMillis = 20000)
         }
     }
 
@@ -78,6 +84,9 @@ experimentTask {
         }
         observable("Number of Doodlebugs") {
             getAgents().count { it.agentType == "Doodlebug" }.toDouble()
+        }
+        observable("Target Function Value") {
+            targetFunctionVH.value
         }
         mutable("a") { requestSetValue(1, "a", it.toInt()) }
     }

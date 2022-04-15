@@ -22,12 +22,12 @@ abstract class ExperimentTaskModel {
         protected set
 }
 
-data class MutableValueHolder<T>(override var value: T, override var instantValue: T) : ValueHolder<T>
+data class MutableValueHolder<T>(override var value: T) : ValueHolder<T>
 
 class MutableExperimentTaskModel: ExperimentTaskModel() {
     override val makeDecisionConditions: Map<String, PredicateExp>
         get() = _makeDecisionConditions
-    override var targetFunctionVH: ValueHolder<Double> = MutableValueHolder(0.0, 0.0)
+    override var targetFunctionVH: ValueHolder<Double> = MutableValueHolder(0.0)
     override val stopConditions: Map<String, PredicateExp>
         get() = _stopConditions
     override val goals: Set<Goal>

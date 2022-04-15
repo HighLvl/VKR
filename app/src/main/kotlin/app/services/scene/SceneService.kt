@@ -72,7 +72,7 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
         prevTime = snapshot.t
         updateSnapshotInfo(snapshot.t)
         updateAgents(snapshot.agentSnapshots)
-        updateScripts(snapshot.t)
+        updateScripts()
         onAfterModelUpdate()
     }
 
@@ -147,7 +147,7 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
             .filterIsInstance<Script>()
 
     private fun onAfterModelUpdate() = forEachScript(Script::onModelAfterUpdate)
-    private fun updateScripts(modelTime: Double) = forEachScript { onModelUpdate(modelTime) }
+    private fun updateScripts() = forEachScript { onModelUpdate() }
     override fun onModelRun() {
         prevTime = Double.MIN_VALUE
         resetSnapshotInfo()

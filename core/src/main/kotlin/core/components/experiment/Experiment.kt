@@ -32,17 +32,7 @@ typealias TargetFunction = () -> Double
 
 
 interface ValueHolder<T> {
-    /**
-     *  @return итоговое значение, в зависиммости от которого принимается оптимизационное решение.
-     *  Может зависеть от набора значений instantValue
-     */
     val value: T
-
-    /**
-     *  @return мгновенное значение, зависит от снимка состояния модели. Мгновенное значение протоколируется в таблице,
-     *  доступной экспериментатору для наблюдения
-     */
-    val instantValue: T
 }
 
 data class Goal(val name: String, val score: Int, val valueHolder: ValueHolder<Boolean>) {

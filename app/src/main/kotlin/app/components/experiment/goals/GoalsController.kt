@@ -5,6 +5,7 @@ import app.coroutines.Contexts
 import core.components.experiment.Goal
 import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
+import core.services.modelTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
@@ -40,7 +41,7 @@ class GoalsController(makeDecisionDataFlow: SharedFlow<CtrlMakeDecisionData>) {
     }
 
     private fun appendFinalValues(makeDecisionData: CtrlMakeDecisionData) {
-        goalSeries["t"]!!.append("FV")
+        goalSeries["t"]!!.append(modelTime)
         makeDecisionData.goalValues.forEach { entry ->
             goalSeries.appendGoalScore(entry.key to entry.value)
         }
@@ -68,35 +69,6 @@ class GoalsController(makeDecisionDataFlow: SharedFlow<CtrlMakeDecisionData>) {
             this.targetScore = targetScore
             goalNameToScoreMap = goals.associate { it.name to it.score }
         }
-    }
-
-    fun onModelUpdate(modelTime: Double) {
-        goals.values.forEach {
-            val score = if (it.valueHolder.instantValue) it.score else 0
-            goalValues[it.name] = it.valueHolder.instantValue to score
-        }
-        val prevGoalValues = goalSeries.entries.asSequence()
-            .filterNot { it.key == "t" || it.key == TITLE_TOTAL_SCORE }.map {
-                it.key to it.value.last
-            }.toMap()
-        if (prevGoalValues != goalValues) {
-            goalSeries.appendModelTime(modelTime)
-            goalValues.forEach {
-                goalSeries.appendGoalScore(it.key to it.value)
-            }
-            goalSeries.appendTotalScore()
-            rowTypes.append(0)
-        }
-    }
-
-    private fun Map<String, MutableSeries<Any>>.appendModelTime(modelTime: Double?) {
-        this["t"]!!.append(modelTime)
-    }
-
-    private fun Map<String, MutableSeries<Any>>.appendTotalScore() {
-        this[TITLE_TOTAL_SCORE]!!.append(
-            goalValues.values.sumOf { it.second }
-        )
     }
 
     private fun Map<String, MutableSeries<Any>>.appendGoalScore(it: Pair<String, Pair<Boolean, Int>>) {

@@ -11,6 +11,7 @@ import core.components.experiment.ExperimentTaskModel
 import core.components.experiment.MutableExperimentTaskModel
 import core.services.logger.Level
 import core.services.logger.Logger
+import core.services.modelTime
 
 class Experiment : Experiment, SystemComponent, Script {
     private val observableVariablesController = ObservableVariablesController()
@@ -93,10 +94,13 @@ class Experiment : Experiment, SystemComponent, Script {
         mutableVariablesController.reset(taskModel.mutableVariables)
     }
 
-    override fun onModelUpdate(modelTime: Double) {
+    override fun onModelUpdate() {
         taskModel.onModelUpdateListener()
-        observableVariablesController.onModelUpdate(modelTime)
         mutableVariablesController.onModelUpdate(modelTime)
+    }
+
+    override fun onModelAfterUpdate() {
+        observableVariablesController.onModelUpdate(modelTime)
     }
 
     override fun updateUI() {

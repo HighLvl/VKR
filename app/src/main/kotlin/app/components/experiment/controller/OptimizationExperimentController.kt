@@ -43,7 +43,7 @@ class OptimizationExperimentController  {
         Logger.log("Optimization experiment stopped", Level.INFO)
     }
 
-    fun onModelUpdate(modelTime: Double) {
+    fun onModelUpdate() {
         when(state) {
             State.RUN -> processRunState()
             State.WAIT_DECISION -> processWaitDecisionState()

@@ -9,6 +9,7 @@ import core.components.configuration.InputArgsComponent
 import core.components.configuration.ModelConfiguration
 import core.services.logger.Level
 import core.services.logger.Logger
+import core.services.putInputArg
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -20,8 +21,13 @@ class Configuration : SystemComponent, InputArgsComponent, AgentInterfaces, Scri
         }
 
     @AddInSnapshot(2)
-    override val inputArgs: Map<String, Any>
+    override var inputArgs: Map<String, Any>
         get() = _inputArgs
+        set(value) {
+            value.forEach {
+                putInputArg(it.key, it.value)
+            }
+        }
 
     override val agentInterfaces: StateFlow<Map<String, AgentInterface>>
         get() = _agentInterfaces

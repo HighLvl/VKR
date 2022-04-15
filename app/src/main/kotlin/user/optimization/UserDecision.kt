@@ -9,7 +9,7 @@ import core.services.Services
 import imgui.ImGui
 import org.lwjgl.glfw.GLFW
 
-class UserDecisionMaking : Component, Script {
+class UserDecision : Component, Script {
     private lateinit var optimizationExperiment: OptimizationExperiment
 
     @AddInSnapshot(2)

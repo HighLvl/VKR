@@ -92,10 +92,8 @@ class OptimizationBuilder(private val model: MutableExperimentTaskModel) {
     fun goals(goalsBuilder: GoalsBuilder.() -> Unit) = goalsBuilder(GoalsBuilder(model))
 
     /** Условия необходимости принятия решения. Решение должно быть принято в случае, если выполнено как минимум одно из условий.
-     * Для принятия решения используются итоговые значения целевых функций и ограничений
+     * Решение может быть принято с учетом значения целевой функции.
      * @see ValueHolder.value
-     * @see ValueHolder.instantValue
-     *  приостановка модели -> планировка запросов к модели -> возобновление модели
      */
     fun makeDecisionOn(makeDecisionOnConditionBuilder: MakeDecisionOnConditionBuilder.() -> Unit) =
         makeDecisionOnConditionBuilder(MakeDecisionOnConditionBuilder(model))
@@ -117,16 +115,15 @@ class TargetFunctionBuilder(model: MutableExperimentTaskModel) : OptimizerLifecy
     /** Итоговое значение эквивалентно последнему мгновенному значению целевой функции
      * @see ValueHolder
      */
-    fun lastInstant(getInstantValue: GetterExp): MutableValueHolder<Double> = MutableValueHolder(0.0, 0.0).apply {
+    fun lastInstant(getInstantValue: GetterExp): MutableValueHolder<Double> = MutableValueHolder(0.0).apply {
+        var instantValue = 0.0
         begin {
             instantValue = 0.0
             value = 0.0
         }
-
         update {
             instantValue = getInstantValue()
         }
-
         end {
             value = instantValue
         }
@@ -135,7 +132,7 @@ class TargetFunctionBuilder(model: MutableExperimentTaskModel) : OptimizerLifecy
     /** Итоговое значение эквивалентно математическому ожиданию мгновенных значений целевой функции
      * @param getInstantValue геттер мгновенного значения целевой функции
      */
-    fun expectedValue(getInstantValue: GetterExp): MutableValueHolder<Double> = MutableValueHolder(0.0, 0.0).apply {
+    fun expectedValue(getInstantValue: GetterExp): MutableValueHolder<Double> = MutableValueHolder(0.0).apply {
         var sum = 0.0
         var startTime = 0.0
         //init
@@ -145,7 +142,7 @@ class TargetFunctionBuilder(model: MutableExperimentTaskModel) : OptimizerLifecy
         }
         //calculate instant value and sum
         update {
-            instantValue = getInstantValue()
+            val instantValue = getInstantValue()
             sum += instantValue * dt
         }
         //calculate ev
@@ -158,13 +155,12 @@ class TargetFunctionBuilder(model: MutableExperimentTaskModel) : OptimizerLifecy
 @ExperimentDslMarker
 class GoalsBuilder(private val model: MutableExperimentTaskModel) : OptimizerLifecycleEventsListener(model) {
     /** Цель достигнута, если последнее мгновенное значение предиката истинно. (value == instantValue)
-     * @see ValueHolder.instantValue
      * @see ValueHolder.value
      */
     fun lastInstant(name: String, score: Int, getInstantValue: PredicateExp) {
-        model.addGoal(name, score, MutableValueHolder(value = false, instantValue = false).apply {
+        model.addGoal(name, score, MutableValueHolder(value = false).apply {
+            var instantValue = false
             begin {
-                instantValue = false
                 value = false
             }
             update {
@@ -179,13 +175,12 @@ class GoalsBuilder(private val model: MutableExperimentTaskModel) : OptimizerLif
     /** Цель достигнута, если все мгновенные значения предиката истинны
      */
     fun allInstant(name: String, score: Int, getInstantValue: PredicateExp) {
-        model.addGoal(name, score, MutableValueHolder(value = false, instantValue = false).apply {
+        model.addGoal(name, score, MutableValueHolder(value = false).apply {
             begin {
-                instantValue = true
                 value = true
             }
             update {
-                instantValue = getInstantValue()
+                val instantValue = getInstantValue()
                 value = value && instantValue
             }
         })
@@ -194,7 +189,7 @@ class GoalsBuilder(private val model: MutableExperimentTaskModel) : OptimizerLif
     /** Построение цели с пользовательским вычислением мгновенного и итогового значений
      */
     fun custom(name: String, score: Int, predicateBuilder: MutableValueHolder<Boolean>.() -> Unit) {
-        model.addGoal(name, score, MutableValueHolder(value = false, instantValue = false).apply(predicateBuilder))
+        model.addGoal(name, score, MutableValueHolder(value = false).apply(predicateBuilder))
     }
 }
 
