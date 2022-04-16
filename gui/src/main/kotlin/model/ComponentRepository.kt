@@ -5,7 +5,7 @@ import core.components.base.Component
 
 import kotlin.reflect.KClass
 
-class ComponentRepository(private val componentProvider: ComponentProvider) {
+class ComponentRepository(componentProvider: ComponentProvider) {
     private val componentTree = mutableMapOf<Int, KClass<out Component>>()
     private val components = componentProvider.getComponents()
 
@@ -13,19 +13,43 @@ class ComponentRepository(private val componentProvider: ComponentProvider) {
 
     fun getComponentTree(): Map<Int, Node> {
         val userComponents = components.user
-        val appComponents = components.app
+        val systemComponents = components.system
+        val systemNodes = mutableListOf<Int>()
         val userNodes = mutableListOf<Int>()
         val tree = mutableMapOf<Int, Node>(
-            0 to FolderNode("Components", listOf(1)),
-            1 to FolderNode("User Components", userNodes)
+            0 to FolderNode(COMPONENTS, listOf(1, 2)),
+            1 to FolderNode(SYSTEM_COMPONENTS, systemNodes),
+            2 to FolderNode(USER_COMPONENTS, userNodes)
         )
-        for (i in userComponents.indices) {
-            val id = i + 2
-            userNodes.add(id)
-            tree[id] = ComponentNode(userComponents[i].qualifiedName.toString())
-            componentTree[id] = userComponents[i]
-        }
+        val lastId = inflateComponentTrees(userComponents, 3, userNodes, tree, USER_COMPONENT_NAME_PREFIX)
+        inflateComponentTrees(systemComponents, lastId + 1, systemNodes, tree, SYSTEM_COMPONENT_NAME_PREFIX)
         return tree
+    }
+
+    private fun inflateComponentTrees(
+        components: List<KClass<out Component>>,
+        startId: Int,
+        nodes: MutableList<Int>,
+        nodeTree: MutableMap<Int, Node>,
+        prefix: String
+    ): Int {
+        var id = startId
+        for (i in components.indices) {
+            id += i
+            nodes.add(id)
+            nodeTree[id] = ComponentNode(components[i].qualifiedName.toString().removePrefix(prefix))
+            componentTree[id] = components[i]
+        }
+        return id
+    }
+
+    private companion object {
+        const val SYSTEM_COMPONENTS = "System Components"
+        const val USER_COMPONENTS = "User Components"
+        const val COMPONENTS = "Components"
+        const val SYSTEM_COMPONENT_NAME_PREFIX = "app.components.system."
+        const val USER_COMPONENT_NAME_PREFIX = "app.components.user."
+
     }
 }
 

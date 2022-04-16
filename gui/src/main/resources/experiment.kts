@@ -8,8 +8,7 @@ experimentTask {
     var targetFunctionVH = MutableValueHolder(0.0)
 
     modelLifecycle {
-        onRun {
-        }
+        onRun { }
         onUpdate {
             numberOfDoodleBugs = getAgents().count { it.agentType == "Doodlebug" }.toDouble()
         }
@@ -20,6 +19,9 @@ experimentTask {
         inputParams {
             param("a", 100.0, 0.0, 200.0, 1.0) {
                 requestSetValue(1, "a", it.toInt())
+            }
+            constraint { params ->
+                params["a"]!! != 10.0
             }
         }
         targetFunction {
@@ -62,7 +64,7 @@ experimentTask {
             //custom("") {}
         }
         makeDecisionOn {
-            modelTimeSinceLastDecision(3.0)
+            modelTimeSinceLastDecision(20.0)
 
         }
         stopOn {

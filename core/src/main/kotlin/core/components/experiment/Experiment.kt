@@ -11,19 +11,29 @@ interface OptimizationExperiment : Component {
         object Stop: State
         object Run: State
         interface WaitDecision: State {
-            val inputParams: List<DoubleParam>
+            val inputParams: List<Input>
             val targetFunctionValue: Double
-            fun makeDecision()
+            fun makeDecision(): Boolean
         }
     }
+
+    interface Input {
+        var value: Double
+        val name: String
+        val minValue: Double
+        val maxValue: Double
+        val step: Double
+    }
+
     val state: State
+    fun start()
+    fun stop()
 }
 
 interface DoubleParam {
     var value: Double
     val inputParam: InputParam
 }
-
 
 typealias GetterExp = () -> Double
 typealias SetterExp = (Double) -> Unit

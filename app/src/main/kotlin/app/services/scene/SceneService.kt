@@ -3,14 +3,14 @@ package app.services.scene
 import app.api.dto.AgentSnapshot
 import app.api.dto.ModelInputArgs
 import app.api.dto.Snapshot
-import app.components.agent.AgentInterface
-import app.components.base.SystemComponent
-import app.components.configuration.AgentInterfaces
-import app.components.configuration.Configuration
-import app.components.experiment.Experiment
+import app.components.system.agent.AgentInterface
+import app.components.system.base.Native
+import app.components.system.configuration.AgentInterfaces
+import app.components.system.configuration.Configuration
+import app.components.system.experiment.common.Experiment
 import app.components.getSnapshot
 import app.components.loadSnapshot
-import app.components.model.SnapshotInfo
+import app.components.system.model.SnapshotInfo
 import app.coroutines.Contexts
 import app.requests.RequestSender
 import app.services.Service
@@ -217,8 +217,8 @@ object EntityFactory {
             }
 
             init {
-                setComponent<SnapshotInfo>()
                 setComponent<Configuration>()
+                setComponent<SnapshotInfo>()
             }
 
             @Suppress("UNCHECKED_CAST")
@@ -257,7 +257,7 @@ object EntityFactory {
     private class SystemComponentHolder(private val componentHolder: ComponentHolder = MapComponentHolder()) :
         ComponentHolder by componentHolder {
         override fun <C : Component> removeComponent(type: KClass<C>): C? {
-            if (type.isSubclassOf(SystemComponent::class)) return null
+            if (type.isSubclassOf(Native::class)) return null
             return componentHolder.removeComponent(type)
         }
     }

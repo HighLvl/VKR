@@ -14,7 +14,7 @@ import widgets.Widget
 class LoggerView(private val viewModel: LoggerViewModel) : View(), Widget {
     private val filterString = ImString()
     private val openFilter = ImBoolean()
-    private val showDebug = ImBoolean(true)
+    private val showDebug = ImBoolean(false)
     private val showError = ImBoolean(true)
     private val showInfo = ImBoolean(true)
     private var logs = listOf<Pair<String, Level>>()
@@ -23,6 +23,7 @@ class LoggerView(private val viewModel: LoggerViewModel) : View(), Widget {
         viewModel.logs.collectWithUiContext() {
             logs = it
         }
+        filter()
     }
 
     private fun filter() {

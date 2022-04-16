@@ -18,7 +18,8 @@ class ExperimentTaskBuilder(private val model: MutableExperimentTaskModel) {
      * Оптимизация проходит в рамках одного запуска. Можно начать и остановить оптимизацию в любое время.
      * В результате принятия оптимизационного решения изменяются входные параметры модели.
      * Оптимизационный эксперимент заканчивается, в случае достижения его цели или выполнения условий останова
-     * процесса оптимизации.
+     * процесса оптимизации. Необходимость принятия решения, условия останова
+     * проверяются при получении состояния от сервера модели.
      * @param targetScore целевая сумма баллов достигнутых целей
      * @see OptimizationBuilder.makeDecisionOn
      * @see OptimizationBuilder.inputParams
@@ -57,14 +58,14 @@ class ModelLifecycleListenerBuilder(private val model: MutableExperimentTaskMode
 }
 
 @ExperimentDslMarker
-class OptimizationBuilder(private val model: MutableExperimentTaskModel) {
+class OptimizationBuilder(private val model: MutableExperimentTaskModel): OptimizerLifecycleEventsListener(model) {
     /** Параметры, изменяемые при принятии решения
      */
     fun inputParams(inputParamsBuilder: InputParamsBuilder.() -> Unit) = inputParamsBuilder(InputParamsBuilder(model))
 
     /** Целевая функция.
      * Для построения функции можно воспользоваться каркасами lastInstant и expectedValue
-     * или создать пользовательскую целевую функцию, вернув valueHolder<Double> в лямбде targetFunctionBuilder:.
+     * или создать пользовательскую целевую функцию, вернув valueHolder<Double> в лямбде targetFunctionBuilder.
      * @see TargetFunctionBuilder.expectedValue
      * @see TargetFunctionBuilder.lastInstant
      */
@@ -105,8 +106,20 @@ class OptimizationBuilder(private val model: MutableExperimentTaskModel) {
 
 @ExperimentDslMarker
 class InputParamsBuilder(private val model: MutableExperimentTaskModel) {
+    /** Объявление паратметра, значение которого изменяется при принятии оптимизационного решения
+     */
     fun param(name: String, initialValue: Double, minValue: Double, maxValue: Double, step: Double, setter: SetterExp) =
         model.addInputParam(InputParam(name, initialValue, minValue, maxValue, step, setter))
+
+    /** Ограничение накладываемое на выборку значений параметров. Если выборка не соотвествует ограничению,
+     *  то значения параметров не изменяются и считается, что решение не принято.
+     * @param predicate должен возврщать истину в случае удовлетворения выборки ограничению.
+     * Map<String, Double> - отображение имени параметра на его значение
+     */
+    fun constraint(predicate: (Map<String, Double>) -> Boolean) {
+        model.constraint = predicate
+    }
+
 }
 
 @ExperimentDslMarker
@@ -210,7 +223,7 @@ class StopOnConditionBuilder(private val model: MutableExperimentTaskModel) : Op
      */
     fun modelTime(t: Double) = model.addStopOnCondition("Model Time >= $t") { modelTime >= t }
 
-    /** Останавливает оптимизацию через время t в секундах после старта
+    /** Останавливает оптимизацию через время t в секундах после старта.
      */
     fun timeSinceStart(timeMillis: Long) {
         var startTime = 0L

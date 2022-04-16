@@ -8,7 +8,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
+
 
 class LogService {
     private val logs = LinkedList<Log>()
@@ -50,10 +53,13 @@ class LogService {
 
 
     private fun formatLog(text: String, level: Level): String {
+        val date = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss,SSS")
+        val dateText = date.format(formatter)
         return when (level) {
-            Level.ERROR -> FORMATTED_ERROR_LOG.format(text)
-            Level.INFO -> FORMATTED_INFO_LOG.format(text)
-            Level.DEBUG -> FORMATTED_DEBUG_LOG.format(text)
+            Level.ERROR -> FORMATTED_ERROR_LOG.format(dateText, text)
+            Level.INFO -> FORMATTED_INFO_LOG.format(dateText, text)
+            Level.DEBUG -> FORMATTED_DEBUG_LOG.format(dateText, text)
         }
     }
 
@@ -79,8 +85,8 @@ class LogService {
 
     private companion object {
         const val MAX_LOG_LIST_SIZE = 10000
-        const val FORMATTED_ERROR_LOG = "[error] %s"
-        const val FORMATTED_INFO_LOG = "[info] %s"
-        const val FORMATTED_DEBUG_LOG = "[debug] %s"
+        const val FORMATTED_ERROR_LOG = "<%s> [error] %s"
+        const val FORMATTED_INFO_LOG = "<%s> [info] %s"
+        const val FORMATTED_DEBUG_LOG = "<%s> [debug] %s"
     }
 }

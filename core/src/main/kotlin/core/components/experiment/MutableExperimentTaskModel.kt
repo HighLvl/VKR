@@ -2,6 +2,7 @@ package core.components.experiment
 
 abstract class ExperimentTaskModel {
     abstract val inputParams: Set<InputParam>
+    abstract val constraint: (Map<String, Double>) -> Boolean
     abstract val makeDecisionConditions: Map<String, PredicateExp>
     abstract val targetFunctionVH: ValueHolder<Double>
     abstract val goals: Set<Goal>
@@ -24,7 +25,7 @@ abstract class ExperimentTaskModel {
 
 data class MutableValueHolder<T>(override var value: T) : ValueHolder<T>
 
-class MutableExperimentTaskModel: ExperimentTaskModel() {
+class MutableExperimentTaskModel : ExperimentTaskModel() {
     override val makeDecisionConditions: Map<String, PredicateExp>
         get() = _makeDecisionConditions
     override var targetFunctionVH: ValueHolder<Double> = MutableValueHolder(0.0)
@@ -38,6 +39,7 @@ class MutableExperimentTaskModel: ExperimentTaskModel() {
         get() = _mutableVariables
     override val inputParams: Set<InputParam>
         get() = _inputParams
+    override var constraint: (Map<String, Double>) -> Boolean = { true }
     override val onBeginListeners: List<() -> Unit>
         get() = _onBeginListeners
     override val onUpdateListeners: List<() -> Unit>

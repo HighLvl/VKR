@@ -1,10 +1,10 @@
 package viewmodel
 
 import app.components.*
-import app.components.agent.AgentInterface
-import app.components.agent.RequestBodies
-import app.components.agent.RequestBody
-import app.components.experiment.Experiment
+import app.components.system.agent.AgentInterface
+import app.components.system.agent.RequestBodies
+import app.components.system.agent.RequestBody
+import app.components.system.experiment.common.Experiment
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import core.components.base.Component
-import app.components.base.SystemComponent
+import app.components.system.base.Native
 
 class ComponentManager {
     private val objectMapper = jacksonObjectMapper()
@@ -40,8 +40,8 @@ class ComponentManager {
                     component.requestBodies.mapToPropBuilderNodes()
                 )
                 is Experiment -> Experiment(index, compClassName, propInspectorNode)
-                is app.components.configuration.Configuration -> Configuration(index, compClassName, propInspectorNode)
-                is SystemComponent -> UnknownComponent(index, compClassName, false, propInspectorNode)
+                is app.components.system.configuration.Configuration -> Configuration(index, compClassName, propInspectorNode)
+                is Native -> UnknownComponent(index, compClassName, false, propInspectorNode)
                 else -> UnknownComponent(index, compClassName, true, propInspectorNode)
             }
         }.toList()

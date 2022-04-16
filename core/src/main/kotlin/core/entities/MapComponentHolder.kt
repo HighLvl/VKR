@@ -10,6 +10,7 @@ class MapComponentHolder : ComponentHolder {
     private val components = mutableMapOf<KClass<out Component>, Component>()
 
     override fun <C : Component> setComponent(type: KClass<out C>): C {
+        getComponent(type)?.let { return it }
         return type.createInstance().also {
             components[type] = it
             runBlockCatching {
