@@ -1,8 +1,6 @@
 package app.components.system.experiment.optimization
 
-import core.components.base.AddInSnapshot
-import core.components.base.Component
-import core.components.base.Script
+import core.components.base.*
 import core.components.experiment.OptimizationExperiment
 import core.entities.Experimenter
 import core.entities.getComponent
@@ -12,6 +10,7 @@ import core.services.logger.Logger
 import imgui.ImGui
 import org.lwjgl.glfw.GLFW
 
+@TargetEntity(Experimenter::class, [OptimizationExperiment::class])
 class UserDecision : Component, Script {
     private lateinit var optimizationExperiment: OptimizationExperiment
     private lateinit var experimenter: Experimenter
@@ -27,15 +26,24 @@ class UserDecision : Component, Script {
         }
 
     private var needMakeDecision: Boolean = false
-    private lateinit var waitDecision: OptimizationExperiment.State.WaitDecision
+    private lateinit var waitDecision: OptimizationExperiment.Command.WaitDecision
 
     override fun onAttach() {
-        try {
-            experimenter = Services.scene.experimenter
-            optimizationExperiment = experimenter.getComponent()!!
-        } catch (e: NullPointerException) {
-            Services.scene.findEntityByComponent(this)!!.removeComponent(this::class)
-            Logger.log("Optimization Experiment required", Level.ERROR)
+        experimenter = Services.scene.experimenter
+        optimizationExperiment = experimenter.getComponent()!!
+        optimizationExperiment.commandObservable.observe {
+            processCommand(it)
+        }
+    }
+
+    private fun processCommand(command: OptimizationExperiment.Command) {
+        when (command) {
+            is OptimizationExperiment.Command.WaitDecision -> if (!needMakeDecision) {
+                needMakeDecision = true
+                waitDecision = command
+                Services.agentModelControl.pauseModel()
+            }
+            else -> needMakeDecision = false
         }
     }
 
@@ -44,24 +52,10 @@ class UserDecision : Component, Script {
     }
 
     override fun onModelAfterUpdate() {
-        when (val state = optimizationExperiment.state) {
-            is OptimizationExperiment.State.Stop, is OptimizationExperiment.State.Run -> needMakeDecision = false
-            is OptimizationExperiment.State.WaitDecision -> if (!needMakeDecision) {
-                Services.agentModelControl.pauseModel { result ->
-                    result.onSuccess {
-                        needMakeDecision = true
-                        waitDecision = state
-                    }
-                }
-            }
-        }
+
     }
 
     override fun updateUI() {
-        if (experimenter.getComponent<OptimizationExperiment>() == null) {
-            Services.scene.findEntityByComponent(this)!!.removeComponent(this::class)
-            return
-        }
         if (needMakeDecision && ImGui.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) {
             if (waitDecision.makeDecision()) {
                 needMakeDecision = false

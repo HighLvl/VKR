@@ -1,26 +1,12 @@
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import java.util.concurrent.SubmissionPublisher
 
 
 fun main() {
-    val context = Dispatchers.IO + Job()
-    val viewModelScope = CoroutineScope(context)
-    val controlScope = CoroutineScope(context)
-
-    runBlocking(Dispatchers.IO) {
-        viewModelScope.launch {
-            delay(10000)
-        }
-        controlScope.launch {
-            delay(10000)
-        }
-        delay(100)
-        controlScope.coroutineContext[Job]?.children?.forEach { println(it) }
-        viewModelScope.coroutineContext.cancelChildren()
-        controlScope.coroutineContext[Job]?.children?.forEach { println(it) }
-        delay(100)
-
-
-    }
+    val publisher = SubmissionPublisher<Unit>()
+    publisher.consume {  }
 }

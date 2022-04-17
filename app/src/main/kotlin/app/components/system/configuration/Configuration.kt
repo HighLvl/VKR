@@ -4,15 +4,18 @@ import app.components.system.base.Native
 import app.utils.KtsScriptEngine
 import core.components.base.AddInSnapshot
 import core.components.base.Script
+import core.components.base.TargetEntity
 import core.components.configuration.AgentInterface
 import core.components.configuration.InputArgsComponent
 import core.components.configuration.ModelConfiguration
+import core.entities.Environment
 import core.services.logger.Level
 import core.services.logger.Logger
 import core.services.putInputArg
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+@TargetEntity(Environment::class)
 class Configuration : Native, InputArgsComponent, AgentInterfaces, Script {
     @AddInSnapshot(1)
     var modelConfiguration: String = ""

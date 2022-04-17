@@ -6,24 +6,29 @@ import app.components.system.experiment.common.variables.observable.ObservableVa
 import app.utils.KtsScriptEngine
 import core.components.base.AddInSnapshot
 import core.components.base.Script
+import core.components.base.TargetEntity
 import core.components.experiment.Experiment
 import core.components.experiment.ExperimentTaskModel
 import core.components.experiment.MutableExperimentTaskModel
+import core.entities.Experimenter
 import core.services.logger.Level
 import core.services.logger.Logger
 import core.services.modelTime
+import core.utils.*
 
+@TargetEntity(Experimenter::class)
 class Experiment : Experiment, Native, Script {
     private val observableVariablesController = ObservableVariablesController()
     private val mutableVariablesController = MutableVariablesController()
 
     private var isRunning = false
-    override var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
-        private set
 
-    val importTaskModelObservers = mutableListOf<() -> Unit>()
-    val clearTrackedDataObservers = mutableListOf<() -> Unit>()
-    val trackedDataSizeObservers = mutableListOf<() -> Unit>()
+    private var taskModel = MutableExperimentTaskModel()
+    private val _taskModelObservable = MutableValue<ExperimentTaskModel>(taskModel)
+    override val taskModelObservable: ValueObservable<ExperimentTaskModel> = _taskModelObservable
+
+    private val _clearTrackedDataObservable = PublishSubject<Unit>()
+    val clearTrackedDataObservable: Observable<Unit> = _clearTrackedDataObservable
 
     @AddInSnapshot(1)
     var task: String = ""
@@ -47,13 +52,16 @@ class Experiment : Experiment, Native, Script {
             field = value
             observableVariablesController.trackedDataSize = value
             mutableVariablesController.trackedDataSize = value
-            trackedDataSizeObservers.forEach { it() }
+            _trackedDataSizeObservable.value = value
         }
 
     @AddInSnapshot(8)
     var clearTrackedDataOnRun = true
 
-    init {
+    private val _trackedDataSizeObservable = MutableValue(trackedDataSize)
+    val trackedDataSizeObservable: ValueObservable<Int> = _trackedDataSizeObservable
+
+    override fun onAttach() {
         importTaskModel()
     }
 
@@ -61,7 +69,7 @@ class Experiment : Experiment, Native, Script {
         isRunning = true
         if (clearTrackedDataOnRun) {
             reset()
-            clearTrackedDataObservers.forEach { it() }
+            _clearTrackedDataObservable.publish(Unit)
         }
         taskModel.onModelRunListener()
     }
@@ -75,6 +83,7 @@ class Experiment : Experiment, Native, Script {
         return try {
             taskModel = KtsScriptEngine.eval(path)
             importTaskModel()
+            _taskModelObservable.value = taskModel
             path
         } catch (e: ClassCastException) {
             Logger.log("${ExperimentTaskModel::class} is expected", Level.ERROR)
@@ -87,7 +96,6 @@ class Experiment : Experiment, Native, Script {
     }
 
     private fun importTaskModel() {
-        importTaskModelObservers.forEach { it() }
         reset()
     }
 

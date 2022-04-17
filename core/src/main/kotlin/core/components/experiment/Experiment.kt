@@ -1,16 +1,21 @@
 package core.components.experiment
 
 import core.components.base.Component
+import core.components.base.TargetEntity
+import core.entities.Experimenter
+import core.utils.ValueObservable
 
 interface Experiment : Component {
-    val taskModel: ExperimentTaskModel
+    val taskModelObservable: ValueObservable<ExperimentTaskModel>
 }
 
 interface OptimizationExperiment : Component {
-    sealed interface State {
-        object Stop: State
-        object Run: State
-        interface WaitDecision: State {
+    sealed interface Command {
+        object Start: Command
+        object Stop: Command
+        object Run: Command
+
+        interface WaitDecision: Command {
             val inputParams: List<Input>
             val targetFunctionValue: Double
             fun makeDecision(): Boolean
@@ -25,7 +30,7 @@ interface OptimizationExperiment : Component {
         val step: Double
     }
 
-    val state: State
+    val commandObservable: ValueObservable<Command>
     fun start()
     fun stop()
 }

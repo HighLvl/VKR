@@ -209,17 +209,8 @@ object EntityFactory {
 
     fun createEnvironment(): Environment {
         return object : Environment(SystemComponentHolder()) {
-            val snapshotInfo by lazy {
-                super.getComponent(SnapshotInfo::class)!!
-            }
-            val configuration by lazy {
-                super.getComponent(Configuration::class)!!
-            }
-
-            init {
-                setComponent<Configuration>()
-                setComponent<SnapshotInfo>()
-            }
+            val snapshotInfo: SnapshotInfo = super.setComponent(SnapshotInfo::class)
+            val configuration: Configuration = super.setComponent(Configuration::class)
 
             @Suppress("UNCHECKED_CAST")
             override fun <C : Component> getComponent(type: KClass<C>): C? {

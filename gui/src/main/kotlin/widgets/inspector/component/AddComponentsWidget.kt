@@ -1,9 +1,9 @@
 package widgets.inspector.component
 
 
+import imgui.ImGui
 import model.FolderNode
 import model.Node
-import imgui.ImGui
 import widgets.Widget
 
 class AddComponentsWidget : Widget {
@@ -23,7 +23,11 @@ class AddComponentsWidget : Widget {
     }
 
     fun load(componentTree: Map<Int, Node>, rootNode: Int) {
+        val currentNodeId = navigator.currentNodeId
         navigator.load(componentTree, rootNode)
+        if (currentNodeId in componentTree) {
+            navigator.navigate(currentNodeId)
+        }
     }
 
     override fun draw() {

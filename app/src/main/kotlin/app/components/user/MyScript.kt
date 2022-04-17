@@ -6,6 +6,8 @@ import app.eventbus.gui.UIEvent
 import core.components.agent.AgentInterface
 import core.components.base.Component
 import core.components.base.Script
+import core.components.base.TargetEntity
+import core.entities.Environment
 import core.entities.getComponent
 import core.services.Services
 import core.services.getAgentsToIdMap
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
+@TargetEntity(Environment::class)
 class MyScript : Component, Script {
     sealed class CellType {
         abstract class Agent(open val id: Int) : CellType()

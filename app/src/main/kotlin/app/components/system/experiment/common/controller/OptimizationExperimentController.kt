@@ -1,23 +1,34 @@
 package app.components.system.experiment.common.controller
 
+import app.components.system.experiment.optimization.InputDoubleParam
 import app.coroutines.Contexts
 import core.components.experiment.*
+import core.components.experiment.OptimizationExperiment.*
 import core.services.Services
 import core.services.logger.Level
 import core.services.logger.Logger
+import core.utils.MutableValue
+import core.utils.Observable
+import core.utils.PublishSubject
+import core.utils.ValueObservable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
 class OptimizationExperimentController {
+    lateinit var inputParams: MutableMap<String, InputDoubleParam>
+    private val _isValidArgsObservable = PublishSubject<Boolean>()
+    val isValidArgsObservable: Observable<Boolean> = _isValidArgsObservable
+
+    private val _commandObservable = MutableValue<Command>(Command.Stop)
+    val commandObservable: ValueObservable<Command> = _commandObservable
 
     enum class State {
         STOP, RUN, WAIT_DECISION
     }
 
-    var state = State.STOP
-        private set
+    private var state: State = State.STOP
 
     private var paramNameToSetterMap: Map<String, SetterExp> = mapOf()
     var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
@@ -28,25 +39,31 @@ class OptimizationExperimentController {
     var makeDecisionData: CtrlMakeDecisionData? = null
         private set
 
-    private val _ctrlMakeDecisionDataFlow = MutableSharedFlow<CtrlMakeDecisionData>()
     private val coroutineScope = CoroutineScope(Contexts.app)
 
+    private val _ctrlMakeDecisionDataFlow = MutableSharedFlow<CtrlMakeDecisionData>()
     val ctrlMakeDecisionDataFlow: SharedFlow<CtrlMakeDecisionData> = _ctrlMakeDecisionDataFlow
 
     fun start() {
+        if (state != State.STOP) return
         taskModel.onStartOptimizationListeners.forEach { it() }
         taskModel.onBeginListeners.forEach { it() }
-        state = State.RUN
         makeDecisionData = null
         Logger.log("Optimization experiment started", Level.INFO)
+        state = State.RUN
+        with(_commandObservable) {
+            value = Command.Start
+            value = Command.Run
+        }
     }
 
     fun stop() {
         if (state == State.STOP) return
         taskModel.onStopOptimizationListeners.forEach { it() }
-        state = State.STOP
         Services.agentModelControl.pauseModel()
         Logger.log("Optimization experiment stopped", Level.INFO)
+        state = State.STOP
+        _commandObservable.value = Command.Stop
     }
 
     fun onModelUpdate() {
@@ -63,8 +80,8 @@ class OptimizationExperimentController {
         if (needMakeDecision()) {
             taskModel.onEndListeners.forEach { it() }
             newMakeDecisionData()
-            waitDecision()
             coroutineScope.launch { _ctrlMakeDecisionDataFlow.emit(makeDecisionData!!) }
+            waitDecision()
         }
         if (needStopOptimization()) {
             stop()
@@ -73,6 +90,20 @@ class OptimizationExperimentController {
 
     private fun waitDecision() {
         state = State.WAIT_DECISION
+        _commandObservable.value = waitDecisionState()
+    }
+
+    private fun waitDecisionState() = object : Command.WaitDecision {
+        override val inputParams: List<Input>
+            get() = this@OptimizationExperimentController.inputParams.values.toList()
+        override val targetFunctionValue: Double
+            get() = makeDecisionData!!.targetFunctionValue
+
+        override fun makeDecision(): Boolean {
+            val isValidArgs = makeDecision(inputParams)
+            _isValidArgsObservable.publish(isValidArgs)
+            return isValidArgs
+        }
     }
 
     private fun needMakeDecision(): Boolean {
@@ -124,12 +155,13 @@ class OptimizationExperimentController {
         coroutineScope.launch { makeDecisionData }
     }
 
-    fun makeDecision(inputParams: List<OptimizationExperiment.Input>): Boolean {
+    fun makeDecision(inputParams: List<Input>): Boolean {
         val params = inputParams.asSequence().map { it.name to it.value }.toMap()
         if (!taskModel.constraint(params)) return false
         inputParams.forEach { paramNameToSetterMap[it.name]!!(it.value) }
         taskModel.onBeginListeners.forEach { it() }
         state = State.RUN
+        _commandObservable.value = Command.Run
         return true
     }
 }

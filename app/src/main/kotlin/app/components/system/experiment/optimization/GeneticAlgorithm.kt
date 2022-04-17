@@ -2,35 +2,37 @@ package app.components.system.experiment.optimization
 
 import core.components.base.Component
 import core.components.base.Script
+import core.components.base.TargetEntity
 import core.components.experiment.OptimizationExperiment
+import core.entities.Experimenter
 import core.entities.getComponent
-import core.entities.removeComponent
 import core.services.Services
-import core.services.logger.Level
-import core.services.logger.Logger
 
-class GeneticAlgorithm: Component, Script {
+@TargetEntity(Experimenter::class, [OptimizationExperiment::class])
+class GeneticAlgorithm : Component, Script {
     private lateinit var optimizationExperiment: OptimizationExperiment
     override fun onAttach() {
-        try {
-            optimizationExperiment = Services.scene.experimenter.getComponent()!!
-        } catch (e: NullPointerException) {
-            Services.scene.findEntityByComponent(this)!!.removeComponent(this::class)
-            Logger.log("Optimization Experiment required", Level.ERROR)
+        optimizationExperiment = Services.scene.experimenter.getComponent()!!
+        optimizationExperiment.commandObservable.observe {
+            processCommand(it)
         }
     }
 
-    override fun onModelAfterUpdate() {
-        when(val state = optimizationExperiment.state) {
-            is OptimizationExperiment.State.Stop -> {}
-            is OptimizationExperiment.State.Run -> {}
-            is OptimizationExperiment.State.WaitDecision -> {
-                state.processWaitDecisionState()
+    private fun processCommand(command: OptimizationExperiment.Command) {
+        when (command) {
+            is OptimizationExperiment.Command.Stop -> {
+            }
+            is OptimizationExperiment.Command.Start -> {
+            }
+            is OptimizationExperiment.Command.Run -> {
+            }
+            is OptimizationExperiment.Command.WaitDecision -> {
+                command.processWaitDecisionState()
             }
         }
     }
 
-    private fun OptimizationExperiment.State.WaitDecision.processWaitDecisionState() {
+    private fun OptimizationExperiment.Command.WaitDecision.processWaitDecisionState() {
         targetFunctionValue
         inputParams
         makeDecision()

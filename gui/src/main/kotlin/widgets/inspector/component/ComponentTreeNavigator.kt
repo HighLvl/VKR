@@ -9,6 +9,8 @@ class ComponentTreeNavigator {
 
     var onSelectComponentNode: (nodeId: Int) -> Unit = {}
     var onSelectFolderNode: (folderName: String, nodesInFolder: Map<Int, Node>) -> Unit = { _, _ -> }
+    val currentNodeId: Int
+    get() = if(backStack.isEmpty()) 0 else backStack.last()
 
     fun load(componentTree: Map<Int, Node>, rootNodeId: Int) {
         tree.clear()

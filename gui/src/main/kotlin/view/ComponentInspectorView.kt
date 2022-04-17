@@ -18,7 +18,7 @@ class ComponentInspectorView(private val viewModel: SceneViewModel) : View(), Wi
     private var title: String = ""
 
     override fun onPreRun() {
-        viewModel.canAddComponents.collectWithUiContext {
+        viewModel.availableComponents.collectWithUiContext {
             addComponentsWidget.load(it, 0)
         }
         viewModel.selectedEntity.collectWithUiContext {

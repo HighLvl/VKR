@@ -6,11 +6,16 @@ import app.components.system.experiment.common.goals.GoalsController
 import app.components.system.experiment.common.input.InputArgsController
 import core.components.base.AddInSnapshot
 import core.components.base.Script
+import core.components.base.TargetEntity
 import core.components.experiment.ExperimentTaskModel
 import core.components.experiment.OptimizationExperiment
+import core.entities.Experimenter
 import core.entities.getComponent
 import core.services.Services
+import core.utils.Disposable
+import core.utils.ValueObservable
 
+@TargetEntity(Experimenter::class, [core.components.experiment.Experiment::class])
 class OptimizationExperiment : OptimizationExperiment, Script {
     private val _inputParams = mutableMapOf<String, InputDoubleParam>()
     private val optimizationExperimentController = OptimizationExperimentController()
@@ -18,18 +23,9 @@ class OptimizationExperiment : OptimizationExperiment, Script {
     private val goalsController = GoalsController(_makeDecisionDataFlow)
     private val inputArgsController = InputArgsController()
     private val experiment = Services.scene.experimenter.getComponent<Experiment>()!!
-    private val taskModel: ExperimentTaskModel by experiment::taskModel
+    private val taskModel: ExperimentTaskModel by experiment.taskModelObservable::value
 
-    override var state: OptimizationExperiment.State = OptimizationExperiment.State.Stop
-        private set
-
-    override fun start() {
-        optimizationExperimentController.start()
-    }
-
-    override fun stop() {
-        optimizationExperimentController.stop()
-    }
+    override val commandObservable: ValueObservable<OptimizationExperiment.Command> = optimizationExperimentController.commandObservable
 
     @AddInSnapshot(6)
     var showGoals by goalsController::enabled
@@ -40,17 +36,20 @@ class OptimizationExperiment : OptimizationExperiment, Script {
     @AddInSnapshot(8)
     var startOnModelRun = true
 
+    private val disposables = mutableListOf<Disposable>()
+
     override fun onAttach() {
-        experiment.importTaskModelObservers += ::importOptimizationTaskModel
-        experiment.clearTrackedDataObservers += ::reset
-        experiment.trackedDataSizeObservers += ::setTrackedDataSize
+        disposables += experiment.taskModelObservable.observe { importOptimizationTaskModel() }
+        disposables += experiment.clearTrackedDataObservable.observe { reset() }
+        disposables += experiment.trackedDataSizeObservable.observe { setTrackedDataSize(it) }
         importOptimizationTaskModel()
+        optimizationExperimentController.isValidArgsObservable.observe {
+            if (it) inputArgsController.commitInputArgs()
+        }
     }
 
     override fun onDetach() {
-        experiment.importTaskModelObservers -= ::importOptimizationTaskModel
-        experiment.clearTrackedDataObservers -= ::reset
-        experiment.trackedDataSizeObservers -= ::setTrackedDataSize
+        disposables.forEach { it.dispose() }
         optimizationExperimentController.stop()
     }
 
@@ -59,8 +58,7 @@ class OptimizationExperiment : OptimizationExperiment, Script {
         optimizationExperimentController.taskModel = taskModel
     }
 
-    private fun setTrackedDataSize() {
-        val value = experiment.trackedDataSize
+    private fun setTrackedDataSize(value: Int) {
         goalsController.trackedDataSize = value
         inputArgsController.trackedDataSize = value
     }
@@ -74,6 +72,7 @@ class OptimizationExperiment : OptimizationExperiment, Script {
     private fun reset() {
         goalsController.reset(taskModel.goals, taskModel.targetScore)
         resetInputArgsController()
+        optimizationExperimentController.inputParams = _inputParams
     }
 
     private fun resetInputArgsController() {
@@ -92,36 +91,6 @@ class OptimizationExperiment : OptimizationExperiment, Script {
 
     override fun onModelUpdate() {
         optimizationExperimentController.onModelUpdate()
-        updateState()
-    }
-
-    private fun updateState() {
-        state = when (optimizationExperimentController.state) {
-            OptimizationExperimentController.State.STOP -> {
-                OptimizationExperiment.State.Stop
-            }
-            OptimizationExperimentController.State.RUN -> {
-                OptimizationExperiment.State.Run
-            }
-            OptimizationExperimentController.State.WAIT_DECISION -> {
-                waitDecision()
-            }
-        }
-    }
-
-    private fun waitDecision() = object : OptimizationExperiment.State.WaitDecision {
-        override val inputParams: List<OptimizationExperiment.Input>
-            get() = _inputParams.values.toList()
-        override val targetFunctionValue: Double
-            get() = optimizationExperimentController.makeDecisionData!!.targetFunctionValue
-
-        override fun makeDecision(): Boolean {
-            val isValidArgs = optimizationExperimentController.makeDecision(inputParams)
-            if (isValidArgs) {
-                inputArgsController.commitInputArgs()
-            }
-            return isValidArgs
-        }
     }
 
     override fun updateUI() {
@@ -131,6 +100,14 @@ class OptimizationExperiment : OptimizationExperiment, Script {
 
     override fun onModelStop() {
         optimizationExperimentController.onModelStop()
+    }
+
+    override fun start() {
+        optimizationExperimentController.start()
+    }
+
+    override fun stop() {
+        optimizationExperimentController.stop()
     }
 }
 

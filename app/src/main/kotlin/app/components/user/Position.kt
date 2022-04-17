@@ -3,10 +3,13 @@ package app.components.user
 import core.components.agent.AgentInterface
 import core.components.base.AddInSnapshot
 import core.components.base.Component
+import core.components.base.TargetEntity
+import core.entities.Agent
 import core.entities.getComponent
 
 import core.services.Services
 
+@TargetEntity(Agent::class)
 class Position : Component {
     @AddInSnapshot(1)
     var rowPropName = ""
