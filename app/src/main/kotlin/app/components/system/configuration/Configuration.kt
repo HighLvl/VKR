@@ -3,12 +3,13 @@ package app.components.system.configuration
 import app.components.system.base.Native
 import app.utils.KtsScriptEngine
 import core.components.base.AddInSnapshot
-import core.components.base.Script
 import core.components.base.TargetEntity
 import core.components.configuration.AgentInterface
 import core.components.configuration.InputArgsComponent
 import core.components.configuration.ModelConfiguration
 import core.entities.Environment
+import core.services.Services
+import core.services.control.ControlState
 import core.services.logger.Level
 import core.services.logger.Logger
 import core.services.putInputArg
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 @TargetEntity(Environment::class)
-class Configuration : Native, InputArgsComponent, AgentInterfaces, Script {
+class Configuration : Native, InputArgsComponent, AgentInterfaces {
     @AddInSnapshot(1)
     var modelConfiguration: String = ""
         set(value) {
@@ -36,13 +37,15 @@ class Configuration : Native, InputArgsComponent, AgentInterfaces, Script {
         get() = _agentInterfaces
 
     private val _agentInterfaces = MutableStateFlow<Map<String, AgentInterface>>(mapOf())
-    private var isRunning = false
     private val _inputArgs = mutableMapOf<String, Any>()
 
     private fun tryToLoadConfiguration(path: String, oldPath: String): String {
-        if (isRunning) {
-            Logger.log("Stop model before loading configuration", Level.ERROR)
-            return oldPath
+        when (Services.agentModelControl.controlState) {
+            ControlState.RUN, ControlState.PAUSE -> {
+                Logger.log("Stop model before loading configuration", Level.ERROR)
+                return oldPath
+            }
+            else -> { }
         }
         if (path.isEmpty()) return oldPath
         return try {
@@ -57,14 +60,6 @@ class Configuration : Native, InputArgsComponent, AgentInterfaces, Script {
             Logger.log("Bad configuration file", Level.ERROR)
             oldPath
         }
-    }
-
-    override fun onModelRun() {
-        isRunning = true
-    }
-
-    override fun onModelStop() {
-        isRunning = false
     }
 
     override fun put(name: String, value: Any) {

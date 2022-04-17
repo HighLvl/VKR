@@ -36,7 +36,7 @@ class AgentModelControlViewModel(private val controlService: AgentModelControl) 
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            controlService.controlState.collect(this@AgentModelControlViewModel::handleControlState)
+            controlService.controlStateFlow.collect(this@AgentModelControlViewModel::handleControlState)
         }
     }
 

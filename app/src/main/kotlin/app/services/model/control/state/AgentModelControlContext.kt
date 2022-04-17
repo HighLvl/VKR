@@ -1,9 +1,8 @@
 package app.services.model.control.state
 
 import app.api.base.AgentModelApi
-import app.api.dto.Error
-import app.api.dto.Requests
 import app.api.dto.ModelInputArgs
+import app.api.dto.Requests
 import app.api.dto.Responses
 import app.api.dto.Snapshot
 import app.coroutines.Contexts
@@ -13,7 +12,6 @@ import app.requests.sendRequest
 import app.services.model.control.PeriodTaskExecutor
 import app.services.scene.SceneApi
 import core.services.control.ControlState
-
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 
@@ -23,7 +21,9 @@ class AgentModelControlContext(
     private val requestDispatcher: RequestDispatcher,
     private val requestSender: RequestSender
 ) {
-    val controlState: MutableSharedFlow<ControlState> = MutableSharedFlow(replay = 1)
+    val controlState: ControlState
+        get() = mapStateToControlState()
+    val controlStateFlow: MutableSharedFlow<ControlState> = MutableSharedFlow(replay = 1)
     val periodTaskExecutor = PeriodTaskExecutor(Contexts.app)
     private val inputArgs: ModelInputArgs
         get() = sceneApi.getInputArgs()
@@ -91,6 +91,7 @@ class AgentModelControlContext(
     }
 
     fun disconnect() {
+
         periodTaskExecutor.stop()
         modelApi.disconnect()
         requestDispatcher.clear()
@@ -114,7 +115,6 @@ class AgentModelControlContext(
 
     fun stopModel(onResult: (Result<Unit>) -> Unit) {
         currentState.stop(this, onResult)
-        println(System.currentTimeMillis() - startTime)
     }
 
     fun setState(state: State) {
@@ -124,11 +124,11 @@ class AgentModelControlContext(
 
     private fun emitCurrentState() {
         coroutineScope.launch {
-            withContext(Dispatchers.IO) { controlState.emit(getControlState()) }
+            withContext(Dispatchers.IO) { controlStateFlow.emit(mapStateToControlState()) }
         }
     }
 
-    private fun getControlState(): ControlState = when (currentState::class) {
+    private fun mapStateToControlState(): ControlState = when (currentState::class) {
         DisconnectState::class -> ControlState.DISCONNECT
         StopState::class -> ControlState.STOP
         RunState::class -> ControlState.RUN
@@ -162,6 +162,7 @@ class AgentModelControlContext(
         setState(StopState)
         sceneApi.onModelStop()
     }
+
     private fun onUpdate(snapshot: Snapshot) {
         sceneApi.updateWith(snapshot)
     }

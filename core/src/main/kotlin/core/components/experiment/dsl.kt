@@ -15,10 +15,13 @@ class ExperimentTaskBuilder(private val model: MutableExperimentTaskModel) {
         builder(ModelLifecycleListenerBuilder(model))
 
     /** Конфигурация задания на оптимизационный эксперимент.
-     * Оптимизация проходит в рамках одного запуска. Можно начать и остановить оптимизацию в любое время.
+     * Оптимизация проходит в рамках одного запуска.
+     * Можно запустить и остановить оптимизационный эксперимент, когда выполнено подключение к модели.
+     * Если модель остановлена или приостановлена, то после запуска оптимизационного эксперимента
+     * будут произведены запуск модели или возобновление соответственно.
      * В результате принятия оптимизационного решения изменяются входные параметры модели.
      * Оптимизационный эксперимент заканчивается, в случае достижения его цели или выполнения условий останова
-     * процесса оптимизации. Необходимость принятия решения, условия останова
+     * процесса оптимизации. Необходимость принятия решения и условия останова
      * проверяются при получении состояния от сервера модели.
      * @param targetScore целевая сумма баллов достигнутых целей
      * @see OptimizationBuilder.makeDecisionOn
@@ -45,15 +48,15 @@ class ExperimentTaskBuilder(private val model: MutableExperimentTaskModel) {
 @ExperimentDslMarker
 class ModelLifecycleListenerBuilder(private val model: MutableExperimentTaskModel) {
     fun onRun(block: () -> Unit) {
-        model.onModelRunListener = block
+        model.modelRunObservable.observe(block)
     }
 
     fun onUpdate(block: () -> Unit) {
-        model.onModelUpdateListener = block
+        model.modelUpdateObservable.observe(block)
     }
 
     fun onStop(block: () -> Unit) {
-        model.onModelStopListener = block
+        model.modelStopObservable.observe(block)
     }
 }
 
@@ -247,34 +250,34 @@ abstract class OptimizerLifecycleEventsListener(private val model: MutableExperi
     /** Вызывается перед запуском оптимизационного эксперимента
      */
     fun start(listener: () -> Unit) {
-        model.addOnStartOptimizationListener(listener)
+        model.startOptimizationObservable.observe(listener)
     }
 
     /** Вызывается после остановки оптимизационного эксперимента
      */
     fun stop(listener: () -> Unit) {
-        model.addOnStartOptimizationListener(listener)
+        model.stopOptimizationObservable.observe(listener)
     }
 
     /** Вызывается в начале процесса вычисления данных, используемых для принятия оптимизационного решения.
      * Используется для инициализации переменных
      */
     fun begin(listener: () -> Unit) {
-        model.addOnBeginListener(listener)
+        model.beginObservable.observe(listener)
     }
 
     /** Вызывается на получении снимка состояния модели.
      * Используется для обновления переменных
      */
     fun update(listener: () -> Unit) {
-        model.addOnUpdateListener(listener)
+        model.updateObservable.observe(listener)
     }
 
     /** Вызывается перед началом процесса принятия решения.
      * Используется для завершения вычислений, используемых для принятия оптимизационного решения.
      */
     fun end(listener: () -> Unit) {
-        model.addOnEndListener(listener)
+        model.endObservable.observe(listener)
     }
 }
 

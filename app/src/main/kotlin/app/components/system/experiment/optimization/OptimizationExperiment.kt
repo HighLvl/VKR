@@ -1,7 +1,6 @@
 package app.components.system.experiment.optimization
 
 import app.components.system.experiment.common.Experiment
-import app.components.system.experiment.common.controller.OptimizationExperimentController
 import app.components.system.experiment.common.goals.GoalsController
 import app.components.system.experiment.common.input.InputArgsController
 import core.components.base.AddInSnapshot
@@ -12,6 +11,7 @@ import core.components.experiment.OptimizationExperiment
 import core.entities.Experimenter
 import core.entities.getComponent
 import core.services.Services
+import core.services.control.ControlState
 import core.utils.Disposable
 import core.utils.ValueObservable
 
@@ -27,14 +27,18 @@ class OptimizationExperiment : OptimizationExperiment, Script {
 
     override val commandObservable: ValueObservable<OptimizationExperiment.Command> = optimizationExperimentController.commandObservable
 
+    @AddInSnapshot(1)
+    val info: String
+    get() = when(Services.agentModelControl.controlState) {
+        ControlState.DISCONNECT -> INFO_DISCONNECT
+        else -> INFO_CONNECT
+    }
+
     @AddInSnapshot(6)
     var showGoals by goalsController::enabled
 
     @AddInSnapshot(7)
     var showInputArgs by inputArgsController::enabled
-
-    @AddInSnapshot(8)
-    var startOnModelRun = true
 
     private val disposables = mutableListOf<Disposable>()
 
@@ -61,12 +65,6 @@ class OptimizationExperiment : OptimizationExperiment, Script {
     private fun setTrackedDataSize(value: Int) {
         goalsController.trackedDataSize = value
         inputArgsController.trackedDataSize = value
-    }
-
-    override fun onModelRun() {
-        if (startOnModelRun) {
-            optimizationExperimentController.start()
-        }
     }
 
     private fun reset() {
@@ -96,6 +94,7 @@ class OptimizationExperiment : OptimizationExperiment, Script {
     override fun updateUI() {
         goalsController.update()
         inputArgsController.update()
+        optimizationExperimentController.update()
     }
 
     override fun onModelStop() {
@@ -108,6 +107,11 @@ class OptimizationExperiment : OptimizationExperiment, Script {
 
     override fun stop() {
         optimizationExperimentController.stop()
+    }
+
+    private companion object {
+        const val INFO_DISCONNECT = "Connect to the model to be able to run an optimization experiment"
+        const val INFO_CONNECT = ""
     }
 }
 

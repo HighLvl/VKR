@@ -5,6 +5,7 @@ import app.coroutines.Contexts
 import core.components.experiment.*
 import core.components.experiment.OptimizationExperiment.*
 import core.services.Services
+import core.services.control.ControlState
 import core.services.logger.Level
 import core.services.logger.Logger
 import core.utils.MutableValue
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
-class OptimizationExperimentController {
+class OptimizationExperimentModel {
     lateinit var inputParams: MutableMap<String, InputDoubleParam>
     private val _isValidArgsObservable = PublishSubject<Boolean>()
     val isValidArgsObservable: Observable<Boolean> = _isValidArgsObservable
@@ -28,7 +29,8 @@ class OptimizationExperimentController {
         STOP, RUN, WAIT_DECISION
     }
 
-    private var state: State = State.STOP
+    var state: State = State.STOP
+    private set
 
     private var paramNameToSetterMap: Map<String, SetterExp> = mapOf()
     var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
@@ -46,8 +48,24 @@ class OptimizationExperimentController {
 
     fun start() {
         if (state != State.STOP) return
-        taskModel.onStartOptimizationListeners.forEach { it() }
-        taskModel.onBeginListeners.forEach { it() }
+        when(Services.agentModelControl.controlState) {
+            ControlState.STOP -> Services.agentModelControl.runModel {
+                it.onSuccess {
+                    startOptimization()
+                }
+            }
+            ControlState.PAUSE -> Services.agentModelControl.resumeModel {
+                it.onSuccess {
+                    startOptimization()
+                }
+            }
+            ControlState.RUN -> startOptimization()
+        }
+    }
+
+    private fun startOptimization() {
+        taskModel.startOptimizationObservable.publish()
+        taskModel.beginObservable.publish()
         makeDecisionData = null
         Logger.log("Optimization experiment started", Level.INFO)
         state = State.RUN
@@ -59,7 +77,19 @@ class OptimizationExperimentController {
 
     fun stop() {
         if (state == State.STOP) return
-        taskModel.onStopOptimizationListeners.forEach { it() }
+        when(Services.agentModelControl.controlState) {
+            ControlState.RUN -> Services.agentModelControl.pauseModel {
+                it.onSuccess {
+                    stopOptimization()
+                }
+            }
+            else -> stopOptimization()
+        }
+
+    }
+
+    private fun stopOptimization() {
+        taskModel.stopOptimizationObservable.publish()
         Services.agentModelControl.pauseModel()
         Logger.log("Optimization experiment stopped", Level.INFO)
         state = State.STOP
@@ -76,9 +106,9 @@ class OptimizationExperimentController {
     }
 
     private fun processRunState() {
-        taskModel.onUpdateListeners.forEach { it() }
+        taskModel.updateObservable.publish()
         if (needMakeDecision()) {
-            taskModel.onEndListeners.forEach { it() }
+            taskModel.endObservable.publish()
             newMakeDecisionData()
             coroutineScope.launch { _ctrlMakeDecisionDataFlow.emit(makeDecisionData!!) }
             waitDecision()
@@ -95,7 +125,7 @@ class OptimizationExperimentController {
 
     private fun waitDecisionState() = object : Command.WaitDecision {
         override val inputParams: List<Input>
-            get() = this@OptimizationExperimentController.inputParams.values.toList()
+            get() = this@OptimizationExperimentModel.inputParams.values.toList()
         override val targetFunctionValue: Double
             get() = makeDecisionData!!.targetFunctionValue
 
@@ -159,7 +189,7 @@ class OptimizationExperimentController {
         val params = inputParams.asSequence().map { it.name to it.value }.toMap()
         if (!taskModel.constraint(params)) return false
         inputParams.forEach { paramNameToSetterMap[it.name]!!(it.value) }
-        taskModel.onBeginListeners.forEach { it() }
+        taskModel.beginObservable.publish()
         state = State.RUN
         _commandObservable.value = Command.Run
         return true

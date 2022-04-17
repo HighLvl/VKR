@@ -29,6 +29,16 @@ open class PublishSubject<T>: Observable<T> {
     }
 }
 
+class EmptyPublishSubject: PublishSubject<Unit>() {
+    fun observe(observer: () -> Unit) {
+        observe { it -> observer() }
+    }
+
+    fun publish() {
+        publish(Unit)
+    }
+}
+
 class MutableValue<T>(initialValue: T) : ValueObservable<T> {
     private val publishSubject =  PublishSubject<T>()
     override var value: T = initialValue

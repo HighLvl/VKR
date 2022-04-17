@@ -1,5 +1,7 @@
 package core.components.experiment
 
+import core.utils.EmptyPublishSubject
+
 abstract class ExperimentTaskModel {
     abstract val inputParams: Set<InputParam>
     abstract val constraint: (Map<String, Double>) -> Boolean
@@ -9,14 +11,14 @@ abstract class ExperimentTaskModel {
     abstract val stopConditions: Map<String, PredicateExp>
     abstract val observableVariables: Map<String, GetterExp>
     abstract val mutableVariables: Map<String, SetterExp>
-    abstract val onBeginListeners: List<() -> Unit>
-    abstract val onUpdateListeners: List<() -> Unit>
-    abstract val onEndListeners: List<() -> Unit>
-    abstract val onModelRunListener: () -> Unit
-    abstract val onModelUpdateListener: () -> Unit
-    abstract val onModelStopListener: () -> Unit
-    abstract val onStartOptimizationListeners: List<() -> Unit>
-    abstract val onStopOptimizationListeners: List<() -> Unit>
+    val beginObservable = EmptyPublishSubject()
+    val updateObservable = EmptyPublishSubject()
+    val endObservable = EmptyPublishSubject()
+    val modelRunObservable = EmptyPublishSubject()
+    val modelUpdateObservable = EmptyPublishSubject()
+    val modelStopObservable = EmptyPublishSubject()
+    val startOptimizationObservable = EmptyPublishSubject()
+    val stopOptimizationObservable = EmptyPublishSubject()
 
     @set:JvmName("setTargetScore1")
     var targetScore = 0
@@ -40,19 +42,6 @@ class MutableExperimentTaskModel : ExperimentTaskModel() {
     override val inputParams: Set<InputParam>
         get() = _inputParams
     override var constraint: (Map<String, Double>) -> Boolean = { true }
-    override val onBeginListeners: List<() -> Unit>
-        get() = _onBeginListeners
-    override val onUpdateListeners: List<() -> Unit>
-        get() = _onUpdateListeners
-    override val onEndListeners: List<() -> Unit>
-        get() = _onEndListeners
-    override var onModelRunListener: () -> Unit = {}
-    override var onModelUpdateListener: () -> Unit = {}
-    override var onModelStopListener: () -> Unit = {}
-    override val onStartOptimizationListeners: List<() -> Unit>
-        get() = _onStartOptimizationListeners
-    override val onStopOptimizationListeners: List<() -> Unit>
-        get() = _onStopOptimizationListeners
 
     private val _observableVariables = mutableMapOf<String, GetterExp>()
     private val _mutableVariables = mutableMapOf<String, SetterExp>()
@@ -60,11 +49,6 @@ class MutableExperimentTaskModel : ExperimentTaskModel() {
     private val _stopConditions = mutableMapOf<String, PredicateExp>()
     private val _goals = mutableSetOf<Goal>()
     private val _inputParams = mutableSetOf<InputParam>()
-    private val _onBeginListeners = mutableListOf<() -> Unit>()
-    private val _onUpdateListeners = mutableListOf<() -> Unit>()
-    private val _onEndListeners = mutableListOf<() -> Unit>()
-    private val _onStartOptimizationListeners = mutableListOf<() -> Unit>()
-    private val _onStopOptimizationListeners = mutableListOf<() -> Unit>()
 
     fun addStopOnCondition(name: String, predicate: PredicateExp) {
         _stopConditions[name] = predicate
@@ -85,27 +69,8 @@ class MutableExperimentTaskModel : ExperimentTaskModel() {
         _inputParams.add(inputParam)
     }
 
-    fun addOnBeginListener(listener: () -> Unit) {
-        _onBeginListeners += listener
-    }
-
-    fun addOnUpdateListener(listener: () -> Unit) {
-        _onUpdateListeners += listener
-    }
-
-    fun addOnEndListener(listener: () -> Unit) {
-        _onEndListeners += listener
-    }
-
     fun addMakeDecisionOnCondition(name: String, predicate: PredicateExp /* = () -> kotlin.Boolean */) {
         _makeDecisionConditions[name] = predicate
     }
 
-    fun addOnStopOptimizationListener(listener: () -> Unit) {
-        _onStopOptimizationListeners += listener
-    }
-
-    fun addOnStartOptimizationListener(listener: () -> Unit) {
-        _onStartOptimizationListeners += listener
-    }
 }

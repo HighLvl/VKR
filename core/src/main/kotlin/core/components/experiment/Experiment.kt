@@ -35,16 +35,9 @@ interface OptimizationExperiment : Component {
     fun stop()
 }
 
-interface DoubleParam {
-    var value: Double
-    val inputParam: InputParam
-}
-
 typealias GetterExp = () -> Double
 typealias SetterExp = (Double) -> Unit
 typealias PredicateExp = () -> Boolean
-typealias TargetFunction = () -> Double
-
 
 interface ValueHolder<T> {
     val value: T

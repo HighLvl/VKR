@@ -11,23 +11,26 @@ import core.components.experiment.Experiment
 import core.components.experiment.ExperimentTaskModel
 import core.components.experiment.MutableExperimentTaskModel
 import core.entities.Experimenter
+import core.services.Services
+import core.services.control.ControlState
 import core.services.logger.Level
 import core.services.logger.Logger
 import core.services.modelTime
-import core.utils.*
+import core.utils.EmptyPublishSubject
+import core.utils.MutableValue
+import core.utils.Observable
+import core.utils.ValueObservable
 
 @TargetEntity(Experimenter::class)
 class Experiment : Experiment, Native, Script {
     private val observableVariablesController = ObservableVariablesController()
     private val mutableVariablesController = MutableVariablesController()
 
-    private var isRunning = false
-
     private var taskModel = MutableExperimentTaskModel()
     private val _taskModelObservable = MutableValue<ExperimentTaskModel>(taskModel)
     override val taskModelObservable: ValueObservable<ExperimentTaskModel> = _taskModelObservable
 
-    private val _clearTrackedDataObservable = PublishSubject<Unit>()
+    private val _clearTrackedDataObservable = EmptyPublishSubject()
     val clearTrackedDataObservable: Observable<Unit> = _clearTrackedDataObservable
 
     @AddInSnapshot(1)
@@ -66,18 +69,20 @@ class Experiment : Experiment, Native, Script {
     }
 
     override fun onModelRun() {
-        isRunning = true
         if (clearTrackedDataOnRun) {
             reset()
-            _clearTrackedDataObservable.publish(Unit)
+            _clearTrackedDataObservable.publish()
         }
-        taskModel.onModelRunListener()
+        taskModel.modelRunObservable.publish()
     }
 
     private fun tryLoadExperimentTaskModel(path: String, oldPath: String): String {
-        if (isRunning) {
-            Logger.log("Stop model before loading task", Level.ERROR)
-            return oldPath
+        when (Services.agentModelControl.controlState) {
+            ControlState.RUN, ControlState.PAUSE -> {
+                Logger.log("Stop model before loading task", Level.ERROR)
+                return oldPath
+            }
+            else -> { }
         }
         if (path.isEmpty()) return oldPath
         return try {
@@ -105,7 +110,7 @@ class Experiment : Experiment, Native, Script {
     }
 
     override fun onModelUpdate() {
-        taskModel.onModelUpdateListener()
+        taskModel.modelUpdateObservable.publish()
         mutableVariablesController.onModelUpdate(modelTime)
     }
 
@@ -120,7 +125,6 @@ class Experiment : Experiment, Native, Script {
     }
 
     override fun onModelStop() {
-        isRunning = false
-        taskModel.onModelStopListener()
+        taskModel.modelStopObservable.publish()
     }
 }

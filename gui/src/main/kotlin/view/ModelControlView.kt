@@ -14,7 +14,7 @@ import widgets.Widget
 import widgets.input.InputInt
 import widgets.input.InputString
 
-class ModelControlView(private val viewModel: AgentModelControlViewModel): View(), Widget {
+class ModelControlView(private val viewModel: AgentModelControlViewModel) : View(), Widget {
     var width = 0f
         private set
 
@@ -80,7 +80,17 @@ class ModelControlView(private val viewModel: AgentModelControlViewModel): View(
     }
 
     private fun handleDisconnectState() {
-        width = WIDTH_IP + WIDTH_PORT + WIDTH_CONNECT_BUTTON
+        width = WIDTH_IP +
+                WIDTH_PORT +
+                WIDTH_CONNECT_BUTTON +
+                WIDTH_INPUT_REQUEST_DT +
+                ImGui.getStyle().itemSpacingX * 4
+        inputRequestDt.draw()
+        repeat(4) {
+            ImGui.sameLine()
+            ImGui.spacing()
+        }
+        ImGui.sameLine()
         ImGui.setNextItemWidth(WIDTH_IP)
         ipInputString.draw()
         ImGui.sameLine()
