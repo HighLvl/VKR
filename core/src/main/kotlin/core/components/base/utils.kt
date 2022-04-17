@@ -1,9 +1,9 @@
 package core.components.base
 
 import core.entities.Entity
+import core.utils.isSubclass
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.isSubclassOf
 
 fun filterAvailableComponents(
     entity: Entity,
@@ -24,7 +24,7 @@ private fun MutableList<KClass<out Component>>.addIfPossible(
 ) {
     entity.getComponent(component)?.let { return }
     annotation?.let {
-        if (!entity::class.isSubclassOf(annotation.entityClass)) return
+        if (!entity::class.isSubclass(annotation.entityClass)) return
         annotation.components.forEach {
             entity.getComponent(it) ?: return
         }

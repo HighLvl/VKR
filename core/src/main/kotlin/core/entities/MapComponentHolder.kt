@@ -1,10 +1,10 @@
 package core.entities
 
 import core.components.base.Component
+import core.utils.isSubclass
 import core.utils.runBlockCatching
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
-import kotlin.reflect.full.isSubclassOf
 
 class MapComponentHolder : ComponentHolder {
     private val components = mutableMapOf<KClass<out Component>, Component>()
@@ -21,7 +21,7 @@ class MapComponentHolder : ComponentHolder {
 
     @Suppress("UNCHECKED_CAST")
     override fun <C : Component> getComponent(type: KClass<C>): C? {
-        return components.entries.firstOrNull { it.key.isSubclassOf(type) }?.value as? C
+        return components.entries.firstOrNull { it.key.isSubclass(type) }?.value as? C
     }
 
     @Suppress("UNCHECKED_CAST")

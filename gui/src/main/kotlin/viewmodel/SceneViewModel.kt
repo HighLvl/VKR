@@ -20,13 +20,13 @@ class SceneViewModel(
     private val _components = MutableStateFlow<List<ComponentDto>>(listOf())
     private val _selectedEntity = MutableStateFlow<Entity>(None)
     private val _objectTree = MutableStateFlow(Folder(ROOT_FOLDER_TITLE, listOf()))
-    private val _canAddComponents = MutableStateFlow(emptyMap<Int, model.Node>())
+    private val _availableComponents = MutableStateFlow(emptyMap<Int, model.Node>())
     private val componentManager = ComponentManager()
 
     val components = _components.asStateFlow()
     val selectedEntity = _selectedEntity.asStateFlow()
     val objectTree = _objectTree.asStateFlow()
-    val availableComponents = _canAddComponents.asStateFlow()
+    val availableComponents = _availableComponents.asStateFlow()
 
     init {
         launchWithAppContext {
@@ -58,11 +58,11 @@ class SceneViewModel(
                 null -> {
                     _selectedEntity.value = None
                     _components.value = emptyList()
-                    _canAddComponents.value = emptyMap()
+                    _availableComponents.value = emptyMap()
                 }
                 else -> {
                     _components.value = componentManager.getComponentDtoList(selectedEntity.getComponents())
-                    _canAddComponents.value = componentRepository.getComponentTree(selectedEntity)
+                    _availableComponents.value = componentRepository.getComponentTree(selectedEntity)
                 }
             }
             _objectTree.value = Folder("root", listOf(Environment, Experimenter, AgentsFolder(buildAgentTree())))

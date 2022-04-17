@@ -52,7 +52,7 @@ class Button(private val title: String) : Widget {
 
     private fun isBoundKeyPressed(): Boolean {
         val boundKey = boundKey ?: return false
-        return ImGui.isKeyPressed(boundKey)
+        return ImGui.isKeyPressed(boundKey) && ImGui.isKeyDown(GLFW.GLFW_KEY_LEFT_CONTROL)
     }
 }
 

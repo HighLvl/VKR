@@ -3,9 +3,9 @@ package core.entities
 import core.components.base.Component
 import core.components.base.TargetEntity
 import core.components.base.filterAvailableComponents
+import core.utils.isSubclass
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.isSubclassOf
 
 abstract class Entity(private val componentHolder: ComponentHolder) : ComponentHolder by componentHolder {
     override fun <C : Component> setComponent(type: KClass<out C>): C {
@@ -29,7 +29,7 @@ abstract class Entity(private val componentHolder: ComponentHolder) : ComponentH
     private fun removeDependentComponents(removedComponent: Component) {
         getComponents().forEach { component ->
             component::class.findAnnotation<TargetEntity>()?.let { annotation ->
-                if (annotation.components.any { removedComponent::class.isSubclassOf(it) }) {
+                if (annotation.components.any { removedComponent::class.isSubclass(it) }) {
                     removeComponent(component::class)
                 }
             }

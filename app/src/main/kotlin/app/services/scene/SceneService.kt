@@ -3,13 +3,13 @@ package app.services.scene
 import app.api.dto.AgentSnapshot
 import app.api.dto.ModelInputArgs
 import app.api.dto.Snapshot
+import app.components.getSnapshot
+import app.components.loadSnapshot
 import app.components.system.agent.AgentInterface
 import app.components.system.base.Native
 import app.components.system.configuration.AgentInterfaces
 import app.components.system.configuration.Configuration
 import app.components.system.experiment.common.Experiment
-import app.components.getSnapshot
-import app.components.loadSnapshot
 import app.components.system.model.SnapshotInfo
 import app.coroutines.Contexts
 import app.requests.RequestSender
@@ -20,12 +20,12 @@ import core.components.configuration.InputArgsComponent
 import core.components.configuration.MutableRequestSignature
 import core.entities.*
 import core.services.scene.Scene
+import core.utils.isSubclass
 import core.utils.runBlockCatching
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KClass
-import kotlin.reflect.full.isSubclassOf
 
 interface SceneApi {
     fun getInputArgs(): ModelInputArgs
@@ -56,7 +56,7 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
                 }
                 it.keys.forEach { agentType ->
                     if (agentType !in oldAgentPrototypeTypes) {
-                        _scene.putAgentPrototype(agentType, EntityFactory.createAgentPrototype())
+                        _scene.putAgentPrototype(agentType, EntityFactory.createAgentPrototype(agentType))
                     }
                 }
             }
@@ -110,7 +110,6 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
 
             val newAgent = EntityFactory.createAgent(
                 agentPrototype,
-                type,
                 agentInterface?.setters?.toList() ?: listOf(),
                 agentInterface?.otherRequests?.toList() ?: listOf(),
                 requestSender
@@ -214,7 +213,7 @@ object EntityFactory {
 
             @Suppress("UNCHECKED_CAST")
             override fun <C : Component> getComponent(type: KClass<C>): C? {
-                return when(type) {
+                return when (type) {
                     SnapshotInfo::class -> snapshotInfo as C
                     Configuration::class -> configuration as C
                     else -> super.getComponent(type)
@@ -225,12 +224,11 @@ object EntityFactory {
 
     fun createAgent(
         agentPrototype: AgentPrototype,
-        agentType: String,
         setterSignatures: List<MutableRequestSignature>,
         otherRequestSignatures: List<MutableRequestSignature>,
         requestSender: RequestSender
     ): Agent {
-        return Agent(agentType, SystemComponentHolder()).apply {
+        return Agent(agentPrototype.agentType, SystemComponentHolder()).apply {
             with(setComponent<AgentInterface>()) {
                 setRequestSignatures(setterSignatures + otherRequestSignatures)
                 setRequestSender(requestSender)
@@ -241,14 +239,14 @@ object EntityFactory {
         }
     }
 
-    fun createAgentPrototype(): AgentPrototype {
-        return AgentPrototype(SystemComponentHolder())
+    fun createAgentPrototype(agentType: String): AgentPrototype {
+        return AgentPrototype(agentType, SystemComponentHolder())
     }
 
     private class SystemComponentHolder(private val componentHolder: ComponentHolder = MapComponentHolder()) :
         ComponentHolder by componentHolder {
         override fun <C : Component> removeComponent(type: KClass<C>): C? {
-            if (type.isSubclassOf(Native::class)) return null
+            if (type.isSubclass(Native::class)) return null
             return componentHolder.removeComponent(type)
         }
     }

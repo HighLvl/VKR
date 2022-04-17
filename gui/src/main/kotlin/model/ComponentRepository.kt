@@ -17,13 +17,10 @@ class ComponentRepository(private val componentProvider: ComponentProvider) {
         val systemComponents = components.system
         val systemNodes = mutableListOf<Int>()
         val userNodes = mutableListOf<Int>()
-        val tree = mutableMapOf<Int, Node>(
-            0 to FolderNode(COMPONENTS, listOf(1, 2)),
-            1 to FolderNode(SYSTEM_COMPONENTS, systemNodes),
-            2 to FolderNode(USER_COMPONENTS, userNodes)
-        )
+        val tree = mutableMapOf<Int, Node>()
         val lastId = inflateComponentTrees(userComponents, 3, userNodes, tree, USER_COMPONENT_NAME_PREFIX)
         inflateComponentTrees(systemComponents, lastId + 1, systemNodes, tree, SYSTEM_COMPONENT_NAME_PREFIX)
+        tree[0] = FolderNode(COMPONENTS, systemNodes + userNodes)
         return tree
     }
 
@@ -45,12 +42,9 @@ class ComponentRepository(private val componentProvider: ComponentProvider) {
     }
 
     private companion object {
-        const val SYSTEM_COMPONENTS = "System Components"
-        const val USER_COMPONENTS = "User Components"
         const val COMPONENTS = "Components"
         const val SYSTEM_COMPONENT_NAME_PREFIX = "app.components.system."
         const val USER_COMPONENT_NAME_PREFIX = "app.components.user."
-
     }
 }
 

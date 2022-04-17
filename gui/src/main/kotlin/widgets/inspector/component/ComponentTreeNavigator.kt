@@ -27,6 +27,7 @@ class ComponentTreeNavigator {
     }
 
     fun navigate(nodeId: Int) {
+        if (currentNodeId == nodeId && backStack.isNotEmpty()) return
         val node = tree[nodeId] ?: return
         when (node) {
             is FolderNode -> {
