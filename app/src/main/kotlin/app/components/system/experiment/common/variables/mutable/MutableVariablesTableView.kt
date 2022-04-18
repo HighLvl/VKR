@@ -1,6 +1,7 @@
 package app.components.system.experiment.common.variables.mutable
 
 import app.components.system.experiment.common.view.InputValuesTableView
+import app.utils.getString
 import core.datatypes.base.Series
 
 class MutableVariablesTableView(dataSource: Map<String, Series<Double>>) :
@@ -13,6 +14,6 @@ class MutableVariablesTableView(dataSource: Map<String, Series<Double>>) :
     }
 
     private companion object {
-        const val TITLE_MUTABLE_VARIABLES_WINDOW = "Mutable Variables"
+        val TITLE_MUTABLE_VARIABLES_WINDOW = getString("mut_vars_window_title")
     }
 }

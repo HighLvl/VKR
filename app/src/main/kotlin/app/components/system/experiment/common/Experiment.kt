@@ -4,6 +4,7 @@ import app.components.system.base.Native
 import app.components.system.experiment.common.variables.mutable.MutableVariablesController
 import app.components.system.experiment.common.variables.observable.ObservableVariablesController
 import app.utils.KtsScriptEngine
+import app.utils.getString
 import core.components.base.AddInSnapshot
 import core.components.base.Script
 import core.components.base.TargetEntity
@@ -49,7 +50,7 @@ class Experiment : Experiment, Native, Script {
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             if (value < 1) {
-                Logger.log("trackedDataSize should be more than 0", Level.ERROR)
+                Logger.log(getString("trackedDataSize_sbmt0"), Level.ERROR)
                 return
             }
             field = value
@@ -79,10 +80,11 @@ class Experiment : Experiment, Native, Script {
     private fun tryLoadExperimentTaskModel(path: String, oldPath: String): String {
         when (Services.agentModelControl.controlState) {
             ControlState.RUN, ControlState.PAUSE -> {
-                Logger.log("Stop model before loading task", Level.ERROR)
+                Logger.log(getString("stop_model_blt"), Level.ERROR)
                 return oldPath
             }
-            else -> { }
+            else -> {
+            }
         }
         if (path.isEmpty()) return oldPath
         return try {
@@ -91,10 +93,10 @@ class Experiment : Experiment, Native, Script {
             _taskModelObservable.value = taskModel
             path
         } catch (e: ClassCastException) {
-            Logger.log("${ExperimentTaskModel::class} is expected", Level.ERROR)
+            Logger.log(getString("experiment_tm_is_exp", ExperimentTaskModel::class), Level.ERROR)
             ""
         } catch (e: Exception) {
-            Logger.log("Bad experiment task file", Level.ERROR)
+            Logger.log(getString("bad_exp_task_file"), Level.ERROR)
             Logger.log(e.stackTraceToString(), Level.ERROR)
             oldPath
         }

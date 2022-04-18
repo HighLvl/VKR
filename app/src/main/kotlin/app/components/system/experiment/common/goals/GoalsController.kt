@@ -2,6 +2,7 @@ package app.components.system.experiment.common.goals
 
 import app.components.system.experiment.common.controller.CtrlMakeDecisionData
 import app.coroutines.Contexts
+import app.utils.getString
 import core.components.experiment.Goal
 import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
@@ -80,6 +81,6 @@ class GoalsController(makeDecisionDataFlow: SharedFlow<CtrlMakeDecisionData>) {
     }
 
     private companion object {
-        const val TITLE_TOTAL_SCORE = "Total Score"
+        val TITLE_TOTAL_SCORE = getString("goals_total_score_title")
     }
 }

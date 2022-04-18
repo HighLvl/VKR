@@ -1,6 +1,7 @@
 package app.components.system.experiment.optimization
 
 import app.components.system.experiment.common.controller.OptimizationExperimentModel
+import app.utils.getString
 import core.services.Services
 import core.services.control.ControlState
 import imgui.internal.ImGui
@@ -33,9 +34,9 @@ class OptimizationExperimentView(private val model: OptimizationExperimentModel)
     }
 
     private companion object {
-        const val WINDOW_TITLE = "Optimization Experiment Control"
-        const val START_BUTTON_TITLE = "Start"
-        const val STOP_BUTTON_TITLE = "Stop"
+        val WINDOW_TITLE = getString("opt_exp_win_title")
+        val START_BUTTON_TITLE = getString("start_opt_exp_button")
+        val STOP_BUTTON_TITLE = getString("stop_opt_exp_button")
         const val WINDOW_WIDTH = 400f
         const val WINDOW_HEIGHT = 100f
     }

@@ -1,5 +1,6 @@
 package app.components.system.experiment.optimization
 
+import app.utils.getString
 import core.components.base.*
 import core.components.experiment.OptimizationExperiment
 import core.entities.Experimenter
@@ -19,9 +20,9 @@ class UserDecision : Component, Script {
     val info: String
         get() {
             return if (needMakeDecision) {
-                "Change input args and press Right CTRL to make a decision"
+                getString("user_des_info_need_md")
             } else {
-                "Waiting for the need to make a decision"
+                getString("user_des_info_not_need_md")
             }
         }
 
@@ -61,7 +62,7 @@ class UserDecision : Component, Script {
                 needMakeDecision = false
                 Services.agentModelControl.resumeModel()
             } else {
-                Logger.log("Input args are not valid", Level.ERROR)
+                Logger.log(getString("invalid_input_args"), Level.ERROR)
             }
         }
     }

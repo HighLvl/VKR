@@ -3,6 +3,7 @@ package app.components.system.experiment.common.goals
 import app.components.system.experiment.common.view.COLOR_FV_GOOD
 import app.components.system.experiment.common.view.COLOR_IV_GOOD
 import app.components.system.experiment.common.view.TableView
+import app.utils.getString
 import core.datatypes.base.Series
 import imgui.flag.ImGuiTableBgTarget
 import imgui.internal.ImGui
@@ -15,10 +16,10 @@ class GoalsView(dataSource: Map<String, Series<*>>, rowTypes: Series<Int>) :
 
     override fun formatTitle(title: String, columnIndex: Int): String {
         if (columnIndex in 1 until columnNumber - 1) {
-            return GOAL_TITLE.format(Locale.US, title, goalNameToScoreMap[title])
+            return getString("goal_title", Locale.US, title, goalNameToScoreMap[title])
         }
         else if(columnIndex == columnNumber - 1) {
-            return TOTAL_SCORE_TITLE.format(Locale.US, title, targetScore)
+            return getString("total_score_title", Locale.US, title, targetScore)
         }
         return super.formatTitle(title, columnIndex)
     }
@@ -31,7 +32,7 @@ class GoalsView(dataSource: Map<String, Series<*>>, rowTypes: Series<Int>) :
         when (column) {
             columnNumber - 1 -> {
                 val totalScore = value as Int
-                super.drawCell(column, row, TOTAL_SCORE.format(Locale.US, totalScore), rowType)
+                super.drawCell(column, row, getString("total_score", Locale.US, totalScore), rowType)
                 if (totalScore >= targetScore) {
                     ImGui.tableSetBgColor(ImGuiTableBgTarget.CellBg, bgColor)
                 }
@@ -42,7 +43,7 @@ class GoalsView(dataSource: Map<String, Series<*>>, rowTypes: Series<Int>) :
             else -> {
                 value as Pair<*, *>
                 val score = value.second as Int
-                super.drawCell(column, row, CURRENT_VALUE.format(Locale.US, score), rowType)
+                super.drawCell(column, row, getString("current_value", Locale.US, score), rowType)
                 val achieved = value.first as Boolean
                 if (achieved)
                     ImGui.tableSetBgColor(ImGuiTableBgTarget.CellBg, bgColor)
@@ -51,11 +52,7 @@ class GoalsView(dataSource: Map<String, Series<*>>, rowTypes: Series<Int>) :
     }
 
     private companion object {
-        const val TITLE_WINDOW = "Goals"
-        const val TOTAL_SCORE = "%d"
-        const val CURRENT_VALUE = "%d"
-        const val GOAL_TITLE = "%s (%d)"
-        const val TOTAL_SCORE_TITLE = "%s (%d)"
+        val TITLE_WINDOW = getString("goals_window_title")
         const val COLUMN_T = 0
     }
 }

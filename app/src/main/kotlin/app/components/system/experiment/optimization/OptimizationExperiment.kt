@@ -3,6 +3,7 @@ package app.components.system.experiment.optimization
 import app.components.system.experiment.common.Experiment
 import app.components.system.experiment.common.goals.GoalsController
 import app.components.system.experiment.common.input.InputArgsController
+import app.utils.getString
 import core.components.base.AddInSnapshot
 import core.components.base.Script
 import core.components.base.TargetEntity
@@ -110,7 +111,7 @@ class OptimizationExperiment : OptimizationExperiment, Script {
     }
 
     private companion object {
-        const val INFO_DISCONNECT = "Connect to the model to be able to run an optimization experiment"
+        val INFO_DISCONNECT = getString("opt_exp_info_disc")
         const val INFO_CONNECT = ""
     }
 }

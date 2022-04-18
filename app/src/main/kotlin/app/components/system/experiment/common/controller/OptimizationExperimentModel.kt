@@ -2,6 +2,7 @@ package app.components.system.experiment.common.controller
 
 import app.components.system.experiment.optimization.InputDoubleParam
 import app.coroutines.Contexts
+import app.utils.getString
 import core.components.experiment.ExperimentTaskModel
 import core.components.experiment.MutableExperimentTaskModel
 import core.components.experiment.OptimizationExperiment.Command
@@ -70,11 +71,11 @@ class OptimizationExperimentModel {
     private fun startOptimization() {
         taskModel.startOptimizationObservable.publish()
         makeDecisionData = null
-        Logger.log("Optimization experiment started", Level.INFO)
+        Logger.log(getString("opt_exp_started"), Level.INFO)
         _commandObservable.value = Command.Start(inputParams.values.toList())
         state = State.RUN
         if (!makeDecision()) {
-            Logger.log("Invalid initial values of parameters", Level.ERROR)
+            Logger.log(getString("inv_init_val_of_params"), Level.ERROR)
             stop()
         }
     }
@@ -95,7 +96,7 @@ class OptimizationExperimentModel {
     private fun stopOptimization() {
         taskModel.stopOptimizationObservable.publish()
         Services.agentModelControl.pauseModel()
-        Logger.log("Optimization experiment stopped", Level.INFO)
+        Logger.log(getString("opt_exp_stopped"), Level.INFO)
         state = State.STOP
         _commandObservable.value = Command.Stop
     }
@@ -144,7 +145,7 @@ class OptimizationExperimentModel {
 
     private fun needMakeDecision(): Boolean {
         taskModel.makeDecisionConditions.entries.firstOrNull { it.value() }?.let { (condName, _) ->
-            Logger.log("Make decision on \"$condName\"", Level.INFO)
+            Logger.log(getString("make_decision_on", condName), Level.INFO)
             return true
         }
         return false
@@ -153,7 +154,7 @@ class OptimizationExperimentModel {
     private fun needStopOptimization(): Boolean {
         var result = false
         taskModel.stopConditions.entries.firstOrNull { it.value() }?.let { (condName, _) ->
-            Logger.log("Stop on \"$condName\"", Level.INFO)
+            Logger.log(getString("stop_on", condName), Level.INFO)
             result = true
         }
         return result
@@ -188,7 +189,7 @@ class OptimizationExperimentModel {
     private fun isTargetScoreAchieved(): Boolean {
         makeDecisionData?.isTargetScoreAchieved?.let {
             if (it) {
-                Logger.log("Target score achieved", Level.INFO)
+                Logger.log(getString("target_score_achieved"), Level.INFO)
             }
             return it
         }

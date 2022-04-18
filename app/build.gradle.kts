@@ -1,6 +1,6 @@
 import com.google.protobuf.gradle.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
+import org.gradle.internal.os.OperatingSystem
 
 plugins {
     kotlin("jvm") version "1.6.0"
@@ -20,6 +20,14 @@ val imguiVersion = "1.86.2"
 val grpcVersion = "1.45.0"
 val protobufVersion = "3.19.4"
 val grpcKotlinVersion = "1.2.1"
+
+val lwjglNatives = when(OperatingSystem.current()) {
+    OperatingSystem.LINUX -> "natives-linux"
+    OperatingSystem.MAC_OS -> "natives-macos"
+    OperatingSystem.WINDOWS -> "natives-windows"
+    else -> ""
+}
+val lwjglVersion = "3.2.3"
 
 dependencies {
     implementation(project(":core"))
@@ -54,6 +62,9 @@ dependencies {
     implementation("io.rsocket.kotlin:rsocket-transport-ktor-client:0.14.3")
 
     implementation("com.google.guava:guava:31.0.1-jre")
+
+    implementation("org.lwjgl:lwjgl-nfd:$lwjglVersion")
+    runtimeOnly("org.lwjgl:lwjgl-nfd:$lwjglVersion:$lwjglNatives")
 }
 
 tasks.test {

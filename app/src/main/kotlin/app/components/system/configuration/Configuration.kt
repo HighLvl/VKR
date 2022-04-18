@@ -2,6 +2,7 @@ package app.components.system.configuration
 
 import app.components.system.base.Native
 import app.utils.KtsScriptEngine
+import app.utils.getString
 import core.components.base.AddInSnapshot
 import core.components.base.TargetEntity
 import core.components.configuration.AgentInterface
@@ -42,7 +43,7 @@ class Configuration : Native, InputArgsComponent, AgentInterfaces {
     private fun tryToLoadConfiguration(path: String, oldPath: String): String {
         when (Services.agentModelControl.controlState) {
             ControlState.RUN, ControlState.PAUSE -> {
-                Logger.log("Stop model before loading configuration", Level.ERROR)
+                Logger.log(getString("stop_model_before_loading_conf"), Level.ERROR)
                 return oldPath
             }
             else -> { }
@@ -57,7 +58,7 @@ class Configuration : Native, InputArgsComponent, AgentInterfaces {
             _agentInterfaces.value = configuration.agentInterfaces
             path
         } catch (e: Exception) {
-            Logger.log("Bad configuration file", Level.ERROR)
+            Logger.log(getString("bad_configuration_file"), Level.ERROR)
             oldPath
         }
     }

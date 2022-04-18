@@ -1,6 +1,7 @@
 package app.components.system.experiment.common.variables.observable
 
 import app.components.system.experiment.common.view.TableView
+import app.utils.getString
 import core.datatypes.base.Series
 import imgui.ImVec2
 import imgui.extension.implot.ImPlot
@@ -39,12 +40,12 @@ class ObservableVariablesView(
                 ImGui.setNextWindowSize(WIDTH_CHART_WINDOW, HEIGHT_CHART_WINDOW)
                 chartWindowSizeInitialized[varName] = true
             }
-            if (ImGui.begin("Chart $varName", showed)) {
+            if (ImGui.begin(getString("chart_window_title", varName), showed)) {
                 val windowSize = ImGui.getWindowSize()
                 val plotSize = ImVec2(windowSize.x - DX_PLOT, windowSize.y - DY_PLOT)
                 ImPlot.beginPlot(
                     varName,
-                    "time",
+                    getString("chart_time_label"),
                     "",
                     plotSize,
                     ImPlotFlags.None,
@@ -99,7 +100,7 @@ class ObservableVariablesView(
             if (hoveredColumn == columnIndex && ImGui.isMouseReleased(ImGuiMouseButton.Right))
                 ImGui.openPopup("MyPopup")
             if (ImGui.beginPopup("MyPopup")) {
-                ImGui.checkbox("Show chart for $varName", showChartImBooleans[varName])
+                ImGui.checkbox(getString("show_chart_for_option", varName), showChartImBooleans[varName])
                 ImGui.endPopup()
             }
             ImGui.popID()
@@ -107,7 +108,7 @@ class ObservableVariablesView(
     }
 
     private companion object {
-        const val TITLE_OBSERVABLE_VARIABLES_WINDOW = "Observable Variables"
+        val TITLE_OBSERVABLE_VARIABLES_WINDOW = getString("obs_vars_window_title")
         const val DX_PLOT = 15f
         const val DY_PLOT = 50f
         const val WIDTH_CHART_WINDOW = 1000f

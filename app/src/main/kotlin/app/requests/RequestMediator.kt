@@ -4,6 +4,7 @@ import app.api.dto.Error
 import app.api.dto.Request
 import app.api.dto.Requests
 import app.api.dto.Responses
+import app.utils.getString
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import core.services.logger.Level
 import core.services.logger.Logger
@@ -72,7 +73,7 @@ object RequestMediator : RequestDispatcher, RequestSender {
 
     private fun onError(onResult: (Result<*>) -> Unit, error: Error) {
         Logger.log(
-            "An error occurred in the model\ncode: ${error.code}, message: \"${error.text}\"",
+            getString("model_error_occurred", error.code, error.text),
             Level.ERROR
         )
         onResult(Result.failure<Any>(kotlin.runCatching { throw error }.exceptionOrNull()!!))
