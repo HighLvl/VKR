@@ -7,17 +7,23 @@ import core.components.experiment.OptimizationExperiment
 import core.entities.Experimenter
 import core.entities.getComponent
 import core.services.Services
+import core.utils.Disposable
 
 @TargetEntity(Experimenter::class, [OptimizationExperiment::class])
 class GeneticAlgorithm : Component, Script {
     private lateinit var optimizationExperiment: OptimizationExperiment
     private lateinit var inputParams: List<OptimizationExperiment.Input>
+    private val disposables = mutableListOf<Disposable>()
 
     override fun onAttach() {
         optimizationExperiment = Services.scene.experimenter.getComponent()!!
-        optimizationExperiment.commandObservable.observe {
+        disposables += optimizationExperiment.commandObservable.observe {
             processCommand(it)
         }
+    }
+
+    override fun onDetach() {
+        disposables.forEach { it.dispose() }
     }
 
     private fun processCommand(command: OptimizationExperiment.Command) {

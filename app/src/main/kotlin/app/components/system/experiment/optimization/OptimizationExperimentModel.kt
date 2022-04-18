@@ -1,6 +1,5 @@
-package app.components.system.experiment.common.controller
+package app.components.system.experiment.optimization
 
-import app.components.system.experiment.optimization.InputDoubleParam
 import app.coroutines.Contexts
 import app.utils.getString
 import core.components.experiment.ExperimentTaskModel
@@ -29,7 +28,7 @@ class OptimizationExperimentModel {
     val commandObservable: ValueObservable<Command> = _commandObservable
 
     enum class State {
-        STOP, RUN, WAIT_DECISION
+        STOP, RUN, WAIT_DECISION, WAIT_FIRST_UPDATE
     }
 
     var state: State = State.STOP
@@ -41,8 +40,6 @@ class OptimizationExperimentModel {
             field = value
             paramNameToSetterMap = value.inputParams.asSequence().map { it.name to it.setter }.toMap()
         }
-    var makeDecisionData: CtrlMakeDecisionData? = null
-        private set
 
     private val coroutineScope = CoroutineScope(Contexts.app)
 
@@ -52,50 +49,21 @@ class OptimizationExperimentModel {
     fun start() {
         if (state != State.STOP) return
         when (Services.agentModelControl.controlState) {
-            ControlState.STOP -> Services.agentModelControl.runModel {
-                it.onSuccess {
-                    startOptimization()
-                }
-            }
-            ControlState.PAUSE -> Services.agentModelControl.resumeModel {
-                it.onSuccess {
-                    startOptimization()
-                }
-            }
-            ControlState.RUN -> startOptimization()
-            else -> {
-            }
+            ControlState.STOP -> Services.agentModelControl.runModel()
+            ControlState.PAUSE -> Services.agentModelControl.resumeModel()
+            else -> {}
         }
-    }
-
-    private fun startOptimization() {
-        taskModel.startOptimizationObservable.publish()
-        makeDecisionData = null
-        Logger.log(getString("opt_exp_started"), Level.INFO)
-        _commandObservable.value = Command.Start(inputParams.values.toList())
-        state = State.RUN
-        if (!makeDecision()) {
-            Logger.log(getString("inv_init_val_of_params"), Level.ERROR)
-            stop()
-        }
+        startOptimization()
     }
 
     fun stop() {
         if (state == State.STOP) return
-        when (Services.agentModelControl.controlState) {
-            ControlState.RUN -> Services.agentModelControl.pauseModel {
-                it.onSuccess {
-                    stopOptimization()
-                }
-            }
-            else -> stopOptimization()
-        }
-
+        stopOptimization()
     }
 
     private fun stopOptimization() {
-        taskModel.stopOptimizationObservable.publish()
         Services.agentModelControl.pauseModel()
+        taskModel.stopOptimizationObservable.publish()
         Logger.log(getString("opt_exp_stopped"), Level.INFO)
         state = State.STOP
         _commandObservable.value = Command.Stop
@@ -103,11 +71,23 @@ class OptimizationExperimentModel {
 
     fun onModelUpdate() {
         when (state) {
+            State.WAIT_FIRST_UPDATE -> waitInitialDecision()
             State.RUN -> processRunState()
             State.WAIT_DECISION -> processWaitDecisionState()
-            else -> {
-            }
+            else -> { }
         }
+    }
+
+    private fun waitInitialDecision() {
+        Logger.log(getString("make_initial_decision"), Level.INFO)
+        waitDecision(0.0)
+    }
+
+    private fun startOptimization() {
+        taskModel.startOptimizationObservable.publish()
+        Logger.log(getString("opt_exp_started"), Level.INFO)
+        _commandObservable.value = Command.Start(inputParams.values.toList())
+        state = State.WAIT_FIRST_UPDATE
     }
 
     private fun processRunState() {
@@ -119,24 +99,25 @@ class OptimizationExperimentModel {
 
         if (needMakeDecision()) {
             taskModel.endObservable.publish()
-            newMakeDecisionData()
-            coroutineScope.launch { _ctrlMakeDecisionDataFlow.emit(makeDecisionData!!) }
-            if (isTargetScoreAchieved()) {
+            val makeDecisionData = newMakeDecisionData()
+            coroutineScope.launch { _ctrlMakeDecisionDataFlow.emit(makeDecisionData) }
+            if (makeDecisionData.isTargetScoreAchieved) {
+                Logger.log(getString("target_score_achieved"), Level.INFO)
                 stop()
                 return
             }
-            waitDecision()
+            waitDecision(makeDecisionData.targetFunctionValue)
         }
     }
 
-    private fun waitDecision() {
+    private fun waitDecision(targetFunctionValue: Double) {
         state = State.WAIT_DECISION
-        _commandObservable.value = waitDecisionState()
+        _commandObservable.value = waitDecisionCommand(targetFunctionValue)
     }
 
-    private fun waitDecisionState() = object : Command.WaitDecision {
+    private fun waitDecisionCommand(targetFunctionValue: Double) = object : Command.WaitDecision {
         override val targetFunctionValue: Double
-            get() = makeDecisionData!!.targetFunctionValue
+            get() = targetFunctionValue
 
         override fun makeDecision(): Boolean {
             return this@OptimizationExperimentModel.makeDecision()
@@ -170,30 +151,19 @@ class OptimizationExperimentModel {
         stop()
     }
 
-    private fun newMakeDecisionData() {
+    private fun newMakeDecisionData(): CtrlMakeDecisionData {
         val totalScore = taskModel.goals.sumOf { if (it.valueHolder.value) it.score else 0 }
         val isTargetScoreAchieved = totalScore >= taskModel.targetScore
         val goalValues = taskModel.goals.asSequence().map {
             val score = if (it.valueHolder.value) it.score else 0
             it.name to (it.valueHolder.value to score)
         }.toMap()
-        makeDecisionData = CtrlMakeDecisionData(
+        return CtrlMakeDecisionData(
             taskModel.targetFunctionVH.value,
             goalValues,
             totalScore,
             isTargetScoreAchieved
         )
-        coroutineScope.launch { makeDecisionData }
-    }
-
-    private fun isTargetScoreAchieved(): Boolean {
-        makeDecisionData?.isTargetScoreAchieved?.let {
-            if (it) {
-                Logger.log(getString("target_score_achieved"), Level.INFO)
-            }
-            return it
-        }
-        return false
     }
 
     private fun makeDecision(): Boolean {

@@ -8,6 +8,7 @@ import core.entities.getComponent
 import core.services.Services
 import core.services.logger.Level
 import core.services.logger.Logger
+import core.utils.Disposable
 import imgui.ImGui
 import org.lwjgl.glfw.GLFW
 
@@ -28,13 +29,18 @@ class UserDecision : Component, Script {
 
     private var needMakeDecision: Boolean = false
     private lateinit var waitDecision: OptimizationExperiment.Command.WaitDecision
+    private val disposables = mutableListOf<Disposable>()
 
     override fun onAttach() {
         experimenter = Services.scene.experimenter
         optimizationExperiment = experimenter.getComponent()!!
-        optimizationExperiment.commandObservable.observe {
+        disposables += optimizationExperiment.commandObservable.observe {
             processCommand(it)
         }
+    }
+
+    override fun onDetach() {
+        disposables.forEach { it.dispose() }
     }
 
     private fun processCommand(command: OptimizationExperiment.Command) {

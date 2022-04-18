@@ -1,6 +1,6 @@
 package app.components.system.experiment.common.goals
 
-import app.components.system.experiment.common.controller.CtrlMakeDecisionData
+import app.components.system.experiment.optimization.CtrlMakeDecisionData
 import app.coroutines.Contexts
 import app.utils.getString
 import core.components.experiment.Goal

@@ -1,6 +1,5 @@
 package app.components.system.experiment.optimization
 
-import app.components.system.experiment.common.controller.OptimizationExperimentModel
 import app.utils.getString
 import core.services.Services
 import core.services.control.ControlState

@@ -1,7 +1,5 @@
 package app.components.system.experiment.optimization
 
-import app.components.system.experiment.common.controller.OptimizationExperimentModel
-
 class OptimizationExperimentController {
     private val model = OptimizationExperimentModel()
 
