@@ -1,8 +1,6 @@
 package core.components.experiment
 
 import core.components.base.Component
-import core.components.base.TargetEntity
-import core.entities.Experimenter
 import core.utils.ValueObservable
 
 interface Experiment : Component {
@@ -11,12 +9,14 @@ interface Experiment : Component {
 
 interface OptimizationExperiment : Component {
     sealed interface Command {
-        object Start: Command
-        object Stop: Command
-        object Run: Command
-
-        interface WaitDecision: Command {
+        data class Start(
             val inputParams: List<Input>
+        ) : Command
+
+        object Stop : Command
+        object Run : Command
+
+        interface WaitDecision : Command {
             val targetFunctionValue: Double
             fun makeDecision(): Boolean
         }

@@ -2,8 +2,10 @@ package app.components.system.experiment.common.controller
 
 import app.components.system.experiment.optimization.InputDoubleParam
 import app.coroutines.Contexts
-import core.components.experiment.*
-import core.components.experiment.OptimizationExperiment.*
+import core.components.experiment.ExperimentTaskModel
+import core.components.experiment.MutableExperimentTaskModel
+import core.components.experiment.OptimizationExperiment.Command
+import core.components.experiment.SetterExp
 import core.services.Services
 import core.services.control.ControlState
 import core.services.logger.Level
@@ -30,14 +32,14 @@ class OptimizationExperimentModel {
     }
 
     var state: State = State.STOP
-    private set
+        private set
 
     private var paramNameToSetterMap: Map<String, SetterExp> = mapOf()
     var taskModel: ExperimentTaskModel = MutableExperimentTaskModel()
-    set(value) {
-        field = value
-        paramNameToSetterMap = value.inputParams.asSequence().map { it.name to it.setter }.toMap()
-    }
+        set(value) {
+            field = value
+            paramNameToSetterMap = value.inputParams.asSequence().map { it.name to it.setter }.toMap()
+        }
     var makeDecisionData: CtrlMakeDecisionData? = null
         private set
 
@@ -48,7 +50,7 @@ class OptimizationExperimentModel {
 
     fun start() {
         if (state != State.STOP) return
-        when(Services.agentModelControl.controlState) {
+        when (Services.agentModelControl.controlState) {
             ControlState.STOP -> Services.agentModelControl.runModel {
                 it.onSuccess {
                     startOptimization()
@@ -60,24 +62,26 @@ class OptimizationExperimentModel {
                 }
             }
             ControlState.RUN -> startOptimization()
+            else -> {
+            }
         }
     }
 
     private fun startOptimization() {
         taskModel.startOptimizationObservable.publish()
-        taskModel.beginObservable.publish()
         makeDecisionData = null
         Logger.log("Optimization experiment started", Level.INFO)
+        _commandObservable.value = Command.Start(inputParams.values.toList())
         state = State.RUN
-        with(_commandObservable) {
-            value = Command.Start
-            value = Command.Run
+        if (!makeDecision()) {
+            Logger.log("Invalid initial values of parameters", Level.ERROR)
+            stop()
         }
     }
 
     fun stop() {
         if (state == State.STOP) return
-        when(Services.agentModelControl.controlState) {
+        when (Services.agentModelControl.controlState) {
             ControlState.RUN -> Services.agentModelControl.pauseModel {
                 it.onSuccess {
                     stopOptimization()
@@ -107,14 +111,20 @@ class OptimizationExperimentModel {
 
     private fun processRunState() {
         taskModel.updateObservable.publish()
+        if (needStopOptimization()) {
+            stop()
+            return
+        }
+
         if (needMakeDecision()) {
             taskModel.endObservable.publish()
             newMakeDecisionData()
             coroutineScope.launch { _ctrlMakeDecisionDataFlow.emit(makeDecisionData!!) }
+            if (isTargetScoreAchieved()) {
+                stop()
+                return
+            }
             waitDecision()
-        }
-        if (needStopOptimization()) {
-            stop()
         }
     }
 
@@ -124,15 +134,11 @@ class OptimizationExperimentModel {
     }
 
     private fun waitDecisionState() = object : Command.WaitDecision {
-        override val inputParams: List<Input>
-            get() = this@OptimizationExperimentModel.inputParams.values.toList()
         override val targetFunctionValue: Double
             get() = makeDecisionData!!.targetFunctionValue
 
         override fun makeDecision(): Boolean {
-            val isValidArgs = makeDecision(inputParams)
-            _isValidArgsObservable.publish(isValidArgs)
-            return isValidArgs
+            return this@OptimizationExperimentModel.makeDecision()
         }
     }
 
@@ -149,12 +155,6 @@ class OptimizationExperimentModel {
         taskModel.stopConditions.entries.firstOrNull { it.value() }?.let { (condName, _) ->
             Logger.log("Stop on \"$condName\"", Level.INFO)
             result = true
-        }
-        makeDecisionData?.isTargetScoreAchieved?.let {
-            if (it) {
-                Logger.log("Target score achieved", Level.INFO)
-                result = true
-            }
         }
         return result
     }
@@ -185,13 +185,29 @@ class OptimizationExperimentModel {
         coroutineScope.launch { makeDecisionData }
     }
 
-    fun makeDecision(inputParams: List<Input>): Boolean {
-        val params = inputParams.asSequence().map { it.name to it.value }.toMap()
-        if (!taskModel.constraint(params)) return false
-        inputParams.forEach { paramNameToSetterMap[it.name]!!(it.value) }
+    private fun isTargetScoreAchieved(): Boolean {
+        makeDecisionData?.isTargetScoreAchieved?.let {
+            if (it) {
+                Logger.log("Target score achieved", Level.INFO)
+            }
+            return it
+        }
+        return false
+    }
+
+    private fun makeDecision(): Boolean {
+        if (!commitInput()) return false
         taskModel.beginObservable.publish()
         state = State.RUN
         _commandObservable.value = Command.Run
+        return true
+    }
+
+    private fun commitInput(): Boolean {
+        val params = inputParams.values.asSequence().map { it.name to it.value }.toMap()
+        if (!taskModel.constraint(params)) return false
+        inputParams.values.forEach { paramNameToSetterMap[it.name]!!(it.value) }
+        _isValidArgsObservable.publish(true)
         return true
     }
 }
