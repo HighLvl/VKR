@@ -1,6 +1,7 @@
 package widgets.inspector.property
 
 import com.fasterxml.jackson.databind.JsonNode
+import utils.getString
 import widgets.inspector.property.base.PropertyInspector
 import widgets.inspector.property.base.SimpleMutablePropertyFactory
 import widgets.properties.MutableProperty
@@ -22,7 +23,7 @@ class ExperimentPropertyInspector : PropertyInspector() {
 
     private companion object {
         const val OPTIMIZATION_TASK_NAME = "task"
-        const val LOAD_TASK_TITLE = "Load"
+        val LOAD_TASK_TITLE = getString("load_experiment_task_title")
         const val TASK_FILE_EXTENSIONS_FILTER = "kts"
     }
 }

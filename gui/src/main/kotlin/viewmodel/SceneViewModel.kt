@@ -10,6 +10,7 @@ import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import model.ComponentRepository
+import utils.getString
 
 @OptIn(ObsoleteCoroutinesApi::class)
 class SceneViewModel(
@@ -161,7 +162,7 @@ class SceneViewModel(
 sealed class Node
 sealed class FolderNode(open val title: String, open val children: List<Node>) : Node()
 data class Folder(override val title: String, override val children: List<Node>) : FolderNode(title, children)
-data class AgentsFolder(override val children: List<Node>) : FolderNode("Agents", children)
+data class AgentsFolder(override val children: List<Node>) : FolderNode(getString("agent_folder_title"), children)
 
 sealed class Entity : Node()
 object None : Entity()

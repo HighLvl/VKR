@@ -1,5 +1,6 @@
 package view
 
+import utils.getString
 import viewmodel.*
 import widgets.Widget
 import widgets.objecttree.FolderNode
@@ -62,8 +63,8 @@ class ObjectTreeView(private val viewModel: SceneViewModel) : View(), Widget {
     }
 
     private companion object {
-        const val TITLE_ENVIRONMENT_OBJECT = "Environment"
-        const val TITLE_EXPERIMENTER_OBJECT = "Experimenter"
-        const val TITLE_AGENT_FOLDER = "Agents"
+        val TITLE_ENVIRONMENT_OBJECT = getString("environment_title")
+        val TITLE_EXPERIMENTER_OBJECT = getString("experimenter_title")
+        val TITLE_AGENT_FOLDER = getString("agent_folder_title")
     }
 }

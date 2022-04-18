@@ -8,6 +8,7 @@ import dockspace.ToolsWindow
 import dockspace.Window
 import model.ComponentRepository
 import model.LogService
+import utils.getString
 import view.*
 import viewmodel.AgentModelControlViewModel
 import viewmodel.LoggerViewModel
@@ -15,14 +16,15 @@ import viewmodel.SceneViewModel
 
 class MainController : Controller() {
     private val sceneViewModel = SceneViewModel(ServiceManager.sceneService, ComponentRepository(ComponentProvider))
-    private val componentInspectorWindow = Window("Inspector", ComponentInspectorView(sceneViewModel))
-    private val objectTreeWindow = Window("Object tree", ObjectTreeView(sceneViewModel))
-    private val loggerWindow = Window("Logger", LoggerView(LoggerViewModel(LogService())))
+    private val componentInspectorWindow =
+        Window(getString("component_inspector_window_title"), ComponentInspectorView(sceneViewModel))
+    private val objectTreeWindow = Window(getString("object_tree_window_title"), ObjectTreeView(sceneViewModel))
+    private val loggerWindow = Window(getString("logger_window_title"), LoggerView(LoggerViewModel(LogService())))
     private val toolsWindow = ToolsWindow(
         MenuBarView(sceneViewModel),
         ModelControlView(AgentModelControlViewModel(ServiceManager.modelControlService))
     )
-    private val scriptViewPortWindow = ScriptViewPortWindow("ScriptView", ScriptViewPortView(sceneViewModel))
+    private val scriptViewPortWindow = ScriptViewPortWindow(getString("script_view_window_title"), ScriptViewPortView(sceneViewModel))
 
 
     private val dockspace = Dockspace().apply {

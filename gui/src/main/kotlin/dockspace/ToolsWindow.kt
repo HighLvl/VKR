@@ -2,11 +2,12 @@ package dockspace
 
 import imgui.flag.ImGuiWindowFlags
 import imgui.internal.ImGui
+import utils.getString
 import view.MenuBarView
 import view.ModelControlView
 
 class ToolsWindow(private val menuBarView: MenuBarView, private val modelControlView: ModelControlView) :
-    Window("Tools window", modelControlView) {
+    Window(getString("tools_window_title"), modelControlView) {
     override val height: Float
     get() = menuBarView.height + MODEL_CONTROL_HEIGHT
 

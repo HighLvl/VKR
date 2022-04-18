@@ -3,6 +3,7 @@ package view
 import imgui.flag.ImGuiCol
 import imgui.internal.ImGui
 import imgui.type.ImBoolean
+import utils.getString
 import viewmodel.SceneViewModel
 import widgets.Widget
 
@@ -33,8 +34,8 @@ class MenuBarView(private val sceneViewModel: SceneViewModel) : View(), Widget {
         val menuBarPos = ImGui.getWindowPos()
         _menuBarX = menuBarPos.x
         _menuBarY = menuBarPos.y
-        if (ImGui.beginMenu("View")) {
-            if (ImGui.checkbox("Dark theme", isDarkTheme)) {
+        if (ImGui.beginMenu(getString("menubar_view_title"))) {
+            if (ImGui.checkbox(getString("menubar_view_dark_theme_option"), isDarkTheme)) {
                 setupImGuiStyle(isDarkTheme.get())
             }
             ImGui.endMenu()

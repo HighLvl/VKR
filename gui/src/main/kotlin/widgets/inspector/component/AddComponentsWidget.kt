@@ -4,6 +4,7 @@ package widgets.inspector.component
 import imgui.ImGui
 import model.FolderNode
 import model.Node
+import utils.getString
 import widgets.Widget
 
 class AddComponentsWidget : Widget {
@@ -39,7 +40,7 @@ class AddComponentsWidget : Widget {
     }
 
     private fun drawButton() {
-        if (ImGui.button("Add component")) {
+        if (ImGui.button(getString("add_component_button_title"))) {
             showAddComponentsList = !showAddComponentsList
         }
     }

@@ -3,6 +3,7 @@ package model
 import app.services.provider.component.ComponentProvider
 import core.components.base.Component
 import core.entities.Entity
+import utils.getString
 
 import kotlin.reflect.KClass
 
@@ -42,7 +43,7 @@ class ComponentRepository(private val componentProvider: ComponentProvider) {
     }
 
     private companion object {
-        const val COMPONENTS = "Components"
+        val COMPONENTS = getString("components_title")
         const val SYSTEM_COMPONENT_NAME_PREFIX = "app.components.system."
         const val USER_COMPONENT_NAME_PREFIX = "app.components.user."
     }

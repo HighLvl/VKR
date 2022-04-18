@@ -3,6 +3,7 @@ package widgets.properties
 import imgui.ImGui
 import imgui.flag.ImGuiInputTextFlags
 import imgui.type.ImString
+import utils.getString
 import widgets.FileOpenDialog
 
 class OpenFileProperty(
@@ -24,6 +25,6 @@ class OpenFileProperty(
     }
 
     private companion object {
-        const val OPEN_FILE_BUTTON_TITLE = "Open"
+        val OPEN_FILE_BUTTON_TITLE = getString("open_file_button_title")
     }
 }

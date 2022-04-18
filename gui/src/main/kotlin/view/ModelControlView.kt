@@ -5,6 +5,7 @@ import imgui.flag.ImGuiStyleVar
 import imgui.internal.ImGui
 import imgui.internal.flag.ImGuiItemFlags
 import imgui.type.ImFloat
+import utils.getString
 import viewmodel.AgentModelControlViewModel
 import viewmodel.ButtonState
 import viewmodel.ViewControlState
@@ -166,19 +167,19 @@ class ModelControlView(private val viewModel: AgentModelControlViewModel) : View
         const val WIDTH_IP = 200f
         const val WIDTH_PORT = 200f
         const val SPACING_BETWEEN_PLAY_AND_PAUSE = 2f
-        const val TITLE_CONNECT_BUTTON = "Connect"
-        const val TITLE_RUN_BUTTON = "Run"
-        const val TITLE_PAUSE_BUTTON = "Pause"
-        const val TITLE_DISCONNECT_BUTTON = "Disconnect"
+        val TITLE_CONNECT_BUTTON = getString("connect_button_title")
+        val TITLE_RUN_BUTTON = getString("run_button_title")
+        val TITLE_PAUSE_BUTTON = getString("pause_button_title")
+        val TITLE_DISCONNECT_BUTTON = getString("disconnect_button_title")
 
-        const val LABEL_INPUT_IP = "ip"
-        const val LABEL_INPUT_PORT = "port"
+        val LABEL_INPUT_IP = getString("input_ip_label")
+        val LABEL_INPUT_PORT = getString("input_port_label")
 
         const val WIDTH_DISCONNECT_BUTTON = 100f
         const val WIDTH_CONNECT_BUTTON = 100f
         const val WIDTH_RUN_BUTTON = 100f
         const val WIDTH_PAUSE_BUTTON = 100f
-        const val LABEL_INPUT_REQUEST_DT = "dt, s"
+        val LABEL_INPUT_REQUEST_DT = getString("input_request_dt_label")
         const val WIDTH_INPUT_REQUEST_DT = 100f
 
         const val REQUEST_DT_VALUE_DEFAULT = 0.001f

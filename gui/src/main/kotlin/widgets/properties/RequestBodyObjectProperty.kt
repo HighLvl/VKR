@@ -1,6 +1,7 @@
 package widgets.properties
 
 import imgui.ImGui
+import utils.getString
 
 class RequestBodyObjectProperty(name: String, private val onMakeRequestClickListener: () -> Unit) :
     NodeTreeObjectProperty(name) {
@@ -17,6 +18,6 @@ class RequestBodyObjectProperty(name: String, private val onMakeRequestClickList
     }
 
     companion object {
-        const val MAKE_REQUEST_BUTTON_TITLE = "Schedule request"
+        val MAKE_REQUEST_BUTTON_TITLE = getString("schedule_request_title")
     }
 }

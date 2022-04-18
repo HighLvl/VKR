@@ -1,6 +1,7 @@
 package view
 
 import imgui.ImGui
+import utils.getString
 import viewmodel.*
 import widgets.Widget
 import widgets.inspector.component.AddComponentsWidget
@@ -37,16 +38,16 @@ class ComponentInspectorView(private val viewModel: SceneViewModel) : View(), Wi
     private fun onEntitySelected(entity: Entity) {
         title = when (entity) {
             is Environment -> {
-                TITLE_COMPONENT_INSPECTOR.format(TITLE_ENVIRONMENT_OBJECT)
+                getString("component_inspector_title", TITLE_ENVIRONMENT_OBJECT)
             }
             is Experimenter -> {
-                TITLE_COMPONENT_INSPECTOR.format(TITLE_EXPERIMENTER_OBJECT)
+                getString("component_inspector_title", TITLE_EXPERIMENTER_OBJECT)
             }
             is Agent -> {
-                TITLE_COMPONENT_INSPECTOR.format(TITLE_AGENT_OBJECT.format(entity.type, entity.id))
+                getString("component_inspector_title", getString("agent_object_title", entity.type, entity.id))
             }
             is AgentPrototype -> {
-                TITLE_COMPONENT_INSPECTOR.format(TITLE_AGENT_PROTOTYPE_OBJECT.format(entity.type))
+                getString("component_inspector_title", getString("agent_prototype_title", entity.type))
             }
             is None -> {
                 TITLE_OBJECT_NOT_SELECTED
@@ -74,12 +75,9 @@ class ComponentInspectorView(private val viewModel: SceneViewModel) : View(), Wi
 
 
     private companion object {
-        const val TITLE_ENVIRONMENT_OBJECT = "Environment"
-        const val TITLE_EXPERIMENTER_OBJECT = "Experimenter"
-        const val TITLE_COMPONENT_INSPECTOR = "Inspected object: %s"
-        const val TITLE_OBJECT_NOT_SELECTED = "The object is not selected"
-        const val TITLE_AGENT_OBJECT = "%s (%d)"
-        const val TITLE_AGENT_PROTOTYPE_OBJECT = "%s (prototype)"
+        val TITLE_ENVIRONMENT_OBJECT = getString("environment_title")
+        val TITLE_EXPERIMENTER_OBJECT = getString("experimenter_title")
+        val TITLE_OBJECT_NOT_SELECTED = getString("object_not_selected")
     }
 }
 

@@ -7,6 +7,7 @@ import imgui.flag.ImGuiCol
 import imgui.internal.ImGui
 import imgui.type.ImBoolean
 import imgui.type.ImString
+import utils.getString
 import viewmodel.Level
 import viewmodel.LoggerViewModel
 import widgets.Widget
@@ -35,23 +36,23 @@ class LoggerView(private val viewModel: LoggerViewModel) : View(), Widget {
     }
 
     override fun draw() {
-        if (ImGui.beginPopup("Options")) {
-            if (ImGui.checkbox("Info", showInfo)) {
+        if (ImGui.beginPopup(getString("logger_options"))) {
+            if (ImGui.checkbox(getString("logger_info_option"), showInfo)) {
                 filter()
             }
-            if (ImGui.checkbox("Debug", showDebug)) {
+            if (ImGui.checkbox(getString("logger_debug_option"), showDebug)) {
                 filter()
             }
-            if (ImGui.checkbox("Error", showError)) {
+            if (ImGui.checkbox(getString("logger_error_option"), showError)) {
                 filter()
             }
-            if (ImGui.checkbox("Filter", openFilter)) {
+            if (ImGui.checkbox(getString("logger_filter_option"), openFilter)) {
                 filter()
             }
             ImGui.endPopup()
         }
 
-        if (ImGui.smallButton("Options")) ImGui.openPopup("Options")
+        if (ImGui.smallButton(getString("logger_options"))) ImGui.openPopup(getString("logger_options"))
 
         ImGui.sameLine()
         if (ImGui.smallButton(TITLE_CLEAR_BUTTON)) {
@@ -61,7 +62,7 @@ class LoggerView(private val viewModel: LoggerViewModel) : View(), Widget {
 
         if (openFilter.get()) {
             ImGui.setNextItemWidth(FILTER_WIDTH)
-            if (ImGui.inputText("Filter", filterString)) {
+            if (ImGui.inputText(getString("logger_filter_option"), filterString)) {
                 filter()
             }
             ImGui.separator()
@@ -90,7 +91,7 @@ class LoggerView(private val viewModel: LoggerViewModel) : View(), Widget {
     }
 
     private companion object {
-        const val TITLE_CLEAR_BUTTON = "Clear"
+        val TITLE_CLEAR_BUTTON = getString("logger_clear_button_title")
 
         val ERROR_COLOR = ImVec4(255f / 255f, 100f / 255f, 100f / 255f, 255f / 255f)
         val INFO_COLOR = listOf(255, 255, 255, 255)
