@@ -12,13 +12,8 @@ interface OptimizationExperiment : Component {
         data class Start(val inputParams: List<Input>) : Command
         data class Stop(val hasGoalBeenAchieved: Boolean) : Command
         object Run : Command
-        interface MakeInitialDecision : Command {
-            fun commit(): Boolean
-        }
-        interface MakeDecision : Command {
-            val targetFunctionValue: Double
-            fun commit(): Boolean
-        }
+        object MakeInitialDecision : Command
+        data class MakeDecision(val targetFunctionValue: Double) : Command
     }
 
     interface Input {
@@ -31,6 +26,7 @@ interface OptimizationExperiment : Component {
 
     val commandObservable: ValueObservable<Command>
     fun start()
+    fun makeDecision(): Boolean
     fun stop()
 }
 

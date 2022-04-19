@@ -81,9 +81,7 @@ class OptimizationExperimentModel {
     private fun waitInitialDecision() {
         Logger.log(getString("make_initial_decision"), Level.INFO)
         state = State.WAIT_DECISION
-        _commandObservable.value = object : Command.MakeInitialDecision {
-            override fun commit() = makeDecision()
-        }
+        _commandObservable.value = Command.MakeInitialDecision
     }
 
     private fun startOptimization() {
@@ -115,14 +113,7 @@ class OptimizationExperimentModel {
 
     private fun waitDecision(targetFunctionValue: Double) {
         state = State.WAIT_DECISION
-        _commandObservable.value = makeDecisionCommand(targetFunctionValue)
-    }
-
-    private fun makeDecisionCommand(targetFunctionValue: Double) = object : Command.MakeDecision {
-        override val targetFunctionValue: Double
-            get() = targetFunctionValue
-
-        override fun commit(): Boolean = makeDecision()
+        _commandObservable.value = Command.MakeDecision(targetFunctionValue)
     }
 
     private fun needMakeDecision(): Boolean {
@@ -167,7 +158,7 @@ class OptimizationExperimentModel {
         )
     }
 
-    private fun makeDecision(): Boolean {
+    fun makeDecision(): Boolean {
         if (!commitInput()) return false
         taskModel.beginObservable.publish()
         state = State.RUN

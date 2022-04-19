@@ -1,7 +1,10 @@
 package app.components.system.experiment.optimization
 
 import app.utils.getString
-import core.components.base.*
+import core.components.base.AddInSnapshot
+import core.components.base.Component
+import core.components.base.Script
+import core.components.base.TargetEntity
 import core.components.experiment.OptimizationExperiment
 import core.entities.Experimenter
 import core.entities.getComponent
@@ -28,7 +31,6 @@ class UserDecision : Component, Script {
         }
 
     private var needMakeDecision: Boolean = false
-    private lateinit var makeDecision: OptimizationExperiment.Command.MakeDecision
     private val disposables = mutableListOf<Disposable>()
 
     override fun onAttach() {
@@ -45,9 +47,9 @@ class UserDecision : Component, Script {
 
     private fun processCommand(command: OptimizationExperiment.Command) {
         when (command) {
-            is OptimizationExperiment.Command.MakeDecision -> if (!needMakeDecision) {
+            is OptimizationExperiment.Command.MakeDecision,
+            OptimizationExperiment.Command.MakeInitialDecision -> if (!needMakeDecision) {
                 needMakeDecision = true
-                makeDecision = command
                 Services.agentModelControl.pauseModel()
             }
             else -> needMakeDecision = false
@@ -64,7 +66,7 @@ class UserDecision : Component, Script {
 
     override fun updateUI() {
         if (needMakeDecision && ImGui.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) {
-            if (makeDecision.commit()) {
+            if (optimizationExperiment.makeDecision()) {
                 needMakeDecision = false
                 Services.agentModelControl.resumeModel()
             } else {

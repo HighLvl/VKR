@@ -110,6 +110,8 @@ class OptimizationExperiment : OptimizationExperiment, Script {
         optimizationExperimentController.stop()
     }
 
+    override fun makeDecision(): Boolean = optimizationExperimentController.makeDecision()
+
     private companion object {
         val INFO_DISCONNECT = getString("opt_exp_info_disc")
         const val INFO_CONNECT = ""

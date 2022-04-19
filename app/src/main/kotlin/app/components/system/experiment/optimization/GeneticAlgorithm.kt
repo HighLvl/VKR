@@ -28,16 +28,15 @@ class GeneticAlgorithm : Component, Script {
 
     private fun processCommand(command: OptimizationExperiment.Command) {
         when (command) {
-
             is OptimizationExperiment.Command.Start -> {
                 inputParams = command.inputParams
             }
             is OptimizationExperiment.Command.MakeInitialDecision -> {
-                makeInitialDecision(command)
+                makeInitialDecision()
             }
             is OptimizationExperiment.Command.Run -> { }
             is OptimizationExperiment.Command.MakeDecision -> {
-                makeDecision(command)
+                makeDecision(command.targetFunctionValue)
             }
             is OptimizationExperiment.Command.Stop -> {
                 if (command.hasGoalBeenAchieved) {
@@ -47,13 +46,13 @@ class GeneticAlgorithm : Component, Script {
         }
     }
 
-    private fun makeInitialDecision(command: OptimizationExperiment.Command.MakeInitialDecision) {
+    private fun makeInitialDecision() {
 
     }
 
-    private fun makeDecision(command: OptimizationExperiment.Command.MakeDecision) = with(command) {
+    private fun makeDecision(targetFunctionValue: Double){
         inputParams
         targetFunctionValue
-        command.commit()
+        optimizationExperiment.makeDecision()
     }
 }

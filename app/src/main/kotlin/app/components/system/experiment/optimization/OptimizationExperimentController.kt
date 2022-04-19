@@ -19,6 +19,8 @@ class OptimizationExperimentController {
         model.start()
     }
 
+    fun makeDecision(): Boolean = model.makeDecision()
+
     fun onModelStop() {
         model.onModelStop()
     }
