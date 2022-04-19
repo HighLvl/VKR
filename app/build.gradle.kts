@@ -30,7 +30,6 @@ val lwjglNatives = when(OperatingSystem.current()) {
 val lwjglVersion = "3.2.3"
 
 dependencies {
-    implementation(project(":core"))
     testImplementation(kotlin("test"))
     implementation(kotlin("script-runtime"))
 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-reflect
