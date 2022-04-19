@@ -103,11 +103,3 @@ protobuf {
         }
     }
 }
-
-sourceSets{
-    create("Model"){
-        proto {
-            srcDir("src/main/proto")
-        }
-    }
-}

@@ -1,5 +1,6 @@
 package gui.viewmodel
 
+import app.services.model.control.AgentModelControlService
 import com.google.common.net.InetAddresses
 import core.services.control.AgentModelControl
 import core.services.control.ControlState
@@ -15,7 +16,7 @@ enum class ViewControlState {
     DISCONNECT, CONNECT
 }
 
-class AgentModelControlViewModel(private val controlService: AgentModelControl) : ViewModel() {
+class AgentModelControlViewModel(private val controlService: AgentModelControlService) : ViewModel() {
     private val _controlState = MutableStateFlow(ViewControlState.DISCONNECT)
     private val _ipText = MutableStateFlow(DEFAULT_IP)
     private val _port = MutableStateFlow(DEFAULT_PORT)

@@ -1,7 +1,5 @@
 import core.components.experiment.MutableValueHolder
 import core.components.experiment.experimentTask
-import core.entities.setComponent
-import core.services.Services
 import core.services.getAgents
 import core.services.requestSetValue
 
