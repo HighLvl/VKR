@@ -24,7 +24,7 @@ class OptimizationExperimentModel {
     private val _isValidArgsObservable = PublishSubject<Boolean>()
     val isValidArgsObservable: Observable<Boolean> = _isValidArgsObservable
 
-    private val _commandObservable = MutableValue<Command>(Command.Stop)
+    private val _commandObservable = MutableValue<Command>(Command.Stop(false))
     val commandObservable: ValueObservable<Command> = _commandObservable
 
     enum class State {
@@ -58,15 +58,15 @@ class OptimizationExperimentModel {
 
     fun stop() {
         if (state == State.STOP) return
-        stopOptimization()
+        stopOptimization(false)
     }
 
-    private fun stopOptimization() {
+    private fun stopOptimization(hasGoalBeenAchieved: Boolean) {
         Services.agentModelControl.pauseModel()
-        taskModel.stopOptimizationObservable.publish()
+        taskModel.stopOptimizationObservable.publish(hasGoalBeenAchieved)
         Logger.log(getString("opt_exp_stopped"), Level.INFO)
         state = State.STOP
-        _commandObservable.value = Command.Stop
+        _commandObservable.value = Command.Stop(hasGoalBeenAchieved)
     }
 
     fun onModelUpdate() {
@@ -80,7 +80,10 @@ class OptimizationExperimentModel {
 
     private fun waitInitialDecision() {
         Logger.log(getString("make_initial_decision"), Level.INFO)
-        waitDecision(0.0)
+        state = State.WAIT_DECISION
+        _commandObservable.value = object : Command.MakeInitialDecision {
+            override fun commit() = makeDecision()
+        }
     }
 
     private fun startOptimization() {
@@ -93,7 +96,7 @@ class OptimizationExperimentModel {
     private fun processRunState() {
         taskModel.updateObservable.publish()
         if (needStopOptimization()) {
-            stop()
+            stopOptimization(false)
             return
         }
 
@@ -103,7 +106,7 @@ class OptimizationExperimentModel {
             coroutineScope.launch { _ctrlMakeDecisionDataFlow.emit(makeDecisionData) }
             if (makeDecisionData.isTargetScoreAchieved) {
                 Logger.log(getString("target_score_achieved"), Level.INFO)
-                stop()
+                stopOptimization(true)
                 return
             }
             waitDecision(makeDecisionData.targetFunctionValue)
@@ -112,16 +115,14 @@ class OptimizationExperimentModel {
 
     private fun waitDecision(targetFunctionValue: Double) {
         state = State.WAIT_DECISION
-        _commandObservable.value = waitDecisionCommand(targetFunctionValue)
+        _commandObservable.value = makeDecisionCommand(targetFunctionValue)
     }
 
-    private fun waitDecisionCommand(targetFunctionValue: Double) = object : Command.WaitDecision {
+    private fun makeDecisionCommand(targetFunctionValue: Double) = object : Command.MakeDecision {
         override val targetFunctionValue: Double
             get() = targetFunctionValue
 
-        override fun makeDecision(): Boolean {
-            return this@OptimizationExperimentModel.makeDecision()
-        }
+        override fun commit(): Boolean = makeDecision()
     }
 
     private fun needMakeDecision(): Boolean {

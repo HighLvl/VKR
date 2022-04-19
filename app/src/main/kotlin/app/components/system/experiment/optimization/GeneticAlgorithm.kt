@@ -28,22 +28,32 @@ class GeneticAlgorithm : Component, Script {
 
     private fun processCommand(command: OptimizationExperiment.Command) {
         when (command) {
-            is OptimizationExperiment.Command.Stop -> {
-            }
+
             is OptimizationExperiment.Command.Start -> {
                 inputParams = command.inputParams
             }
-            is OptimizationExperiment.Command.Run -> {
+            is OptimizationExperiment.Command.MakeInitialDecision -> {
+                makeInitialDecision(command)
             }
-            is OptimizationExperiment.Command.WaitDecision -> {
+            is OptimizationExperiment.Command.Run -> { }
+            is OptimizationExperiment.Command.MakeDecision -> {
                 makeDecision(command)
+            }
+            is OptimizationExperiment.Command.Stop -> {
+                if (command.hasGoalBeenAchieved) {
+
+                }
             }
         }
     }
 
-    private fun makeDecision(command: OptimizationExperiment.Command.WaitDecision) = with(command) {
+    private fun makeInitialDecision(command: OptimizationExperiment.Command.MakeInitialDecision) {
+
+    }
+
+    private fun makeDecision(command: OptimizationExperiment.Command.MakeDecision) = with(command) {
         inputParams
         targetFunctionValue
-        command.makeDecision()
+        command.commit()
     }
 }

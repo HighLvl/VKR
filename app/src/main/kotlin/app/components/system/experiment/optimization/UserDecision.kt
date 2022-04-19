@@ -28,7 +28,7 @@ class UserDecision : Component, Script {
         }
 
     private var needMakeDecision: Boolean = false
-    private lateinit var waitDecision: OptimizationExperiment.Command.WaitDecision
+    private lateinit var makeDecision: OptimizationExperiment.Command.MakeDecision
     private val disposables = mutableListOf<Disposable>()
 
     override fun onAttach() {
@@ -45,9 +45,9 @@ class UserDecision : Component, Script {
 
     private fun processCommand(command: OptimizationExperiment.Command) {
         when (command) {
-            is OptimizationExperiment.Command.WaitDecision -> if (!needMakeDecision) {
+            is OptimizationExperiment.Command.MakeDecision -> if (!needMakeDecision) {
                 needMakeDecision = true
-                waitDecision = command
+                makeDecision = command
                 Services.agentModelControl.pauseModel()
             }
             else -> needMakeDecision = false
@@ -64,7 +64,7 @@ class UserDecision : Component, Script {
 
     override fun updateUI() {
         if (needMakeDecision && ImGui.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) {
-            if (waitDecision.makeDecision()) {
+            if (makeDecision.commit()) {
                 needMakeDecision = false
                 Services.agentModelControl.resumeModel()
             } else {

@@ -1,6 +1,7 @@
 package core.components.experiment
 
 import core.utils.EmptyPublishSubject
+import core.utils.PublishSubject
 
 abstract class ExperimentTaskModel {
     abstract val inputParams: Set<InputParam>
@@ -18,7 +19,7 @@ abstract class ExperimentTaskModel {
     val modelUpdateObservable = EmptyPublishSubject()
     val modelStopObservable = EmptyPublishSubject()
     val startOptimizationObservable = EmptyPublishSubject()
-    val stopOptimizationObservable = EmptyPublishSubject()
+    val stopOptimizationObservable = PublishSubject<Boolean>()
 
     @set:JvmName("setTargetScore1")
     var targetScore = 0

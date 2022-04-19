@@ -9,16 +9,15 @@ interface Experiment : Component {
 
 interface OptimizationExperiment : Component {
     sealed interface Command {
-        data class Start(
-            val inputParams: List<Input>
-        ) : Command
-
-        object Stop : Command
+        data class Start(val inputParams: List<Input>) : Command
+        data class Stop(val hasGoalBeenAchieved: Boolean) : Command
         object Run : Command
-
-        interface WaitDecision : Command {
+        interface MakeInitialDecision : Command {
+            fun commit(): Boolean
+        }
+        interface MakeDecision : Command {
             val targetFunctionValue: Double
-            fun makeDecision(): Boolean
+            fun commit(): Boolean
         }
     }
 

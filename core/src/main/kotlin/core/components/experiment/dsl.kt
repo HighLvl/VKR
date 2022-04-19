@@ -254,8 +254,9 @@ abstract class OptimizerLifecycleEventsListener(private val model: MutableExperi
     }
 
     /** Вызывается после остановки оптимизационного эксперимента
+     * аргумент, передаваемый слушателю, true если цель эксперимента достигнута
      */
-    fun stop(listener: () -> Unit) {
+    fun stop(listener: (Boolean) -> Unit) {
         model.stopOptimizationObservable.observe(listener)
     }
 

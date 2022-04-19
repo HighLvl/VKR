@@ -53,6 +53,7 @@ experimentTask {
 //        }
 
         goals {
+
             lastInstant("last: Number of Doodlebugs > 5", 1) {
                 numberOfDoodleBugs > 5
             }
