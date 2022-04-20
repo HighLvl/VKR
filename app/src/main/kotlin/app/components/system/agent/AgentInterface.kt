@@ -11,7 +11,7 @@ import core.components.configuration.RequestSignature
 import core.utils.uppercaseFirstChar
 import kotlin.reflect.KClass
 
-class AgentInterface : AgentInterface, Native, Script {
+class AgentInterface : Script(), AgentInterface, Native {
     val requestBodies = RequestBodies(this)
     private var _props: Props = Props()
     private lateinit var requestSender: RequestSender

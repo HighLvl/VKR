@@ -16,17 +16,15 @@ object ComponentProvider {
     private fun getComponents(): Components {
         val components = Reflections(
             ConfigurationBuilder().forPackages(
-                "app.components"
+                "components"
             )
         ).getSubTypesOf(Component::class.java)
             .asSequence()
             .filter { !it.kotlin.isAbstract && kotlin.runCatching { it.kotlin.createInstance() }.isSuccess }
             .map { it.kotlin }.filterNot { it.isSubclass(Native::class) }.toList()
-        val userComponents = components.asSequence()
-            .filter { it.qualifiedName.toString().startsWith("app.components.user.") }
-            .sortedBy { it.qualifiedName }.toList()
+        val userComponents = mutableListOf<KClass<Component>>()
         val systemComponents = components.asSequence()
-            .filter { it.qualifiedName.toString().startsWith("app.components.system.") }
+            .filter { it.qualifiedName.toString().startsWith("components.") }
             .sortedBy { it.qualifiedName }.toList()
         return Components(userComponents, systemComponents)
     }

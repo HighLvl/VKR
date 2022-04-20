@@ -64,6 +64,8 @@ dependencies {
 
     implementation("org.lwjgl:lwjgl-nfd:$lwjglVersion")
     runtimeOnly("org.lwjgl:lwjgl-nfd:$lwjglVersion:$lwjglNatives")
+    implementation(project(":core"))
+    implementation(project(":components"))
 }
 
 tasks.test {

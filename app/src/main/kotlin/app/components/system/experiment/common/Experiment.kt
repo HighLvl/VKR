@@ -2,7 +2,7 @@ package app.components.system.experiment.common
 
 import app.components.system.base.Native
 import app.utils.KtsScriptEngine
-import app.utils.getString
+import core.utils.getString
 import core.components.base.AddInSnapshot
 import core.components.base.Script
 import core.components.base.TargetEntity
@@ -21,7 +21,7 @@ import core.utils.Observable
 import core.utils.ValueObservable
 
 @TargetEntity(Experimenter::class)
-class Experiment : Experiment, Native, Script, TrackedData {
+class Experiment : Script(), Experiment, Native, TrackedData {
     private var taskModel = MutableExperimentTaskModel()
     private val _taskModelObservable = MutableValue<ExperimentTaskModel>(taskModel)
     override val taskModelObservable: ValueObservable<ExperimentTaskModel> = _taskModelObservable
@@ -71,7 +71,7 @@ class Experiment : Experiment, Native, Script, TrackedData {
         }
         if (path.isEmpty()) return oldPath
         return try {
-            taskModel = KtsScriptEngine.eval(path)
+            taskModel = KtsScriptEngine().eval(path)
             _taskModelObservable.value = taskModel
             path
         } catch (e: ClassCastException) {

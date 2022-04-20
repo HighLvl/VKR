@@ -5,7 +5,7 @@ import app.api.dto.ModelInputArgs
 import app.api.dto.Requests
 import app.api.dto.Responses
 import app.api.dto.Snapshot
-import app.coroutines.Contexts
+import core.coroutines.Contexts
 import app.requests.RequestDispatcher
 import app.requests.RequestSender
 import app.requests.sendRequest

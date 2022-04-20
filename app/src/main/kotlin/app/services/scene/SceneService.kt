@@ -3,38 +3,24 @@ package app.services.scene
 import app.api.dto.AgentSnapshot
 import app.api.dto.ModelInputArgs
 import app.api.dto.Snapshot
-import app.components.getSnapshot
-import app.components.loadSnapshot
 import app.components.system.agent.AgentInterface
-import app.components.system.base.Native
 import app.components.system.configuration.AgentInterfaces
-import app.components.system.configuration.Configuration
-import app.components.system.experiment.common.Experiment
 import app.components.system.model.SnapshotInfo
-import app.coroutines.Contexts
 import app.requests.RequestSender
 import app.services.Service
-import core.components.base.Component
+import app.services.scene.SceneService.Companion.updateUI
+import app.services.scene.factory.EntityFactory
+import app.services.scene.factory.SceneFactory
+import app.utils.getAccessibleFunction
 import core.components.base.Script
 import core.components.configuration.InputArgsComponent
-import core.components.configuration.MutableRequestSignature
-import core.entities.*
+import core.coroutines.Contexts
+import core.entities.Agent
+import core.entities.getComponent
 import core.services.scene.Scene
-import core.utils.isSubclass
 import core.utils.runBlockCatching
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlin.reflect.KClass
-
-interface SceneApi {
-    fun getInputArgs(): ModelInputArgs
-    fun updateWith(snapshot: Snapshot)
-    fun onModelRun()
-    fun onModelStop()
-    fun onModelPause()
-    fun onModelResume()
-}
 
 class SceneService(private val requestSender: RequestSender) : Service(), SceneApi {
     val scene: Scene
@@ -145,13 +131,13 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
             .flatMap { it.getComponents() }
             .filterIsInstance<Script>()
 
-    private fun onAfterModelUpdate() = forEachScript(Script::onModelAfterUpdate)
-    private fun updateScripts() = forEachScript { onModelUpdate() }
+    private fun onAfterModelUpdate() = forEachScript { onModelAfterUpdate.call(it) }
+    private fun updateScripts() = forEachScript { onModelUpdate.call(it)}
     override fun onModelRun() {
         prevTime = Double.MIN_VALUE
         resetSnapshotInfo()
         _scene.apply { agents.map { it.key }.forEach { removeAgentById(it) } }
-        forEachScript(Script::onModelRun)
+        forEachScript { onModelRun.call(it) }
     }
 
     private fun resetSnapshotInfo() {
@@ -161,17 +147,17 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
         }
     }
 
-    override fun onModelStop() = forEachScript(Script::onModelStop)
-    override fun onModelPause() = forEachScript(Script::onModelPause)
-    override fun onModelResume() = forEachScript(Script::onModelResume)
+    override fun onModelStop() = forEachScript { onModelStop.call(it) }
+    override fun onModelPause() = forEachScript { onModelPause.call(it) }
+    override fun onModelResume() = forEachScript { onModelResume.call(it) }
     fun updateScriptsUI() {
-        runBlocking { forEachScript(Script::updateUI) }
+        forEachScript { updateUI.call(it)}
     }
 
-    private fun forEachScript(block: Script.() -> Unit) {
+    private fun forEachScript(block: (Script) -> Unit) {
         getScripts().forEach {
             runBlockCatching {
-                it.block()
+                block(it)
             }
         }
     }
@@ -187,67 +173,15 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
 //            }
 //        }
 //    }
-}
 
-object SceneFactory {
-    fun createScene(): SceneImpl {
-        val scene = SceneImpl().apply {
-            setEnvironment(EntityFactory.createEnvironment())
-            setExperimenter(EntityFactory.createExperimenter())
-        }
-        return scene
+    private companion object {
+        val onModelRun = getAccessibleFunction<Script>("onModelRun")
+        val onModelUpdate = getAccessibleFunction<Script>("onModelUpdate")
+        val onModelAfterUpdate = getAccessibleFunction<Script>("onModelAfterUpdate")
+        val onModelStop = getAccessibleFunction<Script>("onModelStop")
+        val updateUI = getAccessibleFunction<Script>("updateUI")
+        val onModelPause = getAccessibleFunction<Script>("onModelPause")
+        val onModelResume = getAccessibleFunction<Script>("onModelResume")
     }
 }
 
-object EntityFactory {
-    fun createExperimenter(): Experimenter {
-        val experimenter = Experimenter(SystemComponentHolder())
-        experimenter.setComponent<Experiment>()
-        return experimenter
-    }
-
-    fun createEnvironment(): Environment {
-        return object : Environment(SystemComponentHolder()) {
-            val snapshotInfo: SnapshotInfo = super.setComponent(SnapshotInfo::class)
-            val configuration: Configuration = super.setComponent(Configuration::class)
-
-            @Suppress("UNCHECKED_CAST")
-            override fun <C : Component> getComponent(type: KClass<C>): C? {
-                return when (type) {
-                    SnapshotInfo::class -> snapshotInfo as C
-                    Configuration::class -> configuration as C
-                    else -> super.getComponent(type)
-                }
-            }
-        }
-    }
-
-    fun createAgent(
-        agentPrototype: AgentPrototype,
-        setterSignatures: List<MutableRequestSignature>,
-        otherRequestSignatures: List<MutableRequestSignature>,
-        requestSender: RequestSender
-    ): Agent {
-        return Agent(agentPrototype.agentType, SystemComponentHolder()).apply {
-            with(setComponent<AgentInterface>()) {
-                setRequestSignatures(setterSignatures + otherRequestSignatures)
-                setRequestSender(requestSender)
-            }
-            agentPrototype.getComponents().forEach {
-                setComponent(it::class).loadSnapshot(it.getSnapshot())
-            }
-        }
-    }
-
-    fun createAgentPrototype(agentType: String): AgentPrototype {
-        return AgentPrototype(agentType, SystemComponentHolder())
-    }
-
-    private class SystemComponentHolder(private val componentHolder: ComponentHolder = MapComponentHolder()) :
-        ComponentHolder by componentHolder {
-        override fun <C : Component> removeComponent(type: KClass<C>): C? {
-            if (type.isSubclass(Native::class)) return null
-            return componentHolder.removeComponent(type)
-        }
-    }
-}

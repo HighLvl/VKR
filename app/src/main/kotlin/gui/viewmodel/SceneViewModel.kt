@@ -1,7 +1,7 @@
 package gui.viewmodel
 
-import app.eventbus.gui.EventBus
-import app.eventbus.gui.UIEvent
+import core.gui.EventBus
+import core.gui.UIEvent
 import app.services.scene.SceneService
 import com.fasterxml.jackson.databind.node.ObjectNode
 import core.utils.splitOnCapitalChars

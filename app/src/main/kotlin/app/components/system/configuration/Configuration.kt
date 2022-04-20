@@ -2,10 +2,11 @@ package app.components.system.configuration
 
 import app.components.system.base.Native
 import app.utils.KtsScriptEngine
-import app.utils.getString
+import core.utils.getString
 import core.components.base.AddInSnapshot
 import core.components.base.TargetEntity
 import core.components.configuration.AgentInterface
+import core.components.configuration.Configuration
 import core.components.configuration.InputArgsComponent
 import core.components.configuration.ModelConfiguration
 import core.entities.Environment
@@ -18,9 +19,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 @TargetEntity(Environment::class)
-class Configuration : Native, InputArgsComponent, AgentInterfaces {
+class Configuration : Native, InputArgsComponent, AgentInterfaces, Configuration {
     @AddInSnapshot(1)
-    var modelConfiguration: String = ""
+    override var modelConfiguration: String = ""
         set(value) {
             field = tryToLoadConfiguration(value, field)
         }
@@ -50,7 +51,7 @@ class Configuration : Native, InputArgsComponent, AgentInterfaces {
         }
         if (path.isEmpty()) return oldPath
         return try {
-            val configuration = KtsScriptEngine.eval<ModelConfiguration>(path)
+            val configuration = KtsScriptEngine().eval<ModelConfiguration>(path)
             with(_inputArgs) {
                 clear()
                 putAll(configuration.inputArgs)
@@ -59,6 +60,7 @@ class Configuration : Native, InputArgsComponent, AgentInterfaces {
             path
         } catch (e: Exception) {
             Logger.log(getString("bad_configuration_file"), Level.ERROR)
+            Logger.log(e.stackTraceToString(), Level.ERROR)
             oldPath
         }
     }

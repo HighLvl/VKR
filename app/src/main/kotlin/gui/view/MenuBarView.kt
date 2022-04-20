@@ -46,7 +46,7 @@ class MenuBarView(private val sceneViewModel: SceneViewModel) : View(), Widget {
     private fun setupImGuiStyle(bStyleDark_: Boolean, alpha_: Float = 1.0f) {
         val style = ImGui.getStyle()
 
-        // light style from Pacôme Danhiez (app.components.user itamago) https://github.com/ocornut/imgui/pull/511#issuecomment-175719267
+        // light style from Pacôme Danhiez (components.user itamago) https://github.com/ocornut/imgui/pull/511#issuecomment-175719267
         style.alpha = 1.0f
         style.frameRounding = 3.0f
         style.setColor(ImGuiCol.Text, 0.00f, 0.00f, 0.00f, 1.00f)

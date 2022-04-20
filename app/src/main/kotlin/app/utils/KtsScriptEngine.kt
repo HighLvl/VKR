@@ -3,7 +3,7 @@ package app.utils
 import java.io.File
 import javax.script.ScriptEngineManager
 
-object KtsScriptEngine {
+class KtsScriptEngine {
     private val engine = ScriptEngineManager().getEngineByExtension("kts")!!
 
     fun <T>eval(path: String): T {

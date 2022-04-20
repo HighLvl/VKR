@@ -44,8 +44,8 @@ class ComponentRepository(private val componentProvider: ComponentProvider) {
 
     private companion object {
         val COMPONENTS = getString("components_title")
-        const val SYSTEM_COMPONENT_NAME_PREFIX = "app.components.system."
-        const val USER_COMPONENT_NAME_PREFIX = "app.components.user."
+        const val SYSTEM_COMPONENT_NAME_PREFIX = "components."
+        const val USER_COMPONENT_NAME_PREFIX = ""
     }
 }
 

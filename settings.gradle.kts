@@ -1,3 +1,5 @@
-
 rootProject.name = "DSL_test"
 include(":app")
+include(":core")
+include(":components")
+include(":configuration")
