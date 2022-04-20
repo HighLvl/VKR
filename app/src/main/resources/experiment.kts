@@ -13,6 +13,21 @@ experimentTask {
             numberOfDoodleBugs = getAgents().count { it.agentType == "Doodlebug" }.toDouble()
         }
         onStop { }
+        onPause { }
+        onResume { }
+    }
+
+    variables {
+        observable("Number of Ants") {
+            getAgents().count { it.agentType == "Ant" }.toDouble()
+        }
+        observable("Number of Doodlebugs") {
+            getAgents().count { it.agentType == "Doodlebug" }.toDouble()
+        }
+        observable("Target Function Value") {
+            targetFunctionVH.value
+        }
+        mutable("a") { requestSetValue(1, "a", it.toInt()) }
     }
 
     optimization(targetScore = 2) {
@@ -79,18 +94,5 @@ experimentTask {
             modelTime(2000.0)
             timeSinceStart(timeMillis = 20000)
         }
-    }
-
-    variables {
-        observable("Number of Ants") {
-            getAgents().count { it.agentType == "Ant" }.toDouble()
-        }
-        observable("Number of Doodlebugs") {
-            getAgents().count { it.agentType == "Doodlebug" }.toDouble()
-        }
-        observable("Target Function Value") {
-            targetFunctionVH.value
-        }
-        mutable("a") { requestSetValue(1, "a", it.toInt()) }
     }
 }

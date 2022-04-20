@@ -58,6 +58,14 @@ class ModelLifecycleListenerBuilder(private val model: MutableExperimentTaskMode
     fun onStop(block: () -> Unit) {
         model.modelStopObservable.observe(block)
     }
+
+    fun onResume(block: () -> Unit) {
+        model.modelResumeObservable.observe(block)
+    }
+
+    fun onPause(block: () -> Unit) {
+        model.modelPauseObservable.observe(block)
+    }
 }
 
 @ExperimentDslMarker

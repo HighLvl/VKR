@@ -1,4 +1,4 @@
-package app.components.system.experiment.common.input
+package app.components.system.experiment.optimization.input
 
 import core.components.experiment.OptimizationExperiment
 import core.datatypes.base.MutableSeries

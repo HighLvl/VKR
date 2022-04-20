@@ -1,14 +1,15 @@
 package app.components.system.experiment.optimization
 
-import app.components.system.experiment.common.Experiment
-import app.components.system.experiment.common.goals.GoalsController
-import app.components.system.experiment.common.input.InputArgsController
+import app.components.system.experiment.optimization.goals.GoalsController
+import app.components.system.experiment.optimization.input.InputArgsController
 import app.utils.getString
 import core.components.base.AddInSnapshot
 import core.components.base.Script
 import core.components.base.TargetEntity
+import core.components.experiment.Experiment
 import core.components.experiment.ExperimentTaskModel
 import core.components.experiment.OptimizationExperiment
+import core.components.experiment.TrackedData
 import core.entities.Experimenter
 import core.entities.getComponent
 import core.services.Services
@@ -24,6 +25,7 @@ class OptimizationExperiment : OptimizationExperiment, Script {
     private val goalsController = GoalsController(_makeDecisionDataFlow)
     private val inputArgsController = InputArgsController()
     private val experiment = Services.scene.experimenter.getComponent<Experiment>()!!
+    private val trackedData = Services.scene.experimenter.getComponent<TrackedData>()!!
     private val taskModel: ExperimentTaskModel by experiment.taskModelObservable::value
 
     override val commandObservable: ValueObservable<OptimizationExperiment.Command> = optimizationExperimentController.commandObservable
@@ -45,8 +47,8 @@ class OptimizationExperiment : OptimizationExperiment, Script {
 
     override fun onAttach() {
         disposables += experiment.taskModelObservable.observe { importOptimizationTaskModel() }
-        disposables += experiment.clearTrackedDataObservable.observe { reset() }
-        disposables += experiment.trackedDataSizeObservable.observe { setTrackedDataSize(it) }
+        disposables += trackedData.clearTrackedDataObservable.observe { reset() }
+        disposables += trackedData.trackedDataSizeObservable.observe { setTrackedDataSize(it) }
         importOptimizationTaskModel()
         optimizationExperimentController.isValidArgsObservable.observe {
             if (it) inputArgsController.commitInputArgs()

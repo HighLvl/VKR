@@ -1,4 +1,4 @@
-package app.components.system.experiment.common.goals
+package app.components.system.experiment.optimization.goals
 
 import app.components.system.experiment.optimization.CtrlMakeDecisionData
 import app.coroutines.Contexts

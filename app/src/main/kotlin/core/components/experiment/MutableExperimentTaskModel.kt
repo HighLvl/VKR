@@ -12,12 +12,16 @@ abstract class ExperimentTaskModel {
     abstract val stopConditions: Map<String, PredicateExp>
     abstract val observableVariables: Map<String, GetterExp>
     abstract val mutableVariables: Map<String, SetterExp>
-    val beginObservable = EmptyPublishSubject()
-    val updateObservable = EmptyPublishSubject()
-    val endObservable = EmptyPublishSubject()
+
     val modelRunObservable = EmptyPublishSubject()
     val modelUpdateObservable = EmptyPublishSubject()
     val modelStopObservable = EmptyPublishSubject()
+    val modelResumeObservable = EmptyPublishSubject()
+    val modelPauseObservable = EmptyPublishSubject()
+
+    val beginObservable = EmptyPublishSubject()
+    val updateObservable = EmptyPublishSubject()
+    val endObservable = EmptyPublishSubject()
     val startOptimizationObservable = EmptyPublishSubject()
     val stopOptimizationObservable = PublishSubject<Boolean>()
 

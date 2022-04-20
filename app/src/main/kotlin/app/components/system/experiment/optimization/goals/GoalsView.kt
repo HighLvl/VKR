@@ -1,4 +1,4 @@
-package app.components.system.experiment.common.goals
+package app.components.system.experiment.optimization.goals
 
 import app.components.system.experiment.common.view.COLOR_FV_GOOD
 import app.components.system.experiment.common.view.COLOR_IV_GOOD

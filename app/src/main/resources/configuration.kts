@@ -5,7 +5,6 @@ modelConfiguration {
         arg("doodlebugs", 100)
         arg("ants", 50)
     }
-
     agentInterface("Board") {
         prop("size")
         prop("a")

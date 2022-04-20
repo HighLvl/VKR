@@ -1,4 +1,4 @@
-package app.components.system.experiment.common.variables.mutable
+package app.components.system.experiment.variables.mutable
 
 import app.components.system.experiment.common.view.InputValuesTableView
 import app.utils.getString

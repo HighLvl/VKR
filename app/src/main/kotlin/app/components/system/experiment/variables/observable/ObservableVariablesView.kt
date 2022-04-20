@@ -1,4 +1,4 @@
-package app.components.system.experiment.common.variables.observable
+package app.components.system.experiment.variables.observable
 
 import app.components.system.experiment.common.view.TableView
 import app.utils.getString

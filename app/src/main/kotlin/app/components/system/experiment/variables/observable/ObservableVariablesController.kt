@@ -1,4 +1,4 @@
-package app.components.system.experiment.common.variables.observable
+package app.components.system.experiment.variables.observable
 
 import core.datatypes.base.MutableSeries
 import core.datatypes.mutableSeriesOf
