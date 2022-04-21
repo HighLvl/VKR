@@ -4,6 +4,7 @@ import components.variables.Variables
 import core.components.configuration.Configuration
 import core.components.experiment.MutableValueHolder
 import core.components.experiment.experimentTask
+import core.coroutines.Contexts
 import core.entities.getComponent
 import core.entities.setComponent
 import core.services.Services
@@ -35,10 +36,8 @@ fun setupComponents() = with(Services.scene) {
 }
 
 fun connectToModel() {
-    CoroutineScope(Dispatchers.IO).launch {
-        Services.agentModelControl.connect("localhost", 4444) {
-            Services.agentModelControl.runModel()
-        }
+    CoroutineScope(Contexts.app).launch {
+        Services.agentModelControl.connect("localhost", 4444)
     }
 }
 
