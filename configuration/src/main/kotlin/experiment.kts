@@ -7,6 +7,7 @@ import core.components.experiment.experimentTask
 import core.entities.getComponent
 import core.entities.setComponent
 import core.services.Services
+import core.services.control.ControlState
 import core.services.getAgents
 import core.services.requestSetValue
 import kotlinx.coroutines.CoroutineScope
@@ -33,15 +34,23 @@ fun setupComponents() = with(Services.scene) {
     }
 }
 
-fun connectToModel() = CoroutineScope(Dispatchers.IO).launch {
-    Services.agentModelControl.connect("localhost", 4444)
+fun connectToModel() {
+    CoroutineScope(Dispatchers.IO).launch {
+        Services.agentModelControl.connect("localhost", 4444) {
+            Services.agentModelControl.runModel()
+        }
+    }
 }
 
-experimentTask {
+fun setup() {
     loadModelConfiguration()
     setupComponents()
     connectToModel()
+}
 
+setup()
+
+experimentTask {
     var numberOfDoodleBugs = 0.0
     var targetFunctionVH = MutableValueHolder(0.0)
 

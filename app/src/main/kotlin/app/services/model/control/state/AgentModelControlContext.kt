@@ -5,12 +5,12 @@ import app.api.dto.ModelInputArgs
 import app.api.dto.Requests
 import app.api.dto.Responses
 import app.api.dto.Snapshot
-import core.coroutines.Contexts
 import app.requests.RequestDispatcher
 import app.requests.RequestSender
 import app.requests.sendRequest
 import app.services.model.control.PeriodTaskExecutor
 import app.services.scene.SceneApi
+import core.coroutines.Contexts
 import core.services.control.ControlState
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -68,7 +68,21 @@ class AgentModelControlContext(
             }
             ControlRequest.GET_STATE -> {
                 requestSender.sendRequest<app.api.dto.State>(0, "GetState", listOf()) { result ->
-                    result.onSuccess { onConnect(it) }.onFailure { emitCurrentState() }
+                    result.onSuccess {
+                        onConnect(it)
+                        onResult(Result.success(Unit))
+                    }.onFailure {
+                        emitCurrentState()
+                        onResult(
+                            Result.failure(
+                                try {
+                                    throw Exception()
+                                } catch (e: Exception) {
+                                    e
+                                }
+                            )
+                        )
+                    }
                 }
             }
             ControlRequest.GET_SNAPSHOT -> {
@@ -86,8 +100,8 @@ class AgentModelControlContext(
     fun commitRequests(): Requests = requestDispatcher.commitRequests()
 
 
-    suspend fun connect(ip: String, port: Int) {
-        currentState.connect(this, ip, port)
+    suspend fun connect(ip: String, port: Int, onResult: suspend (Result<Unit>) -> Unit) {
+        currentState.connect(this, ip, port, onResult)
     }
 
     suspend fun disconnect() {
@@ -99,20 +113,20 @@ class AgentModelControlContext(
     }
 
     private var startTime: Long = 0
-    fun runModel(onResult: (Result<Unit>) -> Unit) {
+    fun runModel(onResult: suspend (Result<Unit>) -> Unit) {
         startTime = System.currentTimeMillis()
         currentState.run(this, onResult)
     }
 
-    fun pauseModel(onResult: (Result<Unit>) -> Unit) {
+    fun pauseModel(onResult: suspend (Result<Unit>) -> Unit) {
         currentState.pause(this, onResult)
     }
 
-    fun resumeModel(onResult: (Result<Unit>) -> Unit) {
+    fun resumeModel(onResult: suspend (Result<Unit>) -> Unit) {
         currentState.resume(this, onResult)
     }
 
-    fun stopModel(onResult: (Result<Unit>) -> Unit) {
+    fun stopModel(onResult: suspend (Result<Unit>) -> Unit) {
         currentState.stop(this, onResult)
     }
 

@@ -2,7 +2,10 @@ package app.services.model.control
 
 import core.services.logger.Level
 import core.services.logger.Logger
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import kotlin.coroutines.CoroutineContext
 
 class PeriodTaskExecutor(context: CoroutineContext) {
@@ -13,6 +16,7 @@ class PeriodTaskExecutor(context: CoroutineContext) {
     private var task: suspend () -> Unit = {}
     private val coroutineScope = CoroutineScope(context)
     private var isStopped = true
+    private var job: Job? = null
 
     private var nextUpdateTime: Long = 0L
         get() {
@@ -35,7 +39,7 @@ class PeriodTaskExecutor(context: CoroutineContext) {
         initVars()
         if (pause) pause()
         this.task = task
-        coroutineScope.launch { updateLoop() }
+        job = coroutineScope.launch { updateLoop() }
     }
 
     fun changePeriod(periodSec: Float) {
@@ -85,9 +89,9 @@ class PeriodTaskExecutor(context: CoroutineContext) {
 
     fun stop() {
         isStopped = true
-    }
-
-    companion object {
-        private const val SLEEP_INTERVAL: Long = 1
+        kotlin.runCatching {
+            job?.cancel()
+            job = null
+        }
     }
 }

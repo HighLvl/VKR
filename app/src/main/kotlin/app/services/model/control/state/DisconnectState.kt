@@ -6,10 +6,15 @@ import core.services.logger.Logger
 
 object DisconnectState : State() {
 
-    override suspend fun connect(context: AgentModelControlContext, ip: String, port: Int) {
+    override suspend fun connect(
+        context: AgentModelControlContext,
+        ip: String,
+        port: Int,
+        onResult: suspend (Result<Unit>) -> Unit
+    ) {
         try {
             context.modelApi.connect(ip, port)
-            context.sendControlRequest(GET_STATE)
+            context.sendControlRequest(GET_STATE, onResult)
             scheduleUpdateTask(context)
         } catch (e: Exception) {
             context.setState(DisconnectState)

@@ -41,7 +41,9 @@ class ApiImpl : AgentModelApi {
         }
 
         override fun close() {
-            channel.shutdownNow()
+            kotlin.runCatching {
+                channel.shutdownNow()
+            }
         }
     }
 }
