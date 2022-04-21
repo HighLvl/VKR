@@ -10,7 +10,7 @@ import core.entities.getComponent
 import core.services.Services
 
 @TargetEntity(Agent::class)
-class Position : Component {
+class Position : Component() {
     @AddInSnapshot(1)
     var rowPropName = ""
     @AddInSnapshot(2)

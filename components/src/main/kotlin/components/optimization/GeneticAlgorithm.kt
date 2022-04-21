@@ -1,6 +1,6 @@
 package components.optimization
 
-import core.components.base.Script
+import core.components.base.Component
 import core.components.base.TargetEntity
 import core.components.experiment.OptimizationExperiment
 import core.entities.Experimenter
@@ -9,7 +9,7 @@ import core.services.Services
 import core.utils.Disposable
 
 @TargetEntity(Experimenter::class, [OptimizationExperiment::class])
-class GeneticAlgorithm : Script() {
+class GeneticAlgorithm : Component() {
     private lateinit var optimizationExperiment: OptimizationExperiment
     private lateinit var inputParams: List<OptimizationExperiment.Input>
     private val disposables = mutableListOf<Disposable>()

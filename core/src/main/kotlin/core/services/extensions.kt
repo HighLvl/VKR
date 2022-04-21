@@ -3,7 +3,7 @@ package core.services
 import core.components.agent.AgentInterface
 import core.components.agent.Props
 import core.components.agent.request
-import core.components.configuration.InputArgsComponent
+import core.components.configuration.InputArgs
 import core.components.model.SnapshotInfo
 import core.entities.Agent
 import core.entities.getComponent
@@ -63,14 +63,14 @@ fun requestSetValue(agentId: Int, varName: String, value: Any, onResult: (Result
 /** Изменить входной аргумент модели. Должна быть загружена конфигурация модели с описанием входных аргументов.
  */
 fun putInputArg(name: String, value: Any) {
-    val inputArgs = Services.scene.environment.getComponent<InputArgsComponent>()!!
+    val inputArgs = Services.scene.environment.getComponent<InputArgs>()!!
     inputArgs.put(name, value)
 }
 
 /** Получить значение входного аргумента модели.
  */
 fun <T: Any> getInputArg(name: String): T {
-    val inputArgs = Services.scene.environment.getComponent<InputArgsComponent>()!!
+    val inputArgs = Services.scene.environment.getComponent<InputArgs>()!!
     return inputArgs.get(name)
 }
 

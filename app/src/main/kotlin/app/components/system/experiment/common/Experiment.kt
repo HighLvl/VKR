@@ -4,7 +4,7 @@ import app.components.system.base.Native
 import app.utils.KtsScriptEngine
 import core.utils.getString
 import core.components.base.AddInSnapshot
-import core.components.base.Script
+import core.components.base.Component
 import core.components.base.TargetEntity
 import core.components.experiment.Experiment
 import core.components.experiment.ExperimentTaskModel
@@ -21,7 +21,7 @@ import core.utils.Observable
 import core.utils.ValueObservable
 
 @TargetEntity(Experimenter::class)
-class Experiment : Script(), Experiment, Native, TrackedData {
+class Experiment : Component(), Experiment, Native, TrackedData {
     private var taskModel = MutableExperimentTaskModel()
     private val _taskModelObservable = MutableValue<ExperimentTaskModel>(taskModel)
     override val taskModelObservable: ValueObservable<ExperimentTaskModel> = _taskModelObservable

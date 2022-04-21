@@ -4,7 +4,6 @@ import components.variables.mutable.MutableVariablesController
 import components.variables.observable.ObservableVariablesController
 import core.components.base.AddInSnapshot
 import core.components.base.Component
-import core.components.base.Script
 import core.components.base.TargetEntity
 import core.components.experiment.Experiment
 import core.components.experiment.ExperimentTaskModel
@@ -16,7 +15,7 @@ import core.services.modelTime
 import core.utils.Disposable
 
 @TargetEntity(Experimenter::class)
-class Variables : Script() {
+class Variables : Component() {
     private val observableVariablesController = ObservableVariablesController()
     private val mutableVariablesController = MutableVariablesController()
     private val experiment = Services.scene.experimenter.getComponent<Experiment>()!!

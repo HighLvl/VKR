@@ -1,9 +1,8 @@
 package core.components.experiment
 
-import core.components.base.Component
 import core.utils.ValueObservable
 
-interface OptimizationExperiment : Component {
+interface OptimizationExperiment {
     sealed interface Command {
         data class Start(val inputParams: List<Input>) : Command
         data class Stop(val hasGoalBeenAchieved: Boolean) : Command

@@ -5,7 +5,6 @@ import components.optimization.experiment.input.InputArgsController
 import core.utils.getString
 import core.components.base.AddInSnapshot
 import core.components.base.Component
-import core.components.base.Script
 import core.components.base.TargetEntity
 import core.components.experiment.Experiment
 import core.components.experiment.ExperimentTaskModel
@@ -19,7 +18,7 @@ import core.utils.Disposable
 import core.utils.ValueObservable
 
 @TargetEntity(Experimenter::class, [Experiment::class])
-class OptimizationExperiment : OptimizationExperiment, Script() {
+class OptimizationExperiment : Component(), OptimizationExperiment {
     private val _inputParams = mutableMapOf<String, InputDoubleParam>()
     private val optimizationExperimentController = OptimizationExperimentController()
     private val _makeDecisionDataFlow = optimizationExperimentController.ctrlMakeDecisionDataFlow

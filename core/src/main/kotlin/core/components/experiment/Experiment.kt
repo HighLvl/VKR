@@ -1,9 +1,8 @@
 package core.components.experiment
 
-import core.components.base.Component
 import core.utils.ValueObservable
 
-interface Experiment : Component {
+interface Experiment {
     val taskModelObservable: ValueObservable<ExperimentTaskModel>
 }
 

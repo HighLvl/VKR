@@ -6,12 +6,12 @@ import app.requests.RequestSender
 import core.components.agent.AgentInterface
 import core.components.agent.Props
 import core.components.base.AddInSnapshot
-import core.components.base.Script
+import core.components.base.Component
 import core.components.configuration.RequestSignature
 import core.utils.uppercaseFirstChar
 import kotlin.reflect.KClass
 
-class AgentInterface : Script(), AgentInterface, Native {
+class AgentInterface : AgentInterface, Native, Component() {
     val requestBodies = RequestBodies(this)
     private var _props: Props = Props()
     private lateinit var requestSender: RequestSender

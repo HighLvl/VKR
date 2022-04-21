@@ -26,7 +26,7 @@ abstract class EntityImpl : Entity {
         }
     }
 
-    override fun <C : Component> removeComponent(type: KClass<C>): C? {
+    override fun <C : Component> removeComponent(type: KClass<out C>): C? {
         if (type.isSubclass(Native::class)) return null
         val component = componentHolder.removeComponent(type)
         removeDependentComponents(component!!)
@@ -48,7 +48,7 @@ abstract class EntityImpl : Entity {
         return components - filterAvailableComponents(this, components)
     }
 
-    override fun <C : Component> getComponent(type: KClass<C>): C? {
+    override fun <C : Any> getComponent(type: KClass<C>): C? {
         return componentHolder.getComponent(type)
     }
 

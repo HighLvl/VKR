@@ -7,7 +7,7 @@ import core.entities.Environment
 import java.lang.Exception
 
 @TargetEntity(Environment::class)
-class MyComponent: Component {
+class MyComponent {
     @AddInSnapshot
     var a = 3
     set(value) {

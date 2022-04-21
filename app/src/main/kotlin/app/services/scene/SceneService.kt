@@ -8,12 +8,11 @@ import app.components.system.configuration.AgentInterfaces
 import app.components.system.model.SnapshotInfo
 import app.requests.RequestSender
 import app.services.Service
-import app.services.scene.SceneService.Companion.updateUI
 import app.services.scene.factory.EntityFactory
 import app.services.scene.factory.SceneFactory
 import app.utils.getAccessibleFunction
-import core.components.base.Script
-import core.components.configuration.InputArgsComponent
+import core.components.base.Component
+import core.components.configuration.InputArgs
 import core.coroutines.Contexts
 import core.entities.Agent
 import core.entities.getComponent
@@ -50,7 +49,7 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
     }
 
     override fun getInputArgs(): ModelInputArgs {
-        return ModelInputArgs(scene.environment.getComponent<InputArgsComponent>()!!.inputArgs)
+        return ModelInputArgs(scene.environment.getComponent<InputArgs>()!!.inputArgs)
     }
 
     override fun updateWith(snapshot: Snapshot) {
@@ -126,10 +125,9 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
 
     private fun Agent.getAgentInterfaceScript() = getComponent<AgentInterface>()!!
 
-    private fun getScripts(): Sequence<Script> =
+    private fun getComponentsOfAllEntities(): Sequence<Component> =
         _scene.getEntities().asSequence()
             .flatMap { it.getComponents() }
-            .filterIsInstance<Script>()
 
     private fun onAfterModelUpdate() = forEachScript { onModelAfterUpdate.call(it) }
     private fun updateScripts() = forEachScript { onModelUpdate.call(it)}
@@ -154,8 +152,8 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
         forEachScript { updateUI.call(it)}
     }
 
-    private fun forEachScript(block: (Script) -> Unit) {
-        getScripts().forEach {
+    private fun forEachScript(block: (Component) -> Unit) {
+        getComponentsOfAllEntities().forEach {
             runBlockCatching {
                 block(it)
             }
@@ -175,13 +173,13 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
 //    }
 
     private companion object {
-        val onModelRun = getAccessibleFunction<Script>("onModelRun")
-        val onModelUpdate = getAccessibleFunction<Script>("onModelUpdate")
-        val onModelAfterUpdate = getAccessibleFunction<Script>("onModelAfterUpdate")
-        val onModelStop = getAccessibleFunction<Script>("onModelStop")
-        val updateUI = getAccessibleFunction<Script>("updateUI")
-        val onModelPause = getAccessibleFunction<Script>("onModelPause")
-        val onModelResume = getAccessibleFunction<Script>("onModelResume")
+        val onModelRun = getAccessibleFunction<Component>("onModelRun")
+        val onModelUpdate = getAccessibleFunction<Component>("onModelUpdate")
+        val onModelAfterUpdate = getAccessibleFunction<Component>("onModelAfterUpdate")
+        val onModelStop = getAccessibleFunction<Component>("onModelStop")
+        val updateUI = getAccessibleFunction<Component>("updateUI")
+        val onModelPause = getAccessibleFunction<Component>("onModelPause")
+        val onModelResume = getAccessibleFunction<Component>("onModelResume")
     }
 }
 

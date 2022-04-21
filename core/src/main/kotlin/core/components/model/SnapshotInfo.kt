@@ -1,8 +1,6 @@
 package core.components.model
 
-import core.components.base.Component
-
-interface SnapshotInfo : Component {
+interface SnapshotInfo {
     val modelTime: Double
     val dt: Double
 }

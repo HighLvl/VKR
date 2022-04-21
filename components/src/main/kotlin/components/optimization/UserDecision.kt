@@ -3,7 +3,6 @@ package components.optimization
 import core.utils.getString
 import core.components.base.AddInSnapshot
 import core.components.base.Component
-import core.components.base.Script
 import core.components.base.TargetEntity
 import core.entities.Experimenter
 import core.entities.getComponent
@@ -16,7 +15,7 @@ import org.lwjgl.glfw.GLFW
 import core.components.experiment.OptimizationExperiment
 
 @TargetEntity(Experimenter::class, [OptimizationExperiment::class])
-class UserDecision : Script() {
+class UserDecision : Component() {
     private lateinit var optimizationExperiment: OptimizationExperiment
     private lateinit var experimenter: Experimenter
 

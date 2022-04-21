@@ -2,7 +2,6 @@ package components.environment
 
 import core.components.agent.AgentInterface
 import core.components.base.Component
-import core.components.base.Script
 import core.components.base.TargetEntity
 import core.coroutines.Contexts
 import core.entities.Environment
@@ -21,7 +20,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
 @TargetEntity(Environment::class)
-class MyScript : Script() {
+class MyScript : Component() {
     sealed class CellType {
         abstract class Agent(open val id: Int) : CellType()
         data class Bug(override val id: Int) : Agent(id)
