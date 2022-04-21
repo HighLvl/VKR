@@ -11,7 +11,7 @@ import core.components.configuration.RequestSignature
 import core.utils.uppercaseFirstChar
 import kotlin.reflect.KClass
 
-class AgentInterface : AgentInterface, Native, Component() {
+class AgentInterface : Component(), Native, AgentInterface {
     val requestBodies = RequestBodies(this)
     private var _props: Props = Props()
     private lateinit var requestSender: RequestSender
@@ -41,7 +41,7 @@ class AgentInterface : AgentInterface, Native, Component() {
         _props = Props(props)
     }
 
-    override fun requestSetValue(varName: String, value: Any, onResult: (Result<Unit>) -> Unit) {
+    override fun requestSetValue(varName: String, value: Any, onResult: suspend (Result<Unit>) -> Unit) {
         val requestName = "Set${varName.uppercaseFirstChar()}"
         request(requestName, listOf(value), Unit::class, onResult)
     }
@@ -50,7 +50,7 @@ class AgentInterface : AgentInterface, Native, Component() {
         name: String,
         args: List<Any>,
         resultClass: KClass<T>,
-        onResult: (Result<T>) -> Unit
+        onResult: suspend (Result<T>) -> Unit
     ) {
         requestSender.sendRequest(id, name, args, resultClass, onResult)
     }

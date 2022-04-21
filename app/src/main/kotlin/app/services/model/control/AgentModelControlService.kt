@@ -33,7 +33,7 @@ class AgentModelControlService(modelApi: AgentModelApi, sceneApi: SceneApi, requ
     override fun pauseModel(onResult: (Result<Unit>) -> Unit) = context.pauseModel(onResult)
     override fun resumeModel(onResult: (Result<Unit>) -> Unit) = context.resumeModel(onResult)
     override fun stopModel(onResult: (Result<Unit>) -> Unit) = context.stopModel(onResult)
-    override fun disconnect() = context.disconnect()
+    override suspend fun disconnect() = context.disconnect()
 }
 
 

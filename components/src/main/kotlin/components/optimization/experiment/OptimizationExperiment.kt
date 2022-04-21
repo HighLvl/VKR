@@ -90,7 +90,7 @@ class OptimizationExperiment : Component(), OptimizationExperiment {
         }
     }
 
-    override fun onModelUpdate() {
+    override suspend fun onModelUpdate() {
         optimizationExperimentController.onModelUpdate()
     }
 
@@ -100,7 +100,7 @@ class OptimizationExperiment : Component(), OptimizationExperiment {
         optimizationExperimentController.update()
     }
 
-    override fun onModelStop() {
+    override suspend fun onModelStop() {
         optimizationExperimentController.onModelStop()
     }
 

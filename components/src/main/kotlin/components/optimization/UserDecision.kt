@@ -55,11 +55,11 @@ class UserDecision : Component() {
         }
     }
 
-    override fun onModelStop() {
+    override suspend fun onModelStop() {
         needMakeDecision = false
     }
 
-    override fun onModelAfterUpdate() {
+    override suspend fun onModelAfterUpdate() {
 
     }
 

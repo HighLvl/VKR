@@ -39,7 +39,7 @@ class MyScript : Component() {
         }
     }
 
-    override fun onModelUpdate() {
+    override suspend fun onModelUpdate() {
         clearField()
         val agents = Services.scene.findAgentsThatHaving(Position::class)
         agents.forEach { agent ->

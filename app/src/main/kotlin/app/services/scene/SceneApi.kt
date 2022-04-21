@@ -5,9 +5,9 @@ import app.api.dto.Snapshot
 
 interface SceneApi {
     fun getInputArgs(): ModelInputArgs
-    fun updateWith(snapshot: Snapshot)
-    fun onModelRun()
-    fun onModelStop()
-    fun onModelPause()
-    fun onModelResume()
+    suspend fun updateWith(snapshot: Snapshot)
+    suspend fun onModelRun()
+    suspend fun onModelStop()
+    suspend fun onModelPause()
+    suspend fun onModelResume()
 }

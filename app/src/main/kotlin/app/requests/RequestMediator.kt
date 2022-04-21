@@ -15,21 +15,22 @@ private data class RequestData(
     val ack: Int,
     val args: List<Any> = listOf(),
     val resultClass: KClass<*>,
-    val onResult: (Result<*>) -> Unit
+    val onResult: suspend (Result<*>) -> Unit
 )
 
 object RequestMediator : RequestDispatcher, RequestSender {
     private var nextAck = 0
     private val ackRequestDataMap = mutableMapOf<Int, RequestData>()
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T : Any> sendRequest(
         agentId: Int,
         name: String,
         args: List<Any>,
         resultClass: KClass<T>,
-        onResult: (Result<T>) -> Unit
+        onResult: suspend (Result<T>) -> Unit
     ) {
-        val requestData = RequestData(agentId, name, nextAck, args, resultClass, onResult as (Result<*>) -> Unit)
+        val requestData = RequestData(agentId, name, nextAck, args, resultClass, onResult as suspend (Result<*>) -> Unit)
         ackRequestDataMap[nextAck] = requestData
         if (!(agentId == 0 && name == "GetSnapshot")) Logger.log("Request scheduled: $requestData", Level.DEBUG)
         nextAck++
@@ -46,7 +47,7 @@ object RequestMediator : RequestDispatcher, RequestSender {
         })
     }
 
-    override fun handleResponses(responses: Responses) {
+    override suspend fun handleResponses(responses: Responses) {
         for (response in responses.responses) {
             val requestData = ackRequestDataMap[response.ack] ?: continue
             if (!(requestData.agentId == 0 && requestData.name == "GetSnapshot")) Logger.log(
@@ -66,11 +67,11 @@ object RequestMediator : RequestDispatcher, RequestSender {
         ackRequestDataMap.clear()
     }
 
-    private fun onSuccess(onResult: (Result<*>) -> Unit, value: Any) {
+    private suspend fun onSuccess(onResult: suspend (Result<*>) -> Unit, value: Any) {
         onResult(Result.success(value))
     }
 
-    private fun onError(onResult: (Result<*>) -> Unit, error: Error) {
+    private suspend fun onError(onResult: suspend (Result<*>) -> Unit, error: Error) {
         Logger.log(
             getString("model_error_occurred", error.code, error.text),
             Level.ERROR

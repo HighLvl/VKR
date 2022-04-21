@@ -1,16 +1,18 @@
 package gui.viewmodel
 
-import core.gui.EventBus
-import core.gui.UIEvent
 import app.services.scene.SceneService
 import com.fasterxml.jackson.databind.node.ObjectNode
+import core.coroutines.Contexts
+import core.gui.EventBus
+import core.gui.UIEvent
 import core.utils.splitOnCapitalChars
+import gui.model.ComponentRepository
+import gui.utils.getString
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
-import gui.model.ComponentRepository
-import gui.utils.getString
+import kotlinx.coroutines.withContext
 
 @OptIn(ObsoleteCoroutinesApi::class)
 class SceneViewModel(
@@ -147,9 +149,7 @@ class SceneViewModel(
 
     fun updateScriptsUI() {
         runBlocking {
-            launchWithAppContext {
-                sceneService.updateScriptsUI()
-            }.join()
+            withContext(Contexts.app) { sceneService.updateScriptsUI() }
         }
     }
 

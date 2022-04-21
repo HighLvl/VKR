@@ -5,6 +5,6 @@ import app.api.dto.Responses
 
 interface RequestDispatcher {
     fun commitRequests(): Requests
-    fun handleResponses(responses: Responses)
+    suspend fun handleResponses(responses: Responses)
     fun clear()
 }

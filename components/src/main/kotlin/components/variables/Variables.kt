@@ -13,6 +13,8 @@ import core.entities.getComponent
 import core.services.Services
 import core.services.modelTime
 import core.utils.Disposable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.yield
 
 @TargetEntity(Experimenter::class)
 class Variables : Component() {
@@ -46,11 +48,11 @@ class Variables : Component() {
         disposables.forEach { it.dispose() }
     }
 
-    override fun onModelUpdate() {
+    override suspend fun onModelUpdate() {
         mutableVariablesController.onModelUpdate(modelTime)
     }
 
-    override fun onModelAfterUpdate() {
+    override suspend fun onModelAfterUpdate() {
         observableVariablesController.onModelUpdate(modelTime)
     }
 

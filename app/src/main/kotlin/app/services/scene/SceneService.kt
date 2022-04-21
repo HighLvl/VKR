@@ -20,6 +20,8 @@ import core.services.scene.Scene
 import core.utils.runBlockCatching
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.callSuspend
 
 class SceneService(private val requestSender: RequestSender) : Service(), SceneApi {
     val scene: Scene
@@ -52,7 +54,7 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
         return ModelInputArgs(scene.environment.getComponent<InputArgs>()!!.inputArgs)
     }
 
-    override fun updateWith(snapshot: Snapshot) {
+    override suspend fun updateWith(snapshot: Snapshot) {
         if (prevTime == snapshot.t) return
         prevTime = snapshot.t
         updateSnapshotInfo(snapshot.t)
@@ -129,13 +131,13 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
         _scene.getEntities().asSequence()
             .flatMap { it.getComponents() }
 
-    private fun onAfterModelUpdate() = forEachScript { onModelAfterUpdate.call(it) }
-    private fun updateScripts() = forEachScript { onModelUpdate.call(it)}
-    override fun onModelRun() {
+    private suspend fun onAfterModelUpdate() = forEachScript { onModelAfterUpdate.callSuspend(it) }
+    private suspend fun updateScripts() = forEachScript { onModelUpdate.callSuspend(it)}
+    override suspend fun onModelRun() {
         prevTime = Double.MIN_VALUE
         resetSnapshotInfo()
         _scene.apply { agents.map { it.key }.forEach { removeAgentById(it) } }
-        forEachScript { onModelRun.call(it) }
+        forEachScript { onModelRun.callSuspend(it) }
     }
 
     private fun resetSnapshotInfo() {
@@ -145,14 +147,14 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
         }
     }
 
-    override fun onModelStop() = forEachScript { onModelStop.call(it) }
-    override fun onModelPause() = forEachScript { onModelPause.call(it) }
-    override fun onModelResume() = forEachScript { onModelResume.call(it) }
-    fun updateScriptsUI() {
+    override suspend fun onModelStop() = forEachScript { onModelStop.callSuspend(it) }
+    override suspend fun onModelPause() = forEachScript { onModelPause.callSuspend(it) }
+    override suspend fun onModelResume() = forEachScript { onModelResume.callSuspend(it) }
+    suspend fun updateScriptsUI() {
         forEachScript { updateUI.call(it)}
     }
 
-    private fun forEachScript(block: (Component) -> Unit) {
+    private suspend fun forEachScript(block: suspend (Component) -> Unit) {
         getComponentsOfAllEntities().forEach {
             runBlockCatching {
                 block(it)

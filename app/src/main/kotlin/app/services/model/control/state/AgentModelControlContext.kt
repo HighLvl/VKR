@@ -36,11 +36,11 @@ class AgentModelControlContext(
     }
 
     fun stop() {
-        disconnect()
+        runBlocking { disconnect() }
         coroutineScope.coroutineContext.cancelChildren()
     }
 
-    fun sendControlRequest(controlRequest: ControlRequest, onResult: (Result<Unit>) -> Unit = {}) {
+    fun sendControlRequest(controlRequest: ControlRequest, onResult: suspend (Result<Unit>) -> Unit = {}) {
         when (controlRequest) {
             ControlRequest.RESUME -> {
                 requestSender.sendRequest<Unit>(0, "Resume", listOf()) {
@@ -79,7 +79,7 @@ class AgentModelControlContext(
         }
     }
 
-    fun handleResponses(responses: Responses) {
+    suspend fun handleResponses(responses: Responses) {
         requestDispatcher.handleResponses(responses)
     }
 
@@ -90,8 +90,7 @@ class AgentModelControlContext(
         currentState.connect(this, ip, port)
     }
 
-    fun disconnect() {
-
+    suspend fun disconnect() {
         periodTaskExecutor.stop()
         modelApi.disconnect()
         requestDispatcher.clear()
@@ -141,33 +140,33 @@ class AgentModelControlContext(
         periodTaskExecutor.changePeriod(periodSec)
     }
 
-    private fun onPause() {
+    private suspend fun onPause() {
         periodTaskExecutor.pause()
         setState(PauseState)
         sceneApi.onModelPause()
     }
 
-    private fun onRun() {
+    private suspend fun onRun() {
         setState(RunState)
         sceneApi.onModelRun()
     }
 
-    private fun onResume() {
+    private suspend fun onResume() {
         setState(RunState)
         sceneApi.onModelResume()
     }
 
-    private fun onStop() {
+    private suspend fun onStop() {
         periodTaskExecutor.stop()
         setState(StopState)
         sceneApi.onModelStop()
     }
 
-    private fun onUpdate(snapshot: Snapshot) {
+    private suspend fun onUpdate(snapshot: Snapshot) {
         sceneApi.updateWith(snapshot)
     }
 
-    private fun onConnect(state: app.api.dto.State) {
+    private suspend fun onConnect(state: app.api.dto.State) {
         when (state) {
             app.api.dto.State.RUN -> onRun()
             app.api.dto.State.PAUSE -> onPause()

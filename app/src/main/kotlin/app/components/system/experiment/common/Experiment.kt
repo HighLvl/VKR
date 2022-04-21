@@ -53,7 +53,7 @@ class Experiment : Component(), Experiment, Native, TrackedData {
     private val _trackedDataSizeObservable = MutableValue(trackedDataSize)
     override val trackedDataSizeObservable: ValueObservable<Int> = _trackedDataSizeObservable
 
-    override fun onModelRun() {
+    override suspend fun onModelRun() {
         if (clearTrackedDataOnRun) {
             _clearTrackedDataObservable.publish()
         }
@@ -85,11 +85,11 @@ class Experiment : Component(), Experiment, Native, TrackedData {
     }
 
 
-    override fun onModelUpdate() {
+    override suspend fun onModelUpdate() {
         taskModel.modelUpdateObservable.publish()
     }
 
-    override fun onModelStop() {
+    override suspend fun onModelStop() {
         taskModel.modelStopObservable.publish()
     }
 }

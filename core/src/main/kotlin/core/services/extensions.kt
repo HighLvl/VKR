@@ -38,7 +38,7 @@ inline fun <reified T : Any> getPropValue(agentId: Int, propName: String): T? {
 
 /** Запланировать запрос к агенту и подписаться на ответ
  */
-inline fun <reified T : Any> Agent.request(name: String, args: List<Any>, noinline onResult: (Result<T>) -> Unit = {}) {
+inline fun <reified T : Any> Agent.request(name: String, args: List<Any>, noinline onResult: suspend (Result<T>) -> Unit = {}) {
     getComponent<AgentInterface>()!!.request(name, args, onResult)
 }
 
@@ -48,7 +48,7 @@ inline fun <reified T : Any> request(
     agentId: Int,
     name: String,
     args: List<Any>,
-    noinline onResult: (Result<T>) -> Unit = {}
+    noinline onResult: suspend (Result<T>) -> Unit = {}
 ) {
     getAgent(agentId)?.getComponent<AgentInterface>()?.request(name, args, onResult)
 }
@@ -56,7 +56,7 @@ inline fun <reified T : Any> request(
 /** Запланировать запрос на установку значения переменной агента и подписать на ответ (успех или не успех).
  * @param varName имя переменной
  */
-fun requestSetValue(agentId: Int, varName: String, value: Any, onResult: (Result<Unit>) -> Unit = {}) {
+fun requestSetValue(agentId: Int, varName: String, value: Any, onResult: suspend (Result<Unit>) -> Unit = {}) {
     getAgent(agentId)?.getComponent<AgentInterface>()?.requestSetValue(varName, value, onResult)
 }
 

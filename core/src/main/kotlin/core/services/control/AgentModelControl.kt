@@ -8,5 +8,5 @@ interface AgentModelControl {
     fun pauseModel(onResult: (Result<Unit>) -> Unit = {})
     fun resumeModel(onResult: (Result<Unit>) -> Unit = {})
     fun stopModel(onResult: (Result<Unit>) -> Unit = {})
-    fun disconnect()
+    suspend fun disconnect()
 }

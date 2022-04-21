@@ -16,7 +16,7 @@ fun String.uppercaseFirstChar() = replaceFirstChar {
 
 fun String.splitOnCapitalChars() = replace("([^_])([A-Z])".toRegex(), "$1 $2").uppercaseFirstChar()
 
-fun runBlockCatching(block: () -> Unit) {
+inline fun runBlockCatching(block: () -> Unit) {
     try {
         block()
     } catch (e: Exception) {
