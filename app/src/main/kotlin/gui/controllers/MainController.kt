@@ -1,12 +1,11 @@
 package gui.controllers
 
 import app.services.ServiceManager
-import app.services.provider.component.ComponentProvider
+import app.services.repository.component.ComponentProvider
 import gui.dockspace.Dockspace
 import gui.dockspace.ScriptViewPortWindow
 import gui.dockspace.ToolsWindow
 import gui.dockspace.Window
-import gui.model.ComponentRepository
 import gui.model.LogService
 import gui.utils.getString
 import gui.view.*
@@ -15,7 +14,7 @@ import gui.viewmodel.LoggerViewModel
 import gui.viewmodel.SceneViewModel
 
 class MainController : Controller() {
-    private val sceneViewModel = SceneViewModel(ServiceManager.sceneService, ComponentRepository(ComponentProvider))
+    private val sceneViewModel = SceneViewModel(ServiceManager.sceneService)
     private val componentInspectorWindow =
         Window(getString("component_inspector_window_title"), ComponentInspectorView(sceneViewModel))
     private val objectTreeWindow = Window(getString("object_tree_window_title"), ObjectTreeView(sceneViewModel))

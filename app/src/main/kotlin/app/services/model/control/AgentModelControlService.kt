@@ -28,7 +28,7 @@ class AgentModelControlService(modelApi: AgentModelApi, sceneApi: SceneApi, requ
     }
 
     override fun changeRequestPeriod(periodSec: Float) = context.changeRequestPeriod(periodSec)
-    override suspend fun connect(ip: String, port: Int, onResult: suspend (Result<Unit>) -> Unit) = context.connect(ip, port, onResult)
+    override suspend fun connect(ip: String, port: Int): Result<Unit> = context.connect(ip, port)
     override fun runModel(onResult: suspend (Result<Unit>) -> Unit) = context.runModel(onResult)
     override fun pauseModel(onResult: suspend (Result<Unit>) -> Unit) = context.pauseModel(onResult)
     override fun resumeModel(onResult: suspend (Result<Unit>) -> Unit) = context.resumeModel(onResult)

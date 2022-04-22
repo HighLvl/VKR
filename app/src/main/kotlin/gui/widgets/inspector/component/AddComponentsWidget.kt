@@ -2,8 +2,8 @@ package gui.widgets.inspector.component
 
 
 import imgui.ImGui
-import gui.model.FolderNode
-import gui.model.Node
+import app.services.repository.component.FolderNode
+import app.services.repository.component.Node
 import gui.utils.getString
 import gui.widgets.Widget
 

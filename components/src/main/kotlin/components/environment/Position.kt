@@ -1,7 +1,7 @@
 package components.environment
 
 import core.components.agent.AgentInterface
-import core.components.base.AddInSnapshot
+import core.components.base.AddToSnapshot
 import core.components.base.Component
 import core.components.base.TargetEntity
 import core.entities.Agent
@@ -11,14 +11,14 @@ import core.services.Services
 
 @TargetEntity(Agent::class)
 class Position : Component() {
-    @AddInSnapshot(1)
+    @AddToSnapshot(1)
     var rowPropName = ""
-    @AddInSnapshot(2)
+    @AddToSnapshot(2)
     var columnPropName = ""
-    @AddInSnapshot(3)
+    @AddToSnapshot(3)
     val row: Int
         get() = getValue(rowPropName)
-    @AddInSnapshot(4)
+    @AddToSnapshot(4)
     val column: Int
         get() = getValue(columnPropName)
 

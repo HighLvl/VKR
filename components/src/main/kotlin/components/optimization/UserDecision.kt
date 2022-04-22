@@ -1,7 +1,7 @@
 package components.optimization
 
 import core.utils.getString
-import core.components.base.AddInSnapshot
+import core.components.base.AddToSnapshot
 import core.components.base.Component
 import core.components.base.TargetEntity
 import core.entities.Experimenter
@@ -19,7 +19,7 @@ class UserDecision : Component() {
     private lateinit var optimizationExperiment: OptimizationExperiment
     private lateinit var experimenter: Experimenter
 
-    @AddInSnapshot(2)
+    @AddToSnapshot(2)
     val info: String
         get() {
             return if (needMakeDecision) {

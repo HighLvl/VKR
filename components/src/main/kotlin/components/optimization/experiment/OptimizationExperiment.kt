@@ -3,7 +3,7 @@ package components.optimization.experiment
 import components.optimization.experiment.goals.GoalsController
 import components.optimization.experiment.input.InputArgsController
 import core.utils.getString
-import core.components.base.AddInSnapshot
+import core.components.base.AddToSnapshot
 import core.components.base.Component
 import core.components.base.TargetEntity
 import core.components.experiment.Experiment
@@ -30,17 +30,17 @@ class OptimizationExperiment : Component(), OptimizationExperiment {
 
     override val commandObservable: ValueObservable<OptimizationExperiment.Command> = optimizationExperimentController.commandObservable
 
-    @AddInSnapshot(1)
+    @AddToSnapshot(1)
     val info: String
     get() = when(Services.agentModelControl.controlState) {
         ControlState.DISCONNECT -> INFO_DISCONNECT
         else -> INFO_CONNECT
     }
 
-    @AddInSnapshot(6)
+    @AddToSnapshot(6)
     var showGoals by goalsController::enabled
 
-    @AddInSnapshot(7)
+    @AddToSnapshot(7)
     var showInputArgs by inputArgsController::enabled
 
     private val disposables = mutableListOf<Disposable>()

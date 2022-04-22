@@ -38,6 +38,13 @@ fun setupComponents() = with(Services.scene) {
 fun connectToModel() {
     CoroutineScope(Contexts.app).launch {
         Services.agentModelControl.connect("localhost", 4444)
+        println(Services.agentModelControl.controlState)
+        when(Services.agentModelControl.controlState) {
+            ControlState.STOP -> Services.agentModelControl.runModel()
+            else -> Services.agentModelControl.stopModel {
+                Services.agentModelControl.runModel()
+            }
+        }
     }
 }
 

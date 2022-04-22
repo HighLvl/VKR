@@ -2,7 +2,7 @@ package components.variables
 
 import components.variables.mutable.MutableVariablesController
 import components.variables.observable.ObservableVariablesController
-import core.components.base.AddInSnapshot
+import core.components.base.AddToSnapshot
 import core.components.base.Component
 import core.components.base.TargetEntity
 import core.components.experiment.Experiment
@@ -13,8 +13,6 @@ import core.entities.getComponent
 import core.services.Services
 import core.services.modelTime
 import core.utils.Disposable
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.yield
 
 @TargetEntity(Experimenter::class)
 class Variables : Component() {
@@ -24,10 +22,10 @@ class Variables : Component() {
     private val trackedData = Services.scene.experimenter.getComponent<TrackedData>()!!
 
 
-    @AddInSnapshot(3)
+    @AddToSnapshot(3)
     var showObservableVariables by observableVariablesController::enabled
 
-    @AddInSnapshot(4)
+    @AddToSnapshot(4)
     var showMutableVariables by mutableVariablesController::enabled
     private val disposables = mutableListOf<Disposable>()
     private lateinit var taskModel: ExperimentTaskModel

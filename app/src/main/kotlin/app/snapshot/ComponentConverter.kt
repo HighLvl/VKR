@@ -1,6 +1,6 @@
 package app.snapshot
 
-import core.components.base.AddInSnapshot
+import core.components.base.AddToSnapshot
 import core.components.base.Component
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
@@ -12,9 +12,9 @@ import kotlin.reflect.full.memberProperties
 
 object ComponentConverter {
     fun convertToComponentSnapshot(component: Component): ComponentSnapshot {
-        val properties = component::class.memberProperties.filter { it.hasAnnotation<AddInSnapshot>() }
+        val properties = component::class.memberProperties.filter { it.hasAnnotation<AddToSnapshot>() }
                 .sortedBy {
-                    it.findAnnotation<AddInSnapshot>()!!.priority
+                    it.findAnnotation<AddToSnapshot>()!!.priority
                 }
         val mutableProps = mutableListOf<Property>()
         val immutableProps = mutableListOf<Property>()

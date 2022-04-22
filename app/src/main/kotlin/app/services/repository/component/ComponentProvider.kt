@@ -1,4 +1,4 @@
-package app.services.provider.component
+package app.services.repository.component
 
 import app.components.system.base.Native
 import core.components.base.Component

@@ -2,7 +2,7 @@ package app.components.system.configuration
 
 import app.components.system.base.Native
 import app.utils.KtsScriptEngine
-import core.components.base.AddInSnapshot
+import core.components.base.AddToSnapshot
 import core.components.base.Component
 import core.components.base.TargetEntity
 import core.components.configuration.AgentInterface
@@ -21,13 +21,13 @@ import kotlinx.coroutines.flow.StateFlow
 
 @TargetEntity(Environment::class)
 class Configuration : Component(), Native, InputArgs, AgentInterfaces, Configuration {
-    @AddInSnapshot(1)
+    @AddToSnapshot(1)
     override var modelConfiguration: String = ""
         set(value) {
             field = tryToLoadConfiguration(value, field)
         }
 
-    @AddInSnapshot(2)
+    @AddToSnapshot(2)
     override var inputArgs: Map<String, Any>
         get() = _inputArgs
         set(value) {

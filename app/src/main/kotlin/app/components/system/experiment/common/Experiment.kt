@@ -3,7 +3,7 @@ package app.components.system.experiment.common
 import app.components.system.base.Native
 import app.utils.KtsScriptEngine
 import core.utils.getString
-import core.components.base.AddInSnapshot
+import core.components.base.AddToSnapshot
 import core.components.base.Component
 import core.components.base.TargetEntity
 import core.components.experiment.Experiment
@@ -29,14 +29,14 @@ class Experiment : Component(), Experiment, Native, TrackedData {
     private val _clearTrackedDataObservable = EmptyPublishSubject()
     override val clearTrackedDataObservable: Observable<Unit> = _clearTrackedDataObservable
 
-    @AddInSnapshot(1)
+    @AddToSnapshot(1)
     var task: String = ""
         set(value) {
             field = tryLoadExperimentTaskModel(value, field)
         }
 
 
-    @AddInSnapshot(5)
+    @AddToSnapshot(5)
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             if (value < 1) {
@@ -47,7 +47,7 @@ class Experiment : Component(), Experiment, Native, TrackedData {
             _trackedDataSizeObservable.value = value
         }
 
-    @AddInSnapshot(8)
+    @AddToSnapshot(8)
     var clearTrackedDataOnRun = true
 
     private val _trackedDataSizeObservable = MutableValue(trackedDataSize)

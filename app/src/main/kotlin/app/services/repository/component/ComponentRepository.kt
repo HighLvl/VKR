@@ -1,19 +1,18 @@
-package gui.model
+package app.services.repository.component
 
-import app.services.provider.component.ComponentProvider
 import core.components.base.Component
 import core.entities.Entity
 import gui.utils.getString
 
 import kotlin.reflect.KClass
 
-class ComponentRepository(private val componentProvider: ComponentProvider) {
+class ComponentRepository {
     private val componentTree = mutableMapOf<Int, KClass<out Component>>()
 
     fun getComponentById(id: Int) = componentTree[id]
 
     fun getComponentTree(entity: Entity): Map<Int, Node> {
-        val components = componentProvider.getAvailableComponents(entity)
+        val components = ComponentProvider.getAvailableComponents(entity)
         val userComponents = components.user
         val systemComponents = components.system
         val systemNodes = mutableListOf<Int>()

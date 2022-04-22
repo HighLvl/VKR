@@ -9,8 +9,6 @@ sealed class State {
     open suspend fun connect(
         context: AgentModelControlContext,
         ip: String,
-        port: Int,
-        onResult: suspend (Result<Unit>) -> Unit
-    ) {
-    }
+        port: Int
+    ): Result<Unit> = Result.success(Unit)
 }

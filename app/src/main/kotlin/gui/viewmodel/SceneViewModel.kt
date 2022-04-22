@@ -6,7 +6,6 @@ import core.coroutines.Contexts
 import core.gui.EventBus
 import core.gui.UIEvent
 import core.utils.splitOnCapitalChars
-import gui.model.ComponentRepository
 import gui.utils.getString
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.ticker
@@ -16,14 +15,13 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ObsoleteCoroutinesApi::class)
 class SceneViewModel(
-    private val sceneService: SceneService,
-    private val componentRepository: ComponentRepository
+    private val sceneService: SceneService
 ) :
     ViewModel() {
     private val _components = MutableStateFlow<List<ComponentDto>>(listOf())
     private val _selectedEntity = MutableStateFlow<Entity>(None)
     private val _objectTree = MutableStateFlow(Folder(ROOT_FOLDER_TITLE, listOf()))
-    private val _availableComponents = MutableStateFlow(emptyMap<Int, gui.model.Node>())
+    private val _availableComponents = MutableStateFlow(emptyMap<Int, app.services.repository.component.Node>())
     private val componentManager = ComponentManager()
 
     val components = _components.asStateFlow()
@@ -65,7 +63,7 @@ class SceneViewModel(
                 }
                 else -> {
                     _components.value = componentManager.getComponentDtoList(selectedEntity.getComponents())
-                    _availableComponents.value = componentRepository.getComponentTree(selectedEntity)
+                    _availableComponents.value = sceneService.getComponentTree(selectedEntity)
                 }
             }
             _objectTree.value = Folder("root", listOf(Environment, Experimenter, AgentsFolder(buildAgentTree())))
@@ -129,7 +127,7 @@ class SceneViewModel(
     fun addComponent(id: Int) {
         launchWithAppContext {
             val entity = getSelectedEntity() ?: return@launchWithAppContext
-            componentRepository.getComponentById(id)?.let {
+            sceneService.getComponentById(id)?.let {
                 entity.setComponent(it)
             }
         }

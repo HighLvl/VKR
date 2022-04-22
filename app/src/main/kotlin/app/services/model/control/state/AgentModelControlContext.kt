@@ -12,6 +12,8 @@ import app.services.model.control.PeriodTaskExecutor
 import app.services.scene.SceneApi
 import core.coroutines.Contexts
 import core.services.control.ControlState
+import core.services.logger.Level
+import core.services.logger.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 
@@ -33,6 +35,25 @@ class AgentModelControlContext(
 
     fun start() {
         setState(DisconnectState)
+        scheduleUpdateTask()
+    }
+
+    private fun scheduleUpdateTask() {
+        periodTaskExecutor.scheduleTask {
+            updateAgentModel()
+        }
+    }
+
+    private suspend fun updateAgentModel() {
+        try {
+            update()
+            val requests = commitRequests()
+            val responses = modelApi.handleRequests(requests)
+            handleResponses(responses)
+        } catch (e: Exception) {
+            disconnect()
+            Logger.log(e.message.orEmpty(), Level.ERROR)
+        }
     }
 
     fun stop() {
@@ -44,7 +65,10 @@ class AgentModelControlContext(
         when (controlRequest) {
             ControlRequest.RESUME -> {
                 requestSender.sendRequest<Unit>(0, "Resume", listOf()) {
-                    it.onSuccess { onResume() }.onFailure { emitCurrentState() }
+                    it.onSuccess { onResume() }.onFailure {
+                        emitCurrentState()
+                        periodTaskExecutor.stop()
+                    }
                     onResult(it)
                 }
             }
@@ -56,7 +80,10 @@ class AgentModelControlContext(
             }
             ControlRequest.RUN -> {
                 requestSender.sendRequest<Unit>(0, "Run", inputArgs.args.values.toList()) {
-                    it.onSuccess { onRun() }.onFailure { emitCurrentState() }
+                    it.onSuccess { onRun() }.onFailure {
+                        emitCurrentState()
+                        periodTaskExecutor.stop()
+                    }
                     onResult(it)
                 }
             }
@@ -66,42 +93,30 @@ class AgentModelControlContext(
                     onResult(it)
                 }
             }
-            ControlRequest.GET_STATE -> {
-                requestSender.sendRequest<app.api.dto.State>(0, "GetState", listOf()) { result ->
-                    result.onSuccess {
-                        onConnect(it)
-                        onResult(Result.success(Unit))
-                    }.onFailure {
-                        emitCurrentState()
-                        onResult(
-                            Result.failure(
-                                try {
-                                    throw Exception()
-                                } catch (e: Exception) {
-                                    e
-                                }
-                            )
-                        )
-                    }
-                }
-            }
             ControlRequest.GET_SNAPSHOT -> {
                 requestSender.sendRequest<Snapshot>(0, "GetSnapshot", listOf()) { result ->
                     result.onSuccess { onUpdate(it) }
                 }
             }
+            else -> {}
         }
     }
 
-    suspend fun handleResponses(responses: Responses) {
+    fun sendGetStateRequest(onResult: suspend (Result<app.api.dto.State>) -> Unit = {}) {
+        requestSender.sendRequest<app.api.dto.State>(0, "GetState", listOf()) { result ->
+            onResult(result)
+        }
+    }
+
+    private suspend fun handleResponses(responses: Responses) {
         requestDispatcher.handleResponses(responses)
     }
 
-    fun commitRequests(): Requests = requestDispatcher.commitRequests()
+    private fun commitRequests(): Requests = requestDispatcher.commitRequests()
 
 
-    suspend fun connect(ip: String, port: Int, onResult: suspend (Result<Unit>) -> Unit) {
-        currentState.connect(this, ip, port, onResult)
+    suspend fun connect(ip: String, port: Int): Result<Unit> {
+        return currentState.connect(this, ip, port)
     }
 
     suspend fun disconnect() {
@@ -135,7 +150,7 @@ class AgentModelControlContext(
         emitCurrentState()
     }
 
-    private fun emitCurrentState() {
+    fun emitCurrentState() {
         coroutineScope.launch {
             withContext(Dispatchers.IO) { controlStateFlow.emit(mapStateToControlState()) }
         }
@@ -180,7 +195,7 @@ class AgentModelControlContext(
         sceneApi.updateWith(snapshot)
     }
 
-    private suspend fun onConnect(state: app.api.dto.State) {
+    suspend fun onConnect(state: app.api.dto.State) {
         when (state) {
             app.api.dto.State.RUN -> onRun()
             app.api.dto.State.PAUSE -> onPause()

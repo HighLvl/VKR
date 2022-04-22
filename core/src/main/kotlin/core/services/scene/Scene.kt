@@ -10,5 +10,5 @@ interface Scene {
     val agents: Map<Int, Agent>
     val agentPrototypes: Map<String, AgentPrototype>
     fun findEntityByComponent(component: Component): Entity?
-    fun findAgentsThatHaving(vararg componentClass: KClass<out Component>): List<Agent>
+    fun findAgentsThatHaving(vararg componentClass: KClass<*>): List<Agent>
 }

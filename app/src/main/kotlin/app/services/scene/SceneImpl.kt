@@ -30,7 +30,7 @@ class SceneImpl : Scene {
     override fun findEntityByComponent(component: Component): Entity? =
         getEntities().firstOrNull { it.getComponents().contains(component) }
 
-    override fun findAgentsThatHaving(vararg componentClass: KClass<out Component>): List<Agent> {
+    override fun findAgentsThatHaving(vararg componentClass: KClass<*>): List<Agent> {
         return agentMap.values.filter { agent -> componentClass.all { agent.getComponent(it) != null } }
     }
 

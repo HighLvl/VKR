@@ -8,6 +8,8 @@ import app.components.system.configuration.AgentInterfaces
 import app.components.system.model.SnapshotInfo
 import app.requests.RequestSender
 import app.services.Service
+import app.services.repository.component.ComponentRepository
+import app.services.repository.component.Node
 import app.services.scene.factory.EntityFactory
 import app.services.scene.factory.SceneFactory
 import app.utils.getAccessibleFunction
@@ -15,15 +17,17 @@ import core.components.base.Component
 import core.components.configuration.InputArgs
 import core.coroutines.Contexts
 import core.entities.Agent
+import core.entities.Entity
 import core.entities.getComponent
 import core.services.scene.Scene
 import core.utils.runBlockCatching
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.reflect.KFunction
+import kotlin.reflect.KClass
 import kotlin.reflect.full.callSuspend
 
-class SceneService(private val requestSender: RequestSender) : Service(), SceneApi {
+class SceneService(private val requestSender: RequestSender, private val componentRepository: ComponentRepository) :
+    Service(), SceneApi {
     val scene: Scene
         get() = _scene
 
@@ -132,7 +136,7 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
             .flatMap { it.getComponents() }
 
     private suspend fun onAfterModelUpdate() = forEachScript { onModelAfterUpdate.callSuspend(it) }
-    private suspend fun updateScripts() = forEachScript { onModelUpdate.callSuspend(it)}
+    private suspend fun updateScripts() = forEachScript { onModelUpdate.callSuspend(it) }
     override suspend fun onModelRun() {
         prevTime = Double.MIN_VALUE
         resetSnapshotInfo()
@@ -151,7 +155,7 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
     override suspend fun onModelPause() = forEachScript { onModelPause.callSuspend(it) }
     override suspend fun onModelResume() = forEachScript { onModelResume.callSuspend(it) }
     suspend fun updateScriptsUI() {
-        forEachScript { updateUI.call(it)}
+        forEachScript { updateUI.call(it) }
     }
 
     private suspend fun forEachScript(block: suspend (Component) -> Unit) {
@@ -160,6 +164,14 @@ class SceneService(private val requestSender: RequestSender) : Service(), SceneA
                 block(it)
             }
         }
+    }
+
+    fun getComponentTree(entity: Entity): Map<Int, Node> {
+        return componentRepository.getComponentTree(entity)
+    }
+
+    fun getComponentById(id: Int): KClass<out Component>? {
+        return componentRepository.getComponentById(id)
     }
 //
 //    private fun clearScene() {

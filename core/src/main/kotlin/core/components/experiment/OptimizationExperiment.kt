@@ -4,11 +4,17 @@ import core.utils.ValueObservable
 
 interface OptimizationExperiment {
     sealed interface Command {
-        data class Start(val inputParams: List<Input>) : Command
-        data class Stop(val hasGoalBeenAchieved: Boolean) : Command
+        data class Start(
+            val inputParams: List<Input>
+        ) : Command
+        data class Stop(
+            val hasGoalBeenAchieved: Boolean
+        ) : Command
         object Run : Command
         object MakeInitialDecision : Command
-        data class MakeDecision(val targetFunctionValue: Double) : Command
+        data class MakeDecision(
+            val targetFunctionValue: Double
+        ) : Command
     }
 
     interface Input {

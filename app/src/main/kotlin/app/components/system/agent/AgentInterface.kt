@@ -5,7 +5,7 @@ import app.components.system.base.Native
 import app.requests.RequestSender
 import core.components.agent.AgentInterface
 import core.components.agent.Props
-import core.components.base.AddInSnapshot
+import core.components.base.AddToSnapshot
 import core.components.base.Component
 import core.components.configuration.RequestSignature
 import core.utils.uppercaseFirstChar
@@ -19,7 +19,9 @@ class AgentInterface : Component(), Native, AgentInterface {
     override val id: Int
         get() = snapshot.id
 
-    @AddInSnapshot
+    val int = 0
+
+    @AddToSnapshot
     override val props: Props
         get() = _props
 
