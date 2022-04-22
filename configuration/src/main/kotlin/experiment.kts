@@ -80,7 +80,6 @@ experimentTask {
         observable("Target Function Value") {
             targetFunctionVH.value
         }
-        mutable("a") { requestSetValue(1, "a", it.toInt()) }
     }
 
     optimization(targetScore = 2) {

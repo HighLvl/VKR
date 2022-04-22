@@ -174,6 +174,8 @@ class TargetFunctionBuilder(model: MutableExperimentTaskModel) : OptimizerLifecy
             value = sum / (modelTime - startTime)
         }
     }
+
+    fun custom(builder: MutableValueHolder<Double>.() -> Unit) = MutableValueHolder(0.0).apply(builder)
 }
 
 @ExperimentDslMarker
@@ -220,7 +222,6 @@ class GoalsBuilder(private val model: MutableExperimentTaskModel) : OptimizerLif
 @ExperimentDslMarker
 class VariablesBuilder(private val model: MutableExperimentTaskModel) {
     fun observable(name: String, getter: GetterExp) = model.addObservableVariables(name to getter)
-    fun mutable(name: String, setter: SetterExp) = model.addMutableVariables(name to setter)
 }
 
 @ExperimentDslMarker

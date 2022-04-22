@@ -1,6 +1,5 @@
 package components.variables
 
-import components.variables.mutable.MutableVariablesController
 import components.variables.observable.ObservableVariablesController
 import core.components.base.AddToSnapshot
 import core.components.base.Component
@@ -17,7 +16,6 @@ import core.utils.Disposable
 @TargetEntity(Experimenter::class)
 class Variables : Component() {
     private val observableVariablesController = ObservableVariablesController()
-    private val mutableVariablesController = MutableVariablesController()
     private val experiment = Services.scene.experimenter.getComponent<Experiment>()!!
     private val trackedData = Services.scene.experimenter.getComponent<TrackedData>()!!
 
@@ -25,15 +23,12 @@ class Variables : Component() {
     @AddToSnapshot(3)
     var showObservableVariables by observableVariablesController::enabled
 
-    @AddToSnapshot(4)
-    var showMutableVariables by mutableVariablesController::enabled
     private val disposables = mutableListOf<Disposable>()
     private lateinit var taskModel: ExperimentTaskModel
 
     override fun onAttach() {
         disposables += trackedData.trackedDataSizeObservable.observe { value ->
             observableVariablesController.trackedDataSize = value
-            mutableVariablesController.trackedDataSize = value
         }
         disposables += trackedData.clearTrackedDataObservable.observe { reset() }
         disposables += experiment.taskModelObservable.observe {
@@ -46,21 +41,15 @@ class Variables : Component() {
         disposables.forEach { it.dispose() }
     }
 
-    override suspend fun onModelUpdate() {
-        mutableVariablesController.onModelUpdate(modelTime)
-    }
-
     override suspend fun onModelAfterUpdate() {
         observableVariablesController.onModelUpdate(modelTime)
     }
 
     override fun updateUI() {
         observableVariablesController.update()
-        mutableVariablesController.update()
     }
 
     private fun reset() {
         observableVariablesController.reset(taskModel.observableVariables)
-        mutableVariablesController.reset(taskModel.mutableVariables)
     }
 }
