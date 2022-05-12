@@ -1,27 +1,23 @@
 import core.components.configuration.modelConfiguration
 
 modelConfiguration {
-    inputArgs {
-        arg("doodlebugs", 100)
-        arg("ants", 50)
+    agentInterface("ModelSettings") {
+        setter<Double>("hourSec")
+        request<Unit>("Restart")
     }
-    agentInterface("Board") {
-        prop("size")
-        prop("a")
-
-        setter<Int>("a")
+    agentInterface("Car") {
+        setter<Int>("speed")
+        setter<Double>("restTime")
+        setter<Double>("capacity")
+        setter<Boolean>("workOnSchedule")
+        setter<Int>("fuelConsumption")
     }
-    agentInterface("Ant") {
-        prop("colPosition")
-        prop("rowPosition")
-        prop("breedThreshold")
-        prop("timeSinceBreed")
-    }
-    agentInterface("Doodlebug") {
-        prop("colPosition")
-        prop("rowPosition")
-        prop("breedThreshold")
-        prop("timeSinceBreed")
-        prop("timeSinceEat")
+    agentInterface("Parking") { }
+    agentInterface("Dump") { }
+    agentInterface("Turn") { }
+    agentInterface("GarbageCan") {
+        setter<Double>("intensity")
+        setter<Double>("capacity")
+        setter<Double>("collectIntensity")
     }
 }

@@ -5,13 +5,13 @@ import core.services.logger.Logger
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
-class PeriodTaskExecutor(context: CoroutineContext) {
+class PeriodTaskExecutor(private val context: CoroutineContext) {
     private var periodMillis: Long = 100
     private var remainingTimeToNextUpdate: Long = 0
     private var startTime: Long = 0
     private var isPause = false
     private var task: suspend () -> Unit = {}
-    private val coroutineScope = CoroutineScope(context)
+    private val coroutineScope = CoroutineScope(newSingleThreadContext("periodTaskExecutor"))
     private var isStopped = true
 
     private var nextUpdateTime: Long = 0L
@@ -49,7 +49,11 @@ class PeriodTaskExecutor(context: CoroutineContext) {
     private suspend fun executeTaskOnUpdateTime() {
         if (!isPause && !isStopped) {
             if (isItTimeToUpdate()) {
-                task()
+                withContext(context) {
+                    if (!isPause && !isStopped) {
+                        task()
+                    }
+                }
                 startTime = System.currentTimeMillis()
                 nextUpdateTime = startTime + periodMillis
             }

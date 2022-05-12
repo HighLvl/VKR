@@ -7,7 +7,7 @@ import core.services.logger.Level
 import core.services.logger.Logger
 
 internal class InputArgsController {
-    private val inputParamsSeries = mutableMapOf<String, MutableSeries<Double>>()
+    private val inputParamsSeries = mutableMapOf<String, MutableSeries<Any>>()
     private val mutableVariablesView = InputArgsView(inputParamsSeries).apply {
         onChangeValueListener = { varName, value ->
             inputParams[varName]!!.value = value
@@ -18,6 +18,8 @@ internal class InputArgsController {
 
     var enabled: Boolean by mutableVariablesView::enabled
 
+    private var decisionsNumber = 0
+
     var trackedDataSize = Int.MAX_VALUE
         set(value) {
             field = value
@@ -27,6 +29,8 @@ internal class InputArgsController {
     fun reset(inputParams: Map<String, OptimizationExperiment.Input>) {
         this.inputParams = inputParams
         inputParamsSeries.clear()
+        inputParamsSeries["#"] = mutableSeriesOf(trackedDataSize)
+        decisionsNumber = 0
         inputParams.keys.forEach { varName ->
             inputParamsSeries[varName] = mutableSeriesOf(trackedDataSize)
         }
@@ -45,6 +49,8 @@ internal class InputArgsController {
     }
 
     fun commitInputArgs() {
+        decisionsNumber++
+        inputParamsSeries["#"]!!.append(decisionsNumber)
         inputParams.forEach { (varName, param) ->
             inputParamsSeries[varName]!!.append(newInputParams[varName] ?: param.value)
         }

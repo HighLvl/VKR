@@ -11,6 +11,7 @@ abstract class ExperimentTaskModel {
     abstract val goals: Set<Goal>
     abstract val stopConditions: Map<String, PredicateExp>
     abstract val observableVariables: Map<String, GetterExp>
+    abstract val makeDecision: (Map<String, Double>) -> Unit
 
     val modelRunObservable = EmptyPublishSubject()
     val modelUpdateObservable = EmptyPublishSubject()
@@ -22,7 +23,7 @@ abstract class ExperimentTaskModel {
     val updateObservable = EmptyPublishSubject()
     val endObservable = EmptyPublishSubject()
     val startOptimizationObservable = EmptyPublishSubject()
-    val stopOptimizationObservable = PublishSubject<Boolean>()
+    val stopOptimizationObservable = PublishSubject<Triple<Boolean, Map<String, Double>, Double>>()
 
     @set:JvmName("setTargetScore1")
     var targetScore = 0
@@ -44,7 +45,7 @@ class MutableExperimentTaskModel : ExperimentTaskModel() {
     override val inputParams: Set<InputParam>
         get() = _inputParams
     override var constraint: (Map<String, Double>) -> Boolean = { true }
-
+    override var makeDecision: (Map<String, Double>) -> Unit = {}
     private val _observableVariables = mutableMapOf<String, GetterExp>()
     private val _makeDecisionConditions = mutableMapOf<String, PredicateExp>()
     private val _stopConditions = mutableMapOf<String, PredicateExp>()

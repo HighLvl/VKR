@@ -25,11 +25,15 @@ internal class OptimizationExperimentController {
         model.onModelStop()
     }
 
-    fun onModelUpdate() {
+    suspend fun onModelUpdate() {
         model.onModelUpdate()
     }
 
     fun update() {
         view.update()
+    }
+
+    fun isValidDecision(values: List<Double>): Boolean {
+        return model.isValidDecision(values)
     }
 }

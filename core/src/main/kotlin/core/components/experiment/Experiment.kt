@@ -33,9 +33,7 @@ data class Goal(val name: String, val score: Int, val valueHolder: ValueHolder<B
 
 data class InputParam(
     val name: String,
-    val initialValue: Double,
     val minValue: Double,
     val maxValue: Double,
-    val step: Double,
-    val setter: SetterExp
+    val step: Double
 )

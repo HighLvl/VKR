@@ -5,7 +5,7 @@ import imgui.flag.ImGuiInputTextFlags
 import imgui.internal.ImGui
 import imgui.type.ImDouble
 
-open class InputValuesTableView(title: String, private val dataSource: Map<String, Series<Double>>) :
+open class InputValuesTableView(title: String, private val dataSource: Map<String, Series<Any>>) :
     TableView(title, dataSource) {
     var onChangeValueListener: (String, Double) -> Unit = { _, _ -> }
     private val varValueImDoubles = mutableMapOf<String, ImDouble>()
@@ -32,7 +32,7 @@ open class InputValuesTableView(title: String, private val dataSource: Map<Strin
         super.fillInTableWithData()
     }
 
-    private fun inputValues() {
+    open fun inputValues() {
         ImGui.tableNextRow()
         indexNameMap.entries.forEach { (index, varName) ->
             ImGui.tableSetColumnIndex(index)

@@ -69,7 +69,7 @@ class ModelLifecycleListenerBuilder(private val model: MutableExperimentTaskMode
 }
 
 @ExperimentDslMarker
-class OptimizationBuilder(private val model: MutableExperimentTaskModel): OptimizerLifecycleEventsListener(model) {
+class OptimizationBuilder(private val model: MutableExperimentTaskModel) : OptimizerLifecycleEventsListener(model) {
     /** Параметры, изменяемые при принятии решения
      */
     fun inputParams(inputParamsBuilder: InputParamsBuilder.() -> Unit) = inputParamsBuilder(InputParamsBuilder(model))
@@ -119,8 +119,8 @@ class OptimizationBuilder(private val model: MutableExperimentTaskModel): Optimi
 class InputParamsBuilder(private val model: MutableExperimentTaskModel) {
     /** Объявление паратметра, значение которого изменяется при принятии оптимизационного решения
      */
-    fun param(name: String, initialValue: Double, minValue: Double, maxValue: Double, step: Double, setter: SetterExp) =
-        model.addInputParam(InputParam(name, initialValue, minValue, maxValue, step, setter))
+    fun param(name: String, minValue: Double, maxValue: Double, step: Double) =
+        model.addInputParam(InputParam(name, minValue, maxValue, step))
 
     /** Ограничение накладываемое на выборку значений параметров. Если выборка не соотвествует ограничению,
      *  то значения параметров не изменяются и считается, что решение не принято.
@@ -131,10 +131,13 @@ class InputParamsBuilder(private val model: MutableExperimentTaskModel) {
         model.constraint = predicate
     }
 
+    fun makeDecision(makeDecision: (Map<String, Double>) -> Unit) {
+        model.makeDecision = makeDecision
+    }
 }
 
 @ExperimentDslMarker
-class TargetFunctionBuilder(model: MutableExperimentTaskModel) : OptimizerLifecycleEventsListener(model) {
+class TargetFunctionBuilder(private val model: MutableExperimentTaskModel) : OptimizerLifecycleEventsListener(model) {
 
     /** Итоговое значение эквивалентно последнему мгновенному значению целевой функции
      * @see ValueHolder
@@ -176,6 +179,12 @@ class TargetFunctionBuilder(model: MutableExperimentTaskModel) : OptimizerLifecy
     }
 
     fun custom(builder: MutableValueHolder<Double>.() -> Unit) = MutableValueHolder(0.0).apply(builder)
+
+    fun rating() = MutableValueHolder(0.0).apply {
+        end {
+            value = model.goals.filter { it.valueHolder.value }.sumOf { it.score }.toDouble()
+        }
+    }
 }
 
 @ExperimentDslMarker
@@ -263,10 +272,11 @@ abstract class OptimizerLifecycleEventsListener(private val model: MutableExperi
     }
 
     /** Вызывается после остановки оптимизационного эксперимента
-     * аргумент, передаваемый слушателю, true если цель эксперимента достигнута
+     * аргументы, передаваемые слушателю, true если цель эксперимента достигнута,
+     *  map - лучшее решение
      */
-    fun stop(listener: (Boolean) -> Unit) {
-        model.stopOptimizationObservable.observe(listener)
+    fun stop(listener: suspend (Boolean, Map<String, Double>, Double) -> Unit) {
+        model.stopOptimizationObservable.observe { listener(it.first, it.second, it.third) }
     }
 
     /** Вызывается в начале процесса вычисления данных, используемых для принятия оптимизационного решения.

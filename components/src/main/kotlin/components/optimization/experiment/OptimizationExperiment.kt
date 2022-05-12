@@ -16,6 +16,7 @@ import core.services.Services
 import core.services.control.ControlState
 import core.utils.Disposable
 import core.utils.ValueObservable
+import kotlinx.coroutines.runBlocking
 
 @TargetEntity(Experimenter::class, [Experiment::class])
 class OptimizationExperiment : Component(), OptimizationExperiment {
@@ -61,6 +62,7 @@ class OptimizationExperiment : Component(), OptimizationExperiment {
     }
 
     private fun importOptimizationTaskModel() {
+        importInputParams()
         reset()
         optimizationExperimentController.taskModel = taskModel
     }
@@ -72,11 +74,11 @@ class OptimizationExperiment : Component(), OptimizationExperiment {
 
     private fun reset() {
         goalsController.reset(taskModel.goals, taskModel.targetScore)
-        resetInputArgsController()
+        inputArgsController.reset(_inputParams)
         optimizationExperimentController.inputParams = _inputParams
     }
 
-    private fun resetInputArgsController() {
+    private fun importInputParams() {
         _inputParams.clear()
         taskModel.inputParams.forEach {
             val inputParam = InputDoubleParam(it.name, it.minValue, it.maxValue, it.step) { newValue ->
@@ -85,9 +87,6 @@ class OptimizationExperiment : Component(), OptimizationExperiment {
             _inputParams[it.name] = inputParam
         }
         inputArgsController.reset(_inputParams)
-        taskModel.inputParams.forEach {
-            _inputParams[it.name]!!.value = it.initialValue
-        }
     }
 
     override suspend fun onModelUpdate() {
@@ -110,6 +109,10 @@ class OptimizationExperiment : Component(), OptimizationExperiment {
 
     override fun stop() {
         optimizationExperimentController.stop()
+    }
+
+    override fun isValidDecision(values: List<Double>): Boolean {
+        return optimizationExperimentController.isValidDecision(values)
     }
 
     override fun makeDecision(): Boolean = optimizationExperimentController.makeDecision()

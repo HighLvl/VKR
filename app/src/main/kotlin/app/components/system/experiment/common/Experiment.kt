@@ -19,6 +19,7 @@ import core.utils.EmptyPublishSubject
 import core.utils.MutableValue
 import core.utils.Observable
 import core.utils.ValueObservable
+import kotlinx.coroutines.runBlocking
 
 @TargetEntity(Experimenter::class)
 class Experiment : Component(), Experiment, Native, TrackedData {
@@ -44,7 +45,9 @@ class Experiment : Component(), Experiment, Native, TrackedData {
                 return
             }
             field = value
-            _trackedDataSizeObservable.value = value
+            runBlocking {
+                _trackedDataSizeObservable.publish(value)
+            }
         }
 
     @AddToSnapshot(8)
@@ -72,7 +75,9 @@ class Experiment : Component(), Experiment, Native, TrackedData {
         if (path.isEmpty()) return oldPath
         return try {
             taskModel = KtsScriptEngine().eval(path)
-            _taskModelObservable.value = taskModel
+            runBlocking {
+                _taskModelObservable.publish(taskModel)
+            }
             path
         } catch (e: ClassCastException) {
             Logger.log(getString("experiment_tm_is_exp", ExperimentTaskModel::class), Level.ERROR)

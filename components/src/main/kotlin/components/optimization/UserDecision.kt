@@ -19,6 +19,9 @@ class UserDecision : Component() {
     private lateinit var optimizationExperiment: OptimizationExperiment
     private lateinit var experimenter: Experimenter
 
+    @AddToSnapshot(1)
+    var alwaysMakeCurrentDecision = false
+
     @AddToSnapshot(2)
     val info: String
         get() {
@@ -47,9 +50,16 @@ class UserDecision : Component() {
     private fun processCommand(command: OptimizationExperiment.Command) {
         when (command) {
             is OptimizationExperiment.Command.MakeDecision,
-            OptimizationExperiment.Command.MakeInitialDecision -> if (!needMakeDecision) {
-                needMakeDecision = true
-                Services.agentModelControl.pauseModel()
+            OptimizationExperiment.Command.MakeInitialDecision -> {
+                if (alwaysMakeCurrentDecision) {
+                    needMakeDecision = false
+                    optimizationExperiment.makeDecision()
+                    return
+                }
+                if (!needMakeDecision) {
+                    needMakeDecision = true
+                    Services.agentModelControl.pauseModel()
+                }
             }
             else -> needMakeDecision = false
         }

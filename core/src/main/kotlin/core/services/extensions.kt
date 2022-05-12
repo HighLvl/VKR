@@ -11,16 +11,21 @@ import core.entities.getComponent
 /** Получить агента по id
  */
 fun getAgent(agentId: Int) = Services.scene.agents[agentId]
+
 /** Получить коллекцию агентов модели
  */
 fun getAgents(): Collection<Agent> = Services.scene.agents.values
+
 /** Получить Map, в которой id агента соответсвует агент
  */
 fun getAgentsToIdMap() = Services.scene.agents
+
 /** Получить Map, в которой имени параметра агента соответсвует его значение
  */
 val Agent.props: Props
     get() = this.getComponent<AgentInterface>()!!.props
+val Agent.id: Int
+    get() = this.getComponent<AgentInterface>()!!.id
 
 /** Получить значение параметра агента, приведенное к типу T
  */
@@ -38,7 +43,11 @@ inline fun <reified T : Any> getPropValue(agentId: Int, propName: String): T? {
 
 /** Запланировать запрос к агенту и подписаться на ответ
  */
-inline fun <reified T : Any> Agent.request(name: String, args: List<Any>, noinline onResult: suspend (Result<T>) -> Unit = {}) {
+inline fun <reified T : Any> Agent.request(
+    name: String,
+    args: List<Any>,
+    noinline onResult: suspend (Result<T>) -> Unit = {}
+) {
     getComponent<AgentInterface>()!!.request(name, args, onResult)
 }
 
@@ -69,7 +78,7 @@ fun putInputArg(name: String, value: Any) {
 
 /** Получить значение входного аргумента модели.
  */
-fun <T: Any> getInputArg(name: String): T {
+fun <T : Any> getInputArg(name: String): T {
     val inputArgs = Services.scene.environment.getComponent<InputArgs>()!!
     return inputArgs.get(name)
 }

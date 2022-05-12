@@ -1,4 +1,4 @@
-rootProject.name = "DSL_test"
+rootProject.name = "IDIOMA"
 include(":app")
 include(":core")
 include(":components")

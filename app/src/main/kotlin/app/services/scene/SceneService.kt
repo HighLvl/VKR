@@ -117,14 +117,15 @@ class SceneService(private val requestSender: RequestSender, private val compone
     ) {
         val properties = agentSnapshot.props
         val configuredProperties = mutableMapOf<String, Any>()
-        val propertyConfiguration = agentInterfacesComponent.agentInterfaces.value[type]?.properties?.forEach {
+        agentInterfacesComponent.agentInterfaces.value[type]?.properties?.forEach {
             if (it.name in properties.keys) {
                 configuredProperties[it.name] = properties[it.name]!!
             }
         }
-        val configuredSnapshot = when (propertyConfiguration) {
-            null -> agentSnapshot
-            else -> agentSnapshot.copy(props = configuredProperties)
+        val configuredSnapshot = if (configuredProperties.isEmpty()) {
+            agentSnapshot
+        } else {
+            agentSnapshot.copy(props = configuredProperties)
         }
         getAgentInterfaceScript().snapshot = configuredSnapshot
     }

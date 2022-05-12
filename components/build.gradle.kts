@@ -22,6 +22,11 @@ dependencies {
     implementation("io.github.spair:imgui-java-app:$imguiVersion")
     implementation("io.github.spair:imgui-java-binding:$imguiVersion")
     implementation(project(":core"))
+    implementation("org.opt4j:opt4j-core:3.1.4")
+    implementation("org.opt4j:opt4j-optimizers:3.1.4")
+    // https://mvnrepository.com/artifact/org.opt4j/opt4j-viewer
+    implementation("org.opt4j:opt4j-viewer:3.1.4")
+
 }
 
 tasks.test {

@@ -1,4 +1,5 @@
 import gui.controllers.MainController
+import gui.utils.Contexts
 import imgui.ImFontConfig
 import imgui.ImGuiIO
 import imgui.ImGuiViewport
@@ -13,13 +14,15 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import org.lwjgl.glfw.GLFW
-import gui.utils.Contexts
 import java.io.IOException
 import java.net.URISyntaxException
+import java.net.URL
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 import kotlin.time.ExperimentalTime
+
 
 class Main : Application() {
     private lateinit var imPlotContext: ImPlotContext
@@ -104,9 +107,23 @@ class Main : Application() {
             exitProcess(0)
         }
 
+
+        private fun copyToTempFile(url: URL, suffix: String): Path {
+            val tempFile = Files.createTempFile(null, suffix)
+            url.openStream().use { `in` ->
+                Files.newOutputStream(tempFile).use { out ->
+                    `in`.transferTo(out)
+                }
+            }
+            return tempFile
+        }
+
+
         private fun loadFromResources(name: String): ByteArray {
             return try {
-                Files.readAllBytes(Paths.get(Main::class.java.getResource(name)!!.toURI()))
+                val path =
+                    copyToTempFile(Main::class.java.getResource(name)!!, ".ttf")
+                Files.readAllBytes(path)
             } catch (e: IOException) {
                 throw RuntimeException(e)
             } catch (e: URISyntaxException) {
