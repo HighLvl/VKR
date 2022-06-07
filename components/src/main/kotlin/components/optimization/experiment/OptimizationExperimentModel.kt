@@ -3,7 +3,6 @@ package components.optimization.experiment
 import core.components.experiment.ExperimentTaskModel
 import core.components.experiment.MutableExperimentTaskModel
 import core.components.experiment.OptimizationExperiment.Command
-import core.components.experiment.SetterExp
 import core.coroutines.Contexts
 import core.services.Services
 import core.services.control.ControlState
@@ -106,6 +105,7 @@ internal class OptimizationExperimentModel {
 
         if (needMakeDecision()) {
             taskModel.endObservable.publish()
+            evaluateValue(taskModel.targetFunctionVH.value)
             val makeDecisionData = newMakeDecisionData()
             coroutineScope.launch { _ctrlMakeDecisionDataFlow.emit(makeDecisionData) }
             if (makeDecisionData.isTargetScoreAchieved) {
@@ -113,17 +113,17 @@ internal class OptimizationExperimentModel {
                 stopOptimization(true)
                 return
             }
-            waitDecision(makeDecisionData.targetFunctionValue)
+            _commandObservable.publish(Command.MakeDecision)
         }
     }
 
-    private suspend fun waitDecision(targetFunctionValue: Double) {
+    private suspend fun evaluateValue(targetFunctionValue: Double) {
         if (targetFunctionValue > bestTargetFunctionValue) {
             bestTargetFunctionValue = targetFunctionValue
             bestDecision = lastDecision
         }
         state = State.WAIT_DECISION
-        _commandObservable.publish(Command.MakeDecision(targetFunctionValue))
+        _commandObservable.publish(Command.EvaluateValue(targetFunctionValue))
     }
 
     private fun needMakeDecision(): Boolean {

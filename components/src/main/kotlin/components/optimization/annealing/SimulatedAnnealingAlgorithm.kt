@@ -10,7 +10,6 @@ import core.entities.Experimenter
 import core.entities.getComponent
 import core.services.Services
 import core.utils.Disposable
-import org.opt4j.optimizers.ea.EvolutionaryAlgorithmModule
 import org.opt4j.optimizers.sa.SimulatedAnnealingModule
 
 
@@ -56,7 +55,10 @@ class SimulatedAnnealingAlgorithm : Component() {
             is OptimizationExperiment.Command.Run -> {
             }
             is OptimizationExperiment.Command.MakeDecision -> {
-                optimizer?.makeDecision(command.targetFunctionValue)
+                optimizer?.makeDecision()
+            }
+            is OptimizationExperiment.Command.EvaluateValue -> {
+                optimizer?.evaluateValue(command.targetFunctionValue)
             }
             is OptimizationExperiment.Command.Stop -> {
                 optimizer?.close()

@@ -16,9 +16,10 @@ interface OptimizationExperiment {
 
         object Run : Command
         object MakeInitialDecision : Command
-        data class MakeDecision(
+        data class EvaluateValue(
             val targetFunctionValue: Double
         ) : Command
+        object MakeDecision : Command
     }
 
     interface Input {

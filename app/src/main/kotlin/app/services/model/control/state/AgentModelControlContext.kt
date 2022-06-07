@@ -1,6 +1,5 @@
 package app.services.model.control.state
 
-import app.api.base.AgentModelApi
 import app.api.dto.ModelInputArgs
 import app.api.dto.Requests
 import app.api.dto.Responses
@@ -8,6 +7,7 @@ import app.api.dto.Snapshot
 import app.requests.RequestDispatcher
 import app.requests.RequestSender
 import app.requests.sendRequest
+import app.services.model.control.IPModelAPI
 import app.services.model.control.PeriodTaskExecutor
 import app.services.scene.SceneApi
 import core.coroutines.Contexts
@@ -18,7 +18,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 class AgentModelControlContext(
-    val modelApi: AgentModelApi,
+    val modelApi: IPModelAPI,
     private val sceneApi: SceneApi,
     private val requestDispatcher: RequestDispatcher,
     private val requestSender: RequestSender
@@ -98,7 +98,8 @@ class AgentModelControlContext(
                     result.onSuccess { onUpdate(it) }
                 }
             }
-            else -> {}
+            else -> {
+            }
         }
     }
 

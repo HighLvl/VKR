@@ -72,7 +72,10 @@ class GeneticAlgorithm : Component() {
             is OptimizationExperiment.Command.Run -> {
             }
             is OptimizationExperiment.Command.MakeDecision -> {
-                optimizer?.makeDecision(command.targetFunctionValue)
+                optimizer?.makeDecision()
+            }
+            is OptimizationExperiment.Command.EvaluateValue -> {
+                optimizer?.evaluateValue(command.targetFunctionValue)
             }
             is OptimizationExperiment.Command.Stop -> {
                 optimizer?.close()

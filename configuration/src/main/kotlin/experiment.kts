@@ -9,8 +9,7 @@ import core.services.logger.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-val modelConfigurationPath =
-    "C:\\Users\\chere\\IdeaProjects\\DSL_test\\configuration\\src\\main\\kotlin\\configuration.kts"
+val modelConfigurationPath = "C:\\Users\\chere\\IdeaProjects\\IDIOMA\\configuration\\src\\main\\kotlin\\configuration.kts"
 
 fun loadModelConfiguration() {
     Services.scene.environment.getComponent<Configuration>()!!.modelConfiguration = modelConfigurationPath

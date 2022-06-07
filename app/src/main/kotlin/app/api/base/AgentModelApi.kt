@@ -5,7 +5,7 @@ import app.api.dto.Requests
 import app.api.dto.Responses
 
 interface AgentModelApi {
-    suspend fun connect(ip: String, port: Int)
+    suspend fun connect()
     fun disconnect()
     suspend fun handleRequests(requests: Requests) : Responses
 }

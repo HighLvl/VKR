@@ -23,12 +23,11 @@ object Problem {
         return runBlocking { targetFunctionChannel!!.receive() }
     }
 
-    suspend fun waitInitialDecision() {
-        waitDecisionChannel!!.receive()
+    suspend fun evaluateValue(value: Double) {
+        targetFunctionChannel!!.send(value)
     }
 
-    suspend fun waitDecision(value: Double) {
-        targetFunctionChannel!!.send(value)
+    suspend fun waitDecision() {
         waitDecisionChannel!!.receive()
     }
 

@@ -63,14 +63,18 @@ class Optimizer(optimizerModule: OptimizerModule, private val optimizationExperi
 
     suspend fun makeInitialDecision() {
         launchOpt4J()
+        makeDecision()
+    }
+
+    suspend fun evaluateValue(tfValue: Double) {
         launchAndJoin {
-            Problem.waitInitialDecision()
+            Problem.evaluateValue(tfValue)
         }
     }
 
-    suspend fun makeDecision(tfValue: Double) {
+    suspend fun makeDecision() {
         launchAndJoin {
-            Problem.waitDecision(tfValue)
+            Problem.waitDecision()
         }
     }
 }

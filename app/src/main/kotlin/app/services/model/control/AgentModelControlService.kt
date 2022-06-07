@@ -11,7 +11,7 @@ import core.services.control.AgentModelControl
 import core.services.control.ControlState
 import kotlinx.coroutines.flow.SharedFlow
 
-class AgentModelControlService(modelApi: AgentModelApi, sceneApi: SceneApi, requestDispatcher: RequestDispatcher, requestSender: RequestSender) : Service(), AgentModelControl {
+class AgentModelControlService(modelApi: IPModelAPI, sceneApi: SceneApi, requestDispatcher: RequestDispatcher, requestSender: RequestSender) : Service(), AgentModelControl {
     private val context = AgentModelControlContext(modelApi, sceneApi, requestDispatcher, requestSender)
     val controlStateFlow: SharedFlow<ControlState> = context.controlStateFlow
     override val controlState: ControlState
